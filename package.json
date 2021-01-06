@@ -1,0 +1,14 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "lerna": "^3.22.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stefanoverna/structured-text.git"
+  },
+  "license": "MIT",
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/stefanoverna/structured-text"
+}
