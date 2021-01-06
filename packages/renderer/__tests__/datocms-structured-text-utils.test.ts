@@ -1,5 +1,7 @@
 import vhtml from 'vhtml';
-import { isHeading, isSpan } from 'datocms-structured-text-utils';
+// import hyperscript from 'hyperscript';
+// import React from 'react';
+import { isHeading } from 'datocms-structured-text-utils';
 import { render, StructuredText } from '../src';
 
 const value: StructuredText = {
@@ -446,21 +448,31 @@ const value: StructuredText = {
 
 describe('render', () => {
   it('needs tests', () => {
-    render(
-      vhtml,
-      value,
-      {
+    console.log(
+      render(vhtml, value, {
         guard: isHeading,
         transform: ({ node, h, children, key }) => {
-          return h(`${node.level}`, { key }, children);
+          return h(`${node.level - 1}`, { key }, children);
         },
-      },
-      {
-        guard: isSpan,
-        transform: ({ node }) => {
-          return node.value;
-        },
-      },
+      }),
     );
+
+    // console.log(
+    //   render(hyperscript, value, {
+    //     guard: isHeading,
+    //     transform: ({ node, h, children, key }) => {
+    //       return h(`${node.level - 1}`, { key }, children);
+    //     },
+    //   }),
+    // );
+
+    // console.log(
+    //   render(React.createElement, value, {
+    //     guard: isHeading,
+    //     transform: ({ node, h, children, key }) => {
+    //       return h(`${node.level - 1}`, { key }, children);
+    //     },
+    //   }),
+    // );
   });
 });

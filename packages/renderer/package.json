@@ -34,7 +34,9 @@
     "datocms-structured-text-utils": "^0.1.0"
   },
   "devDependencies": {
+    "@types/hyperscript": "0.0.4",
     "@types/vhtml": "^2.2.0",
+    "hyperscript": "^2.0.2",
     "vhtml": "^2.2.0"
   }
 }

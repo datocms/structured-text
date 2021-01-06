@@ -82,15 +82,13 @@ export type Block = {
 export const spanType = 'span' as const;
 export type SpanType = 'span';
 
-export enum Mark {
-  strong = 'strong',
-  code = 'code',
-  emphasis = 'emphasis',
-  underline = 'underline',
-  strikeThrough = 'strikethrough',
-  highlight = 'highlight',
-}
-export const allMarks: Mark[] = Object.values(Mark);
+export type Mark =
+  | 'strong'
+  | 'code'
+  | 'emphasis'
+  | 'underline'
+  | 'strikethrough'
+  | 'highlight';
 
 export type Span = {
   type: SpanType;
@@ -137,4 +135,8 @@ export function isHeading(node: Node): node is Heading {
 
 export function isSpan(node: Node): node is Span {
   return node.type === spanType;
+}
+
+export function hasChildren(node: Node): node is WithChildrenNode {
+  return 'children' in node;
 }
