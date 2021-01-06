@@ -9,7 +9,5 @@
       "src/typings"
     ]
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

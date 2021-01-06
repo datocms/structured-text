@@ -22,7 +22,7 @@
     "test": "jest",
     "build": "lerna run build",
     "lint": "lerna run lint",
-    "prettier": "prettier --write \"packages/**/{src,__tests__}/**/*.{ts,tsx}\""
+    "prettier": "prettier --write \"**/*.{ts,tsx,json}\""
   },
   "license": "MIT",
   "author": "Stefano Verna <s.verna@datocms.com>",
