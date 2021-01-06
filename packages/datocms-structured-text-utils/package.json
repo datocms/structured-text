@@ -1,0 +1,35 @@
+{
+  "name": "datocms-structured-text-utils",
+  "version": "0.1.0",
+  "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields",
+  "keywords": [
+    "datocms",
+    "structured-text"
+  ],
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/datocms-structured-text-utils#readme",
+  "license": "MIT",
+  "main": "dist/datocms-structured-text-utils.es5.js",
+  "typings": "dist/types/index.d.ts",
+  "directories": {
+    "lib": "dist",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stefanoverna/structured-text.git"
+  },
+  "scripts": {
+    "build": "tsc --module commonjs",
+    "prebuild": "rimraf dist",
+    "lint": "../../node_modules/.bin/eslint . --ext .ts,.tsx"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanoverna/structured-text/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
