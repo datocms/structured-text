@@ -1,6 +1,19 @@
-import { hasChildren } from 'datocms-structured-text-utils';
-import { DastDocument, Node } from 'datocms-structured-text-utils';
-import { isHeading, isSpan } from 'datocms-structured-text-utils';
+import {
+  DastDocument,
+  hasChildren,
+  isBlock,
+  isBlockquote,
+  isCode,
+  isHeading,
+  isInlineItem,
+  isItemLink,
+  isLink,
+  isListItem,
+  isParagraph,
+  isRoot,
+  isSpan,
+  Node,
+} from 'datocms-structured-text-utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UnknownArgs = any[];
@@ -86,3 +99,59 @@ export function render<JsxLikeFn extends UnknownFn, T extends UnknownArgs>(
     },
   );
 }
+
+// ,
+// {
+//   guard: isRoot,
+//   transform: ({ h, key, children }) => {
+//     return h('', { key }, children);
+//   },
+// },
+// {
+//   guard: isParagraph,
+//   transform: ({ h, key, children }) => {
+//     return h('p', { key }, children);
+//   },
+// },
+// {
+//   guard: isListItem,
+//   transform: ({ h, key, children }) => {
+//     return h('li', { key }, children);
+//   },
+// },
+// {
+//   guard: isBlockquote,
+//   transform: ({ h, key, children }) => {
+//     return h('blockquote', { key }, children);
+//   },
+// },
+// {
+//   guard: isBlock,
+//   transform: ({ h, key, children }) => {
+//     return h('', { key }, children);
+//   },
+// },
+// {
+//   guard: isCode,
+//   transform: ({ h, key, children }) => {
+//     return h('pre', { key }, h('code', null, children));
+//   },
+// },
+// {
+//   guard: isLink,
+//   transform: ({ h, key, children, node }) => {
+//     return h('a', { key, href: node. }, children);
+//   },
+// },
+// {
+//   guard: isItemLink,
+//   transform: ({ h, key, children }) => {
+//     return h('', { key }, children);
+//   },
+// },
+// {
+//   guard: isInlineItem,
+//   transform: ({ h, key, children }) => {
+//     return h('', { key }, children);
+//   },
+// },

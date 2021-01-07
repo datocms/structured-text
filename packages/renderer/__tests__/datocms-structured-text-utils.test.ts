@@ -452,7 +452,7 @@ describe('render', () => {
       render(vhtml, value, {
         guard: isHeading,
         transform: ({ node, h, children, key }) => {
-          return h(`${node.level - 1}`, { key }, children);
+          return h(`h${node.level + 1}`, { key }, children);
         },
       }),
     );

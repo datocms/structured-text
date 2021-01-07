@@ -140,3 +140,39 @@ export function isSpan(node: Node): node is Span {
 export function hasChildren(node: Node): node is WithChildrenNode {
   return 'children' in node;
 }
+
+export function isRoot(node: Node): node is Root {
+  return node.type === rootType;
+}
+
+export function isParagraph(node: Node): node is Paragraph {
+  return node.type === paragraphType;
+}
+
+export function isListItem(node: Node): node is ListItem {
+  return node.type === listItemType;
+}
+
+export function isBlockquote(node: Node): node is Blockquote {
+  return node.type === blockquoteType;
+}
+
+export function isBlock(node: Node): node is Block {
+  return node.type === blockType;
+}
+
+export function isCode(node: Node): node is Code {
+  return node.type === codeType;
+}
+
+export function isLink(node: Node): node is Link {
+  return node.type === linkType;
+}
+
+export function isItemLink(node: Node): node is ItemLink {
+  return node.type === itemLinkType;
+}
+
+export function isInlineItem(node: Node): node is InlineItem {
+  return node.type === inlineItemType;
+}
