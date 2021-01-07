@@ -30,6 +30,10 @@
   "bugs": {
     "url": "https://github.com/stefanoverna/structured-text/issues"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "lodash.flatten": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/lodash.flatten": "^4.4.6"
+  }
 }

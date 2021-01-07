@@ -1,5 +1,5 @@
 {
-  "name": "datocms-structured-text-renderer",
+  "name": "datocms-structured-text-generic-html-renderer",
   "version": "0.1.0",
   "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields",
   "keywords": [
@@ -7,7 +7,7 @@
     "structured-text"
   ],
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/datocms-structured-text-renderer#readme",
+  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/generic-html-renderer#readme",
   "license": "MIT",
   "main": "dist/lib/index.js",
   "typings": "dist/types/index.d.ts",
@@ -33,10 +33,5 @@
   "dependencies": {
     "datocms-structured-text-utils": "^0.1.0"
   },
-  "devDependencies": {
-    "@types/hyperscript": "0.0.4",
-    "@types/vhtml": "^2.2.0",
-    "hyperscript": "^2.0.2",
-    "vhtml": "^2.2.0"
-  }
+  "devDependencies": {}
 }

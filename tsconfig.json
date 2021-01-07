@@ -8,8 +8,6 @@
     "strict": true,
     "strictNullChecks": false,
     "sourceMap": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
     "noImplicitReturns": true,
     "declaration": true,
     "allowSyntheticDefaultImports": true,

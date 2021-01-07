@@ -12,7 +12,6 @@ export type BlockNode =
 
 export type InlineNode = Span | Link | ItemLink | InlineItem;
 
-export const rootType = 'root' as const;
 export type RootType = 'root';
 
 export type Root = {
@@ -20,7 +19,6 @@ export type Root = {
   children: Array<Paragraph | Heading | List | Code | Blockquote | Block>;
 };
 
-export const paragraphType = 'paragraph' as const;
 export type ParagraphType = 'paragraph';
 
 export type Paragraph = {
@@ -28,7 +26,6 @@ export type Paragraph = {
   children: Array<InlineNode>;
 };
 
-export const headingType = 'heading' as const;
 export type HeadingType = 'heading';
 
 export type Heading = {
@@ -37,7 +34,6 @@ export type Heading = {
   children: Array<InlineNode>;
 };
 
-export const listType = 'list' as const;
 export type ListType = 'list';
 
 export type List = {
@@ -46,7 +42,6 @@ export type List = {
   children: Array<ListItem>;
 };
 
-export const listItemType = 'listItem' as const;
 export type ListItemType = 'listItem';
 
 export type ListItem = {
@@ -54,7 +49,6 @@ export type ListItem = {
   children: Array<Paragraph | List>;
 };
 
-export const codeType = 'code' as const;
 export type CodeType = 'code';
 
 export type Code = {
@@ -63,7 +57,6 @@ export type Code = {
   children: Array<Span>;
 };
 
-export const blockquoteType = 'blockquote' as const;
 export type BlockquoteType = 'blockquote';
 
 export type Blockquote = {
@@ -71,7 +64,6 @@ export type Blockquote = {
   children: Array<Paragraph>;
 };
 
-export const blockType = 'block' as const;
 export type BlockType = 'block';
 
 export type Block = {
@@ -79,7 +71,6 @@ export type Block = {
   item: string;
 };
 
-export const spanType = 'span' as const;
 export type SpanType = 'span';
 
 export type Mark =
@@ -96,7 +87,6 @@ export type Span = {
   value: string;
 };
 
-export const linkType = 'link' as const;
 export type LinkType = 'link';
 
 export type Link = {
@@ -105,7 +95,6 @@ export type Link = {
   children: Array<Span>;
 };
 
-export const itemLinkType = 'itemLink' as const;
 export type ItemLinkType = 'itemLink';
 
 export type ItemLink = {
@@ -114,7 +103,6 @@ export type ItemLink = {
   children: Array<Span>;
 };
 
-export const inlineItemType = 'inlineItem' as const;
 export type InlineItemType = 'inlineItem';
 
 export type InlineItem = {
@@ -124,55 +112,21 @@ export type InlineItem = {
 
 export type WithChildrenNode = Exclude<Node, Span | Block | InlineItem>;
 
-export type DastDocument = {
+export type Document = {
   schema: 'dast';
   document: Root;
 };
 
-export function isHeading(node: Node): node is Heading {
-  return node.type === headingType;
-}
-
-export function isSpan(node: Node): node is Span {
-  return node.type === spanType;
-}
-
-export function hasChildren(node: Node): node is WithChildrenNode {
-  return 'children' in node;
-}
-
-export function isRoot(node: Node): node is Root {
-  return node.type === rootType;
-}
-
-export function isParagraph(node: Node): node is Paragraph {
-  return node.type === paragraphType;
-}
-
-export function isListItem(node: Node): node is ListItem {
-  return node.type === listItemType;
-}
-
-export function isBlockquote(node: Node): node is Blockquote {
-  return node.type === blockquoteType;
-}
-
-export function isBlock(node: Node): node is Block {
-  return node.type === blockType;
-}
-
-export function isCode(node: Node): node is Code {
-  return node.type === codeType;
-}
-
-export function isLink(node: Node): node is Link {
-  return node.type === linkType;
-}
-
-export function isItemLink(node: Node): node is ItemLink {
-  return node.type === itemLinkType;
-}
-
-export function isInlineItem(node: Node): node is InlineItem {
-  return node.type === inlineItemType;
-}
+export type NodeType =
+  | ParagraphType
+  | HeadingType
+  | LinkType
+  | ItemLinkType
+  | InlineItemType
+  | BlockType
+  | ListType
+  | ListItemType
+  | BlockquoteType
+  | CodeType
+  | RootType
+  | SpanType;
