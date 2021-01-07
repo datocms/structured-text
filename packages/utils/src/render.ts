@@ -106,7 +106,7 @@ export function transformNode<
     return matchingTransform.apply({ adapter, node, children, key, ancestors });
   } else {
     console.warn(
-      `Don't know how to handle a node, so it will be skipped. Please specify a custom renderRule for that!`,
+      `Don't know how to render a node, so it will be skipped. Please specify a custom renderRule for it!`,
       node,
     );
     return null;

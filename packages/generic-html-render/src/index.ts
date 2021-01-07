@@ -90,13 +90,14 @@ export function render<
         return renderNode(markToTagName(mark), { key: 't-0' }, children);
       }, renderText(node.value));
     }),
+    // catch-all rule
     renderRule(
       (node: Node): node is Node => true,
       ({ adapter: { renderNode }, key, node }) => {
         return renderNode(
           'div',
           { key },
-          `Don't know how to handle a node, so it will be skipped. Please specify a custom renderRule for that!`,
+          `Don't know how to render a node, so it will be skipped. Please specify a custom render rule for it!`,
           renderNode(
             'pre',
             { key },
