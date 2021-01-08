@@ -24,8 +24,8 @@ export type Record = {
 
 export type StructuredText<R extends Record = Record> = {
   value: Document;
-  blocks: R[];
-  links: R[];
+  blocks?: R[];
+  links?: R[];
 };
 
 export type RenderResult<
