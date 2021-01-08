@@ -2,6 +2,16 @@ import { Document, Node } from './types';
 import { hasChildren } from './guards';
 import flatten from 'lodash.flatten';
 
+export class RenderError extends Error {
+  node: Node;
+
+  constructor(message: string, node: Node) {
+    super(message);
+    this.node = node;
+    Object.setPrototypeOf(this, RenderError.prototype);
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TrasformFn = (...args: any[]) => any;
 
@@ -29,7 +39,7 @@ export type RenderResult<
   | ReturnType<F>
   | ReturnType<M>
   | null
-  | (ReturnType<H> | ReturnType<T> | ReturnType<F> | ReturnType<M>)[];
+  | undefined;
 
 export type RenderContext<
   H extends TrasformFn,
@@ -42,7 +52,7 @@ export type RenderContext<
   node: N;
   ancestors: Node[];
   key: string;
-  children: RenderResult<H, T, M, F>;
+  children: RenderResult<H, T, M, F>[] | undefined;
 };
 
 export interface RenderRule<
@@ -105,11 +115,10 @@ export function transformNode<
   if (matchingTransform) {
     return matchingTransform.apply({ adapter, node, children, key, ancestors });
   } else {
-    console.warn(
-      `Don't know how to render a node, so it will be skipped. Please specify a custom renderRule for it!`,
+    throw new RenderError(
+      `Don't know how to render a node with type "${node.type}". Please specify a custom renderRule for it!`,
       node,
     );
-    return null;
   }
 }
 

@@ -54,6 +54,13 @@ export const allowedChildren: AllowedChildren = {
   [spanNodeType]: [],
 };
 
+export const inlineNodeTypes = [
+  spanNodeType,
+  linkNodeType,
+  itemLinkNodeType,
+  inlineItemNodeType,
+];
+
 type AllowedAttributes = Record<NodeType, string[]>;
 
 export const allowedAttributes: AllowedAttributes = {

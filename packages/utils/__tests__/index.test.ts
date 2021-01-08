@@ -7,6 +7,7 @@ import {
   StructuredText,
   renderRule,
   Node,
+  RenderError,
 } from '../src';
 
 describe('datocms-structured-text-utils', () => {
@@ -85,13 +86,13 @@ describe('datocms-structured-text-utils', () => {
 
       describe('no rules', () => {
         it('returns null', () => {
-          expect(render(adapter, structuredText, [])).toMatchInlineSnapshot(
-            `null`,
-          );
+          expect(() => {
+            render(adapter, structuredText, []);
+          }).toThrow(RenderError);
         });
       });
 
-      describe('no rules', () => {
+      describe('some rules', () => {
         it('returns null', () => {
           expect(
             render(adapter, structuredText, [
@@ -102,94 +103,7 @@ describe('datocms-structured-text-utils', () => {
                 },
               ),
             ]),
-          ).toMatchInlineSnapshot(`
-            Object {
-              "ancestors": Array [],
-              "children": Array [
-                Object {
-                  "ancestors": Array [
-                    Object {
-                      "children": Array [
-                        Object {
-                          "marks": Array [
-                            "strikethrough",
-                          ],
-                          "type": "span",
-                          "value": "Foobar",
-                        },
-                      ],
-                      "type": "paragraph",
-                    },
-                  ],
-                  "children": Array [
-                    Object {
-                      "ancestors": Array [
-                        Object {
-                          "children": Array [
-                            Object {
-                              "marks": Array [
-                                "strikethrough",
-                              ],
-                              "type": "span",
-                              "value": "Foobar",
-                            },
-                          ],
-                          "type": "paragraph",
-                        },
-                        Object {
-                          "marks": Array [
-                            "strikethrough",
-                          ],
-                          "type": "span",
-                          "value": "Foobar",
-                        },
-                      ],
-                      "children": undefined,
-                      "key": "t-0",
-                      "node": Object {
-                        "marks": Array [
-                          "strikethrough",
-                        ],
-                        "type": "span",
-                        "value": "Foobar",
-                      },
-                    },
-                  ],
-                  "key": "t-0",
-                  "node": Object {
-                    "children": Array [
-                      Object {
-                        "marks": Array [
-                          "strikethrough",
-                        ],
-                        "type": "span",
-                        "value": "Foobar",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                },
-              ],
-              "key": "t-0",
-              "node": Object {
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "marks": Array [
-                          "strikethrough",
-                        ],
-                        "type": "span",
-                        "value": "Foobar",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "type": "root",
-              },
-            }
-          `);
+          ).toMatchSnapshot();
         });
       });
     });

@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`datocms-structured-text-utils render some value some rules returns null 1`] = `
+Object {
+  "ancestors": Array [],
+  "children": Array [
+    Object {
+      "ancestors": Array [
+        Object {
+          "children": Array [
+            Object {
+              "marks": Array [
+                "strikethrough",
+              ],
+              "type": "span",
+              "value": "Foobar",
+            },
+          ],
+          "type": "paragraph",
+        },
+      ],
+      "children": Array [
+        Object {
+          "ancestors": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "marks": Array [
+                    "strikethrough",
+                  ],
+                  "type": "span",
+                  "value": "Foobar",
+                },
+              ],
+              "type": "paragraph",
+            },
+            Object {
+              "marks": Array [
+                "strikethrough",
+              ],
+              "type": "span",
+              "value": "Foobar",
+            },
+          ],
+          "children": undefined,
+          "key": "t-0",
+          "node": Object {
+            "marks": Array [
+              "strikethrough",
+            ],
+            "type": "span",
+            "value": "Foobar",
+          },
+        },
+      ],
+      "key": "t-0",
+      "node": Object {
+        "children": Array [
+          Object {
+            "marks": Array [
+              "strikethrough",
+            ],
+            "type": "span",
+            "value": "Foobar",
+          },
+        ],
+        "type": "paragraph",
+      },
+    },
+  ],
+  "key": "t-0",
+  "node": Object {
+    "children": Array [
+      Object {
+        "children": Array [
+          Object {
+            "marks": Array [
+              "strikethrough",
+            ],
+            "type": "span",
+            "value": "Foobar",
+          },
+        ],
+        "type": "paragraph",
+      },
+    ],
+    "type": "root",
+  },
+}
+`;

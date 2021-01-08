@@ -10,7 +10,6 @@ import {
   isRoot,
   isSpan,
   Mark,
-  Node,
   Record,
   render as genericRender,
   RenderResult,
@@ -18,9 +17,10 @@ import {
   renderRule,
   StructuredText,
   TrasformFn,
+  RenderError,
 } from 'datocms-structured-text-utils';
 
-export { renderRule };
+export { renderRule, RenderError };
 
 export function markToTagName(mark: Mark): string {
   switch (mark) {
@@ -90,21 +90,5 @@ export function render<
         return renderNode(markToTagName(mark), { key: 't-0' }, children);
       }, renderText(node.value));
     }),
-    // catch-all rule
-    renderRule(
-      (node: Node): node is Node => true,
-      ({ adapter: { renderNode }, key, node }) => {
-        return renderNode(
-          'div',
-          { key },
-          `Don't know how to render a node, so it will be skipped. Please specify a custom render rule for it!`,
-          renderNode(
-            'pre',
-            { key },
-            renderNode('code', null, JSON.stringify(node, null, 2)),
-          ),
-        );
-      },
-    ),
   ]);
 }
