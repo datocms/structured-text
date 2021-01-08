@@ -13,6 +13,8 @@ import {
   Node,
   Span,
   WithChildrenNode,
+  InlineNode,
+  NodeType,
 } from './types';
 
 import {
@@ -28,10 +30,15 @@ import {
   linkNodeType,
   itemLinkNodeType,
   inlineItemNodeType,
+  inlineNodeTypes,
 } from './definitions';
 
 export function hasChildren(node: Node): node is WithChildrenNode {
   return 'children' in node;
+}
+
+export function isInline(node: Node): node is InlineNode {
+  return (inlineNodeTypes as NodeType[]).includes(node.type);
 }
 
 export function isHeading(node: Node): node is Heading {
