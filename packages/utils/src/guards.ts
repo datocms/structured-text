@@ -37,7 +37,7 @@ export function hasChildren(node: Node): node is WithChildrenNode {
   return 'children' in node;
 }
 
-export function isInline(node: Node): node is InlineNode {
+export function isInlineNode(node: Node): node is InlineNode {
   return (inlineNodeTypes as NodeType[]).includes(node.type);
 }
 
