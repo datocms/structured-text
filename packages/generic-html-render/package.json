@@ -24,8 +24,7 @@
   },
   "scripts": {
     "build": "tsc --module commonjs",
-    "prebuild": "rimraf dist",
-    "lint": "../../node_modules/.bin/eslint . --ext .ts,.tsx"
+    "prebuild": "rimraf dist"
   },
   "bugs": {
     "url": "https://github.com/stefanoverna/structured-text/issues"

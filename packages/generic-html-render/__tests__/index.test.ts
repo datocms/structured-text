@@ -784,7 +784,7 @@ describe('render', () => {
                         "key": "t-1",
                       },
                       "children": Array [
-                        "Don't know how to handle a node, so it will be skipped. Please specify a custom renderRule for that!",
+                        "Don't know how to render a node, so it will be skipped. Please specify a custom render rule for it!",
                         Object {
                           "attrs": Object {
                             "key": "t-1",

@@ -19,9 +19,9 @@
     "url": "git://github.com/stefanoverna/structured-text.git"
   },
   "scripts": {
-    "test": "jest",
+    "test": "npm run lint && jest",
     "build": "lerna run build",
-    "lint": "lerna run lint",
+    "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write \"**/*.{ts,tsx,json}\""
   },
   "license": "MIT",
