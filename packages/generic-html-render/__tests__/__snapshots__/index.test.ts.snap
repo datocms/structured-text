@@ -44,7 +44,13 @@ Array [
       "key": "t-3",
     },
     "children": Array [
-      "You probably build websites and think your 💩  is special. You think your 13 megabyte parallax-ative home page is going to get you",
+      "You probably build websites and think your 💩  is special.",
+      Object {
+        "attrs": undefined,
+        "children": Array [],
+        "tagName": "br",
+      },
+      "You think your 13 megabyte parallax-ative home page is going to get you",
       Object {
         "attrs": Object {
           "key": "t-1",
@@ -271,7 +277,9 @@ Array [
             "attrs": Object {
               "key": "t-0",
             },
-            "children": Array [],
+            "children": Array [
+              "",
+            ],
             "tagName": "p",
           },
         ],

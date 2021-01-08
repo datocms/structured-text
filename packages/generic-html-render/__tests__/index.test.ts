@@ -73,7 +73,7 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
             {
               type: 'span',
               value:
-                'You probably build websites and think your 💩  is special. You think your 13 megabyte parallax-ative home page is going to get you',
+                'You probably build websites and think your 💩  is special.\nYou think your 13 megabyte parallax-ative home page is going to get you',
             },
             {
               type: 'span',

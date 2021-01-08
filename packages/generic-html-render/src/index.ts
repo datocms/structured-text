@@ -36,6 +36,7 @@ export function markToTagName(mark: Mark): string {
       return mark;
   }
 }
+
 export function render<
   R extends Record,
   H extends TrasformFn,
@@ -86,9 +87,22 @@ export function render<
     ),
     renderRule(isSpan, ({ adapter: { renderNode, renderText }, key, node }) => {
       const marks = node.marks || [];
+
+      const lines = node.value.split(/\n/);
+
+      const newlinesToBrContent =
+        lines.length > 0
+          ? lines.slice(1).reduce(
+              (acc, line) => {
+                return acc.concat([renderNode('br'), line]);
+              },
+              [lines[0]],
+            )
+          : renderText(node.value, key);
+
       return marks.reduce<RenderResult<H, T, M, F>>((children, mark) => {
         return renderNode(markToTagName(mark), { key }, children);
-      }, renderText(node.value, key));
+      }, newlinesToBrContent);
     }),
   ]);
 }
