@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-generic-html-renderer",
-  "version": "0.1.0-alpha.9",
+  "version": "0.1.0-alpha.10",
   "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields",
   "keywords": [
     "datocms",
