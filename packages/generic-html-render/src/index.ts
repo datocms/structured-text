@@ -93,10 +93,13 @@ export function render<
       const textWithNewlinesConvertedToBr =
         lines.length > 0
           ? lines.slice(1).reduce(
-              (acc, line) => {
-                return acc.concat([renderNode('br'), line]);
+              (acc, line, index) => {
+                return acc.concat([
+                  renderNode('br', { key: `br-${index}` }),
+                  renderText(line, `line-${index}`),
+                ]);
               },
-              [lines[0]],
+              [renderText(lines[0], 'line-first')],
             )
           : renderText(node.value, key);
 

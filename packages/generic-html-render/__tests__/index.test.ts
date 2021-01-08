@@ -478,15 +478,25 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
 type Tag = {
   tagName: string;
   attrs: Record<string, string>;
-  children: Array<string | Tag>;
+  children: Array<Tag | Text | Fragment>;
+};
+
+type Text = {
+  text: string;
+  key: string;
+};
+
+type Fragment = {
+  children: Array<Tag | Text | Fragment>;
+  key: string;
 };
 
 const dummyRenderer = (
   tagName: string,
   attrs: Record<string, string>,
-  ...children: Array<string | Tag | Array<string | Tag>>
+  ...children: Array<Text | Fragment | Tag | Array<Text | Fragment | Tag>>
 ): Tag => {
-  const sanitizedChildren = children.reduce<Array<string | Tag>>(
+  const sanitizedChildren = children.reduce<Array<Text | Fragment | Tag>>(
     (acc, child) =>
       Array.isArray(child) ? [...acc, ...child] : [...acc, child],
     [],
@@ -502,28 +512,36 @@ const dummyRenderer = (
 const dummyAdapter = {
   renderNode: dummyRenderer,
   renderMark: dummyRenderer,
-  renderFragment: (chunks: (string | Tag)[]) => chunks,
-  renderText: (text: string) => text,
+  renderFragment: (children: (Tag | Text | Fragment)[], key: string) => ({
+    children,
+    key,
+  }),
+  renderText: (text: string, key: string) => ({ text, key }),
 };
 
 describe('render', () => {
   it('transforms a structured text GraphQL response into HTML using an adapter', () => {
     expect(
       render(dummyAdapter, value, [
-        renderRule(isInlineItem, ({ node, adapter: { renderNode }, key }) => {
-          const record = value.links.find((record) => record.id === node.item);
+        renderRule(
+          isInlineItem,
+          ({ node, adapter: { renderNode, renderText }, key }) => {
+            const record = value.links.find(
+              (record) => record.id === node.item,
+            );
 
-          switch (record.__typename) {
-            case 'BlogPostRecord':
-              return renderNode(
-                'a',
-                { key, href: `/blog/${record.id}` },
-                record.title,
-              );
-            default:
-              return null;
-          }
-        }),
+            switch (record.__typename) {
+              case 'BlogPostRecord':
+                return renderNode(
+                  'a',
+                  { key, href: `/blog/${record.id}` },
+                  renderText(record.title, 'p-0'),
+                );
+              default:
+                return null;
+            }
+          },
+        ),
         renderRule(
           isItemLink,
           ({ node, adapter: { renderNode }, key, children }) => {
@@ -531,7 +549,6 @@ describe('render', () => {
               (record) => record.id === node.item,
             );
 
-            children;
             switch (record.__typename) {
               case 'BlogPostRecord':
                 return renderNode(
