@@ -49,8 +49,8 @@ export function render<
 ): RenderResult<H, T, M, F> {
   return genericRender(adapter, structuredText, [
     ...customRules,
-    renderRule(isRoot, ({ adapter: { renderFragment }, children }) => {
-      return renderFragment(children);
+    renderRule(isRoot, ({ adapter: { renderFragment }, key, children }) => {
+      return renderFragment(children, key);
     }),
     renderRule(isParagraph, ({ adapter: { renderNode }, key, children }) => {
       return renderNode('p', { key }, children);
@@ -84,11 +84,11 @@ export function render<
         return renderNode(`h${node.level}`, { key }, children);
       },
     ),
-    renderRule(isSpan, ({ adapter: { renderNode, renderText }, node }) => {
+    renderRule(isSpan, ({ adapter: { renderNode, renderText }, key, node }) => {
       const marks = node.marks || [];
       return marks.reduce<RenderResult<H, T, M, F>>((children, mark) => {
-        return renderNode(markToTagName(mark), { key: 't-0' }, children);
-      }, renderText(node.value));
+        return renderNode(markToTagName(mark), { key }, children);
+      }, renderText(node.value, key));
     }),
   ]);
 }
