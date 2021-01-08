@@ -28,22 +28,19 @@ export const allowedNodeTypes = [
   spanNodeType,
 ];
 
-type AllowedChildren = Record<
-  NodeType,
-  'text' | 'inlineNodesAndText' | NodeType[]
->;
+type AllowedChildren = Record<NodeType, 'inlineNodes' | NodeType[]>;
 
 export const allowedChildren: AllowedChildren = {
   [blockquoteNodeType]: [paragraphNodeType],
   [blockNodeType]: [],
-  [codeNodeType]: 'text',
-  [headingNodeType]: 'inlineNodesAndText',
+  [codeNodeType]: [],
+  [headingNodeType]: 'inlineNodes',
   [inlineItemNodeType]: [],
-  [itemLinkNodeType]: 'inlineNodesAndText',
-  [linkNodeType]: 'inlineNodesAndText',
+  [itemLinkNodeType]: 'inlineNodes',
+  [linkNodeType]: 'inlineNodes',
   [listItemNodeType]: [paragraphNodeType, listNodeType],
   [listNodeType]: [listItemNodeType],
-  [paragraphNodeType]: 'inlineNodesAndText',
+  [paragraphNodeType]: 'inlineNodes',
   [rootNodeType]: [
     blockquoteNodeType,
     codeNodeType,
@@ -66,7 +63,7 @@ type AllowedAttributes = Record<NodeType, string[]>;
 export const allowedAttributes: AllowedAttributes = {
   [blockquoteNodeType]: ['children'],
   [blockNodeType]: ['item'],
-  [codeNodeType]: ['language', 'children'],
+  [codeNodeType]: ['language', 'code'],
   [headingNodeType]: ['level', 'children'],
   [inlineItemNodeType]: ['item'],
   [itemLinkNodeType]: ['item', 'children'],

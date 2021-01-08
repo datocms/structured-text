@@ -68,11 +68,11 @@ export function render<
     renderRule(isBlockquote, ({ adapter: { renderNode }, key, children }) => {
       return renderNode('blockquote', { key }, children);
     }),
-    renderRule(isCode, ({ adapter: { renderNode }, key, node, children }) => {
+    renderRule(isCode, ({ adapter: { renderNode, renderText }, key, node }) => {
       return renderNode(
         'pre',
         { key, 'data-language': node.language },
-        renderNode('code', null, children),
+        renderNode('code', null, renderText(node.code)),
       );
     }),
     renderRule(isLink, ({ adapter: { renderNode }, key, children, node }) => {

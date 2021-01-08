@@ -10,7 +10,7 @@ Array [
       "This is a ",
       Object {
         "attrs": Object {
-          "key": "t-0",
+          "key": "t-1",
         },
         "children": Array [
           "title",
@@ -47,7 +47,7 @@ Array [
       "You probably build websites and think your 💩  is special. You think your 13 megabyte parallax-ative home page is going to get you",
       Object {
         "attrs": Object {
-          "key": "t-0",
+          "key": "t-1",
         },
         "children": Array [
           " some fucking Awwward banner y",
@@ -350,7 +350,7 @@ Array [
       "This is a website. ",
       Object {
         "attrs": Object {
-          "key": "t-0",
+          "key": "t-1",
         },
         "children": Array [
           "Look at it.",

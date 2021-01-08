@@ -54,7 +54,7 @@ export type CodeType = 'code';
 export type Code = {
   type: CodeType;
   language?: string;
-  children: Array<Span>;
+  code: string;
 };
 
 export type BlockquoteType = 'blockquote';
@@ -110,7 +110,7 @@ export type InlineItem = {
   item: string;
 };
 
-export type WithChildrenNode = Exclude<Node, Span | Block | InlineItem>;
+export type WithChildrenNode = Exclude<Node, Code | Span | Block | InlineItem>;
 
 export type Document = {
   schema: 'dast';
