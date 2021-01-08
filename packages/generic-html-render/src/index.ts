@@ -90,7 +90,7 @@ export function render<
 
       const lines = node.value.split(/\n/);
 
-      const newlinesToBrContent =
+      const textWithNewlinesConvertedToBr =
         lines.length > 0
           ? lines.slice(1).reduce(
               (acc, line) => {
@@ -102,7 +102,7 @@ export function render<
 
       return marks.reduce<RenderResult<H, T, M, F>>((children, mark) => {
         return renderNode(markToTagName(mark), { key }, children);
-      }, newlinesToBrContent);
+      }, textWithNewlinesConvertedToBr);
     }),
   ]);
 }

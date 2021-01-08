@@ -21,6 +21,7 @@
   "scripts": {
     "test": "npm run lint && jest",
     "build": "lerna run build",
+    "release": "npm run test && npm run build && lerna publish",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write \"**/*.{ts,tsx,json}\""
   },
