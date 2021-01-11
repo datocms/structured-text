@@ -23,7 +23,7 @@
     "url": "git+https://github.com/stefanoverna/structured-text.git"
   },
   "scripts": {
-    "build": "tsc --module umd",
+    "build": "tsc --module commonjs",
     "prebuild": "rimraf dist"
   },
   "bugs": {
