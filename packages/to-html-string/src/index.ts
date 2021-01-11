@@ -40,8 +40,7 @@ const vhtmlAdapter = (
 export const defaultAdapter = {
   renderNode: vhtmlAdapter,
   renderMark: vhtmlAdapter,
-  renderFragment: (children: AdapterReturn[]): AdapterReturn =>
-    children.join(''),
+  renderFragment: (children: AdapterReturn[]): string => children.join(''),
   renderText: (text: string): AdapterReturn => text,
 };
 
@@ -101,7 +100,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
   renderMark,
   renderFragment,
   customRules,
-}: StructuredTextPropTypes<R>): string | null {
+}: StructuredTextPropTypes<R>): ReturnType<F> | null {
   if (!structuredText) {
     return null;
   }

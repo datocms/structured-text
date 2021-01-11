@@ -1,12 +1,16 @@
+/** @jsx h */
+
 import {
   render,
   StructuredTextGraphQlResponse,
   RenderError,
   renderRule,
-} from '../src/';
+} from '../src';
 import { isHeading } from 'datocms-structured-text-utils';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import h from 'hyperscript';
 
-describe('StructuredText', () => {
+describe('render', () => {
   describe('with no value', () => {
     it('renders null', () => {
       expect(render({ structuredText: null })).toMatchSnapshot();
@@ -164,14 +168,20 @@ describe('StructuredText', () => {
                   return null;
               }
             },
-            renderBlock: ({ record, adapter }) => {
+            renderBlock: ({ record }) => {
               switch (record.__typename) {
                 case 'QuoteRecord':
-                  return adapter.renderNode(
-                    'figure',
-                    null,
-                    adapter.renderNode('blockquote', null, record.quote),
-                    adapter.renderNode('figcaption', null, record.author),
+                  // return adapter.renderNode(
+                  //   'figure',
+                  //   null,
+                  //   adapter.renderNode('blockquote', null, record.quote),
+                  //   adapter.renderNode('figcaption', null, record.author),
+                  // );
+                  return (
+                    <figure>
+                      <blockquote>{record.quote}</blockquote>
+                      <figcaption>{record.author}</figcaption>
+                    </figure>
                   );
                 default:
                   return null;
