@@ -1,5 +1,5 @@
 {
-  "name": "to-plain-text",
+  "name": "datocms-structured-text-to-plain-text",
   "version": "0.1.0-alpha.15",
   "description": "Convert DatoCMS Structured Text field to plain text",
   "keywords": [
