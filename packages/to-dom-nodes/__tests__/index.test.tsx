@@ -200,10 +200,28 @@ describe('render', () => {
       });
     });
 
+    describe('skipping rendering of custom nodes', () => {
+      it('renders the document', () => {
+        expect(
+          render({
+            structuredText,
+            renderInlineRecord: () => null,
+            renderLinkToRecord: () => null,
+            renderBlock: () => null,
+          }),
+        ).toMatchSnapshot();
+      });
+    });
+
     describe('with missing record', () => {
       it('raises an error', () => {
         expect(() => {
-          render({ structuredText, renderInlineRecord: () => null });
+          render({
+            structuredText: { ...structuredText, links: [] },
+            renderInlineRecord: () => null,
+            renderLinkToRecord: () => null,
+            renderBlock: () => null,
+          });
         }).toThrow(RenderError);
       });
     });

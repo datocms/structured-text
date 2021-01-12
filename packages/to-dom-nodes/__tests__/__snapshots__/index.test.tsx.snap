@@ -190,6 +190,72 @@ Array [
 ]
 `;
 
+exports[`render with links/blocks skipping rendering of custom nodes renders the document 1`] = `
+Array [
+  Node {
+    "_getProperty": [Function],
+    "_setProperty": [Function],
+    "attributes": Array [],
+    "childNodes": Array [
+      Node {
+        "nodeName": "#text",
+        "nodeType": 3,
+        "parentElement": [Circular],
+        "value": "This is a",
+      },
+      Node {
+        "_getProperty": [Function],
+        "_setProperty": [Function],
+        "attributes": Array [],
+        "childNodes": Array [
+          Node {
+            "nodeName": "#text",
+            "nodeType": 3,
+            "parentElement": [Circular],
+            "value": "title",
+          },
+        ],
+        "classList": Object {
+          "add": [Function],
+          "contains": [Function],
+          "item": [Function],
+          "length": 0,
+          "remove": [Function],
+          "toString": [Function],
+          "toggle": [Function],
+        },
+        "className": "",
+        "dataset": Object {},
+        "nodeName": "mark",
+        "parentElement": [Circular],
+        "style": Style {
+          "el": [Circular],
+          "styles": Array [],
+        },
+        "tagName": "mark",
+      },
+    ],
+    "classList": Object {
+      "add": [Function],
+      "contains": [Function],
+      "item": [Function],
+      "length": 0,
+      "remove": [Function],
+      "toString": [Function],
+      "toggle": [Function],
+    },
+    "className": "",
+    "dataset": Object {},
+    "nodeName": "h1",
+    "style": Style {
+      "el": [Circular],
+      "styles": Array [],
+    },
+    "tagName": "h1",
+  },
+]
+`;
+
 exports[`render with links/blocks with default rules renders the document 1`] = `
 Array [
   Node {

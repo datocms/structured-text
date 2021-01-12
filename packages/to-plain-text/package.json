@@ -1,0 +1,36 @@
+{
+  "name": "to-plain-text",
+  "version": "0.1.0-alpha.14",
+  "description": "Convert DatoCMS Structured Text field to plain text",
+  "keywords": [
+    "datocms",
+    "structured-text"
+  ],
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/to-plain-text#readme",
+  "license": "MIT",
+  "main": "dist/lib/index.js",
+  "typings": "dist/types/index.d.ts",
+  "directories": {
+    "lib": "dist",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stefanoverna/structured-text.git"
+  },
+  "scripts": {
+    "build": "tsc --module commonjs",
+    "prebuild": "rimraf dist"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanoverna/structured-text/issues"
+  },
+  "dependencies": {
+    "datocms-structured-text-utils": "^0.1.0-alpha.14",
+    "datocms-structured-text-generic-html-renderer": "^0.1.0-alpha.14"
+  }
+}

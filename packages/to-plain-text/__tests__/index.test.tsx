@@ -1,5 +1,3 @@
-/** @jsx h */
-
 import {
   render,
   StructuredTextGraphQlResponse,
@@ -7,8 +5,6 @@ import {
   renderRule,
 } from '../src';
 import { isHeading } from 'datocms-structured-text-utils';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import h from 'vhtml';
 
 describe('render', () => {
   describe('with no value', () => {
@@ -56,8 +52,11 @@ describe('render', () => {
             customRules: [
               renderRule(
                 isHeading,
-                ({ adapter: { renderNode }, node, children, key }) => {
-                  return renderNode(`h${node.level + 1}`, { key }, children);
+                ({ node, children, adapter: { renderFragment } }) => {
+                  return renderFragment([
+                    `Heading ${node.level}:`,
+                    ...children,
+                  ]);
                 },
               ),
             ],
@@ -144,26 +143,18 @@ describe('render', () => {
         expect(
           render({
             structuredText,
-            renderInlineRecord: ({ adapter, record }) => {
+            renderInlineRecord: ({ record }) => {
               switch (record.__typename) {
                 case 'DocPageRecord':
-                  return adapter.renderNode(
-                    'a',
-                    { href: `/docs/${record.slug}` },
-                    record.title,
-                  );
+                  return record.title;
                 default:
                   return null;
               }
             },
-            renderLinkToRecord: ({ record, children, adapter }) => {
+            renderLinkToRecord: ({ record, children }) => {
               switch (record.__typename) {
                 case 'DocPageRecord':
-                  return adapter.renderNode(
-                    'a',
-                    { href: `/docs/${record.slug}` },
-                    children,
-                  );
+                  return children;
                 default:
                   return null;
               }
@@ -171,18 +162,7 @@ describe('render', () => {
             renderBlock: ({ record }) => {
               switch (record.__typename) {
                 case 'QuoteRecord':
-                  // return adapter.renderNode(
-                  //   'figure',
-                  //   null,
-                  //   adapter.renderNode('blockquote', null, record.quote),
-                  //   adapter.renderNode('figcaption', null, record.author),
-                  // );
-                  return (
-                    <figure>
-                      <blockquote>{record.quote}</blockquote>
-                      <figcaption>{record.author}</figcaption>
-                    </figure>
-                  );
+                  return `${record.quote} — ${record.author}`;
                 default:
                   return null;
               }
@@ -192,28 +172,13 @@ describe('render', () => {
       });
     });
 
-    describe('with missing renderInlineRecord prop', () => {
-      it('raises an error', () => {
-        expect(() => {
-          render({ structuredText });
-        }).toThrow(RenderError);
+    describe('with missing renderInlineRecord', () => {
+      it('skips the node', () => {
+        expect(render({ structuredText })).toMatchSnapshot();
       });
     });
 
-    describe('skipping rendering of custom nodes', () => {
-      it('renders the document', () => {
-        expect(
-          render({
-            structuredText,
-            renderInlineRecord: () => null,
-            renderLinkToRecord: () => null,
-            renderBlock: () => null,
-          }),
-        ).toMatchSnapshot();
-      });
-    });
-
-    describe('with missing record', () => {
+    describe('with missing record and renderInlineRecord specified', () => {
       it('raises an error', () => {
         expect(() => {
           render({
