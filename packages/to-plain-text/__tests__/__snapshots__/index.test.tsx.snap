@@ -6,6 +6,6 @@ exports[`render simple dast with no links/blocks with default rules renders the 
 
 exports[`render with links/blocks with default rules renders the document 1`] = `"This is a title How to code here! Foo bar. — Mark Smith"`;
 
-exports[`render with links/blocks with missing renderInlineRecord skips the node 1`] = `"This is a title"`;
+exports[`render with links/blocks with missing renderInlineRecord skips the node 1`] = `"This is a title here!"`;
 
 exports[`render with no value renders null 1`] = `null`;

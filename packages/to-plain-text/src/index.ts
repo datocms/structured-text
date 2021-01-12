@@ -141,7 +141,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
       }),
       renderRule(isItemLink, ({ node, children, adapter }) => {
         if (!renderLinkToRecord || !structuredText.links) {
-          return null;
+          return children;
         }
 
         const item = structuredText.links.find((item) => item.id === node.item);
