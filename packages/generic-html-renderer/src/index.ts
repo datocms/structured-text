@@ -29,7 +29,7 @@ export function markToTagName(mark: Mark): string {
     case 'underline':
       return 'u';
     case 'strikethrough':
-      return 'strike';
+      return 'del';
     case 'highlight':
       return 'mark';
     default:
