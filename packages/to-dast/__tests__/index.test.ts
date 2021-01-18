@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { htmlToDast } from '../src';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
+import { findAll, find } from 'unist-utils-core';
 
 describe('toDast', () => {
   it('works with empty document', async () => {
@@ -237,6 +238,7 @@ describe('toDast', () => {
             "paragraph",
           ]
         `);
+        expect(findAll(dast, 'heading')).toHaveLength(0);
       });
 
       it('ignores invalid children', async () => {
@@ -245,11 +247,12 @@ describe('toDast', () => {
         `;
         const dast = await htmlToDast(html);
         expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'paragraph')).toHaveLength(0);
       });
 
-      it('allows hyperlink as children', async () => {
+      it('allows link as children', async () => {
         const html = `
-          <h1>span <a href="#">hyperlink</a></h1>
+          <h1>span <a href="#">link</a></h1>
         `;
         const dast = await htmlToDast(html);
         expect(validate(dast).valid).toBeTruthy();
@@ -263,7 +266,7 @@ describe('toDast', () => {
               "children": Array [
                 Object {
                   "type": "span",
-                  "value": "hyperlink",
+                  "value": "link",
                 },
               ],
               "type": "link",
@@ -271,6 +274,203 @@ describe('toDast', () => {
             },
           ]
         `);
+      });
+
+      it('is converted to text when inside of another dast node (except root)', async () => {
+        const html = `
+          <section>
+            <ul>
+              <h1>inside ul</h1>
+            </ul>
+          </section>
+          <pre>
+            <code>
+              <h1>inside code</h1>
+            </code>
+          </pre>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'heading')).toHaveLength(0);
+      });
+    });
+
+    describe('code', () => {
+      it('creates valid code node', async () => {
+        const html = `
+          <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">import</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"file.html"</span> /&gt;</span></code></pre>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children[0]).toMatchInlineSnapshot(`
+          Object {
+            "code": "<import src=\\"file.html\\" />",
+            "language": "html",
+            "type": "code",
+          }
+        `);
+      });
+
+      it('turns pre into span if not allowed inside the parent dast node', async () => {
+        const html = `
+          <ul>
+            <li><pre><code class="language-html">dast()</code></pre></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'code')).toHaveLength(0);
+        expect(findAll(dast, 'span')[0]).toMatchInlineSnapshot(`
+          Object {
+            "type": "span",
+            "value": "dast()",
+          }
+        `);
+      });
+
+      it('turns code elements into code blocks if in root context', async () => {
+        const html = `
+          <code class="language-html">dast()</code>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'code')).toHaveLength(1);
+        expect(findAll(dast, 'code')[0]).toMatchInlineSnapshot(`
+          Object {
+            "code": "dast()",
+            "language": "html",
+            "type": "code",
+          }
+        `);
+      });
+
+      it('works without language information', async () => {
+        const html = `
+          <code>dast()</code>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'code')).toHaveLength(1);
+        expect(findAll(dast, 'code')[0].language).toBeFalsy();
+      });
+    });
+
+    describe('blockquote', () => {
+      it('creates valid blockquote node', async () => {
+        const html = `
+          <blockquote>1</blockquote>
+          <blockquote><span>2</span></blockquote>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+          Array [
+            "blockquote",
+            "blockquote",
+          ]
+        `);
+        expect(dast.children[0]).toMatchInlineSnapshot(`
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "type": "span",
+                    "value": "1",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "blockquote",
+          }
+        `);
+      });
+    });
+
+    describe.only('list', () => {
+      it('creates valid list', async () => {
+        const html = `
+          <ul><li>test</li></ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+      });
+
+      it('wraps children with listItem', async () => {
+        const html = `
+          <ul>
+            <li>1</li>
+            2
+            <li>3</li>
+            <li><p>4</p></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(
+          find(dast, 'list').children.every(
+            (child) => child.type === 'listItem',
+          ),
+        ).toBeTruthy();
+      });
+
+      it('supports nested lists', async () => {
+        const html = `
+          <ul>
+            <li><ul><li>1</li></ul></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(find(dast, 'list'), 'list')).toBeTruthy();
+      });
+
+      it('converts nested blockquote to text', async () => {
+        const html = `
+          <ul>
+            <li><blockquote>1</blockquote></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'blockquote')).toHaveLength(0);
+        expect(find(dast, 'span').value).toBe('1');
+      });
+
+      it('converts nested heading to text', async () => {
+        const html = `
+          <ul>
+            <li><h1>1</h1></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'h1')).toHaveLength(0);
+        expect(find(dast, 'span').value).toBe('1');
+      });
+
+      it('converts nested code to text', async () => {
+        const html = `
+          <ul>
+            <li><code>1</code></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'code')).toHaveLength(0);
+        expect(find(dast, 'span').value).toBe('1');
+      });
+
+      it('supports nested link', async () => {
+        const html = `
+          <ul>
+            <li><a href="#">1</a></li>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(findAll(dast, 'link')).toHaveLength(1);
       });
     });
   });

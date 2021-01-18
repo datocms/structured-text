@@ -24,10 +24,20 @@ export function validate(root: Node): { valid: boolean; message?: string } {
           node.type
         }" has an invalid attribute "${invalidAttribute}":\n\n ${JSON.stringify(
           node,
+          null,
+          2,
         )}`,
       };
     }
-    if ('marks' in node && Array.isArray(node.marks)) {
+    if ('marks' in node) {
+      if (!Array.isArray(node.marks)) {
+        return {
+          valid: false,
+          message: `"${
+            node.type
+          }"'s marks is not an Array:\n\n ${JSON.stringify(node, null, 2)}`,
+        };
+      }
       const invalidMark = node.marks.find(
         (mark: Mark) => !allowedMarks.includes(mark),
       );
@@ -36,11 +46,23 @@ export function validate(root: Node): { valid: boolean; message?: string } {
           valid: false,
           message: `"${
             node.type
-          }" has an invalid mark "${invalidMark}":\n\n ${JSON.stringify(node)}`,
+          }" has an invalid mark "${invalidMark}":\n\n ${JSON.stringify(
+            node,
+            null,
+            2,
+          )}`,
         };
       }
     }
-    if ('children' in node && Array.isArray(node.children)) {
+    if ('children' in node) {
+      if (!Array.isArray(node.children)) {
+        return {
+          valid: false,
+          message: `"${
+            node.type
+          }"'s children is not an Array:\n\n ${JSON.stringify(node, null, 2)}`,
+        };
+      }
       let allowed = allowedChildren[node.type];
       if (typeof allowed === 'string' && allowed === 'inlineNodes') {
         allowed = inlineNodeTypes;
@@ -53,7 +75,7 @@ export function validate(root: Node): { valid: boolean; message?: string } {
           valid: false,
           message: `"${node.type}" has invalid child "${
             invalidChild.type
-          }":\n\n ${JSON.stringify(node)}`,
+          }":\n\n ${JSON.stringify(node, null, 2)}`,
         };
       }
       for (let i = node.children.length - 1; i >= 0; i--) {

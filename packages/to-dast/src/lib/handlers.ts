@@ -25,6 +25,7 @@ export async function root(createNode, node, context) {
 
 export async function paragraph(createNode, node, context) {
   const isAllowedChild = allowedChildren[context.name].includes('paragraph');
+
   const children = await visitAll(createNode, node, {
     ...context,
     name: isAllowedChild ? 'paragraph' : context.name,
@@ -37,6 +38,7 @@ export async function paragraph(createNode, node, context) {
 
 export async function heading(createNode, node, context) {
   const isAllowedChild = allowedChildren[context.name].includes('heading');
+
   const children = await visitAll(createNode, node, {
     ...context,
     name: isAllowedChild ? 'heading' : context.name,
@@ -54,12 +56,19 @@ export async function heading(createNode, node, context) {
 }
 
 export async function code(createNode, node, context) {
+  const isAllowedChild = allowedChildren[context.name].includes('code');
+
+  if (!isAllowedChild) {
+    return inlineCode(createNode, node, context);
+  }
+
+  const prefix = context.codePrefix || 'language-';
   const isPre = convert('pre');
   const isCode = convert('code');
   const children = node.children;
   let index = -1;
   let classList;
-  let language;
+  let language = {};
 
   if (isPre(node)) {
     while (++index < children.length) {
@@ -68,6 +77,8 @@ export async function code(createNode, node, context) {
         break;
       }
     }
+  } else if (isCode(node) && has(node, 'className')) {
+    classList = node.properties.className;
   }
 
   if (classList) {
@@ -75,14 +86,14 @@ export async function code(createNode, node, context) {
 
     while (++index < classList.length) {
       if (classList[index].slice(0, prefix.length) === prefix) {
-        language = classList[index].slice(prefix.length);
+        language = { language: classList[index].slice(prefix.length) };
         break;
       }
     }
   }
 
   return createNode('code', {
-    language,
+    ...language,
     code: String(wrapText(context, toText(node))).replace(/\n+$/, ''),
   });
 }
@@ -221,11 +232,11 @@ export const handlers = {
 
   a: link,
 
-  code: inlineCode,
-  kbd: inlineCode,
-  samp: inlineCode,
-  tt: inlineCode,
-  var: inlineCode,
+  code: code,
+  kbd: code,
+  samp: code,
+  tt: code,
+  var: code,
 
   strong: strong,
   b: strong,
@@ -255,7 +266,11 @@ export async function wrapListItems(createNode, node, context) {
     if (children[index].type !== 'listItem') {
       children[index] = {
         type: 'listItem',
-        children: [children[index]],
+        children: [
+          allowedChildren.listItem.includes(children[index].type)
+            ? children[index]
+            : createNode('paragraph', { children: [children[index]] }),
+        ],
       };
     }
   }
