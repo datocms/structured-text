@@ -2,7 +2,10 @@
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
 import has from 'hast-util-has-property';
-import { allowedChildren } from 'datocms-structured-text-utils';
+import {
+  allowedChildren,
+  inlineNodeTypes,
+} from 'datocms-structured-text-utils';
 
 import visitAll from './visit-all';
 import { wrap, needed as isWrapNeeded } from './wrap';
@@ -13,7 +16,7 @@ export async function root(createNode, node, context) {
     name: 'root',
   });
 
-  if (isWrapNeeded(children)) {
+  if (children.some((child) => !allowedChildren.root.includes(child.type))) {
     children = wrap(children);
   }
 
@@ -128,26 +131,33 @@ export async function listItem(createNode, node, context) {
       : children;
   }
 }
-export async function hyperLink(createNode, node, context) {
-  const isAllowedChild = allowedChildren[context.name].includes('hyperLink');
+export async function link(createNode, node, context) {
+  const isAllowedChild = (allowedChildren[context.name] === 'inlineNodes'
+    ? inlineNodeTypes
+    : allowedChildren[context.name] || []
+  ).includes('link');
+
   const children = await visitAll(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'hyperLink' : context.name,
+    name: isAllowedChild ? 'linkNodeType' : context.name,
   });
 
   if (children.length) {
     return isAllowedChild
-      ? createNode('hyperLink', {
+      ? createNode('link', {
           url: resolveUrl(context, node.properties.href),
-          children: wrap(children),
+          children,
         })
       : children;
   }
 }
 export async function span(createNode, node, context) {
+  const marks = Array.isArray(context.marks)
+    ? { marks: Array.isArray(context.marks) }
+    : {};
   return createNode('span', {
     value: wrapText(context, node.value),
-    marks: Array.isArray(context.marks) ? context.marks : null,
+    ...marks,
   });
 }
 
@@ -209,7 +219,7 @@ export const handlers = {
 
   blockquote: blockquote,
 
-  a: hyperLink,
+  a: link,
 
   code: inlineCode,
   kbd: inlineCode,

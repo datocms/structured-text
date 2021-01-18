@@ -2,7 +2,7 @@
 import extend from 'extend';
 import convert from 'unist-util-is/convert';
 
-const isPhrasing = convert(['span', 'hyperLink']);
+const isPhrasing = convert(['span', 'link']);
 
 export function wrap(nodes) {
   return runs(nodes, onphrasing);

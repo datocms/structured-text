@@ -1,12 +1,13 @@
 // @ts-nocheck
 import { htmlToDast } from '../src';
-import { allowedChildren } from 'datocms-structured-text-utils';
-import validate from './utils/validate-schema';
+import { allowedChildren, validate } from 'datocms-structured-text-utils';
 
 describe('toDast', () => {
   it('works with empty document', async () => {
     const html = '';
-    expect(await htmlToDast(html)).toMatchInlineSnapshot(`
+    const dast = await htmlToDast(html);
+    expect(validate(dast).valid).toBeTruthy();
+    expect(dast).toMatchInlineSnapshot(`
       Object {
         "children": Array [],
         "type": "root",
@@ -16,7 +17,9 @@ describe('toDast', () => {
 
   it('ignores doctype and HTML comments', async () => {
     const html = `<!doctype html> <!-- <p>test</p> -->`;
-    expect(await htmlToDast(html)).toMatchInlineSnapshot(`
+    const dast = await htmlToDast(html);
+    expect(validate(dast).valid).toBeTruthy();
+    expect(dast).toMatchInlineSnapshot(`
       Object {
         "children": Array [],
         "type": "root",
@@ -45,7 +48,9 @@ describe('toDast', () => {
       <script>console.log('script')</script>
     `;
 
-    expect(await htmlToDast(html)).toMatchInlineSnapshot(`
+    const dast = await htmlToDast(html);
+    expect(validate(dast).valid).toBeTruthy();
+    expect(dast).toMatchInlineSnapshot(`
       Object {
         "children": Array [],
         "type": "root",
@@ -57,12 +62,14 @@ describe('toDast', () => {
     describe('root', () => {
       it('wraps children when necessary', async () => {
         const html = `
+          <unknown>span</unknown>
           <p>already wrapped</p>
           needs wrapping
         `;
         const dast = await htmlToDast(html);
         expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
           Array [
+            "paragraph",
             "paragraph",
             "paragraph",
           ]
@@ -148,22 +155,18 @@ describe('toDast', () => {
             Object {
               "children": Array [
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": "[simple text] ",
                 },
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": "[span becomes simple text]",
                 },
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": " ",
                 },
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": "[span becomes simple text]",
                 },
@@ -190,7 +193,6 @@ describe('toDast', () => {
             Object {
               "children": Array [
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": "[simple text]",
                 },
@@ -200,7 +202,6 @@ describe('toDast', () => {
             Object {
               "children": Array [
                 Object {
-                  "marks": null,
                   "type": "span",
                   "value": "[separate paragraph]",
                 },
@@ -211,9 +212,70 @@ describe('toDast', () => {
         `);
       });
     });
+
+    describe('heading', () => {
+      it('wraps children when necessary', async () => {
+        const html = `
+          <h1>needs wrapping</h1>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children[0].type).toBe('heading');
+        expect(dast.children[0].children[0].type).toBe('span');
+      });
+
+      it('ignores invalid heading numbers', async () => {
+        const html = `
+          <h7>needs wrapping</h7>
+          <p>hello</p>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+          Array [
+            "paragraph",
+            "paragraph",
+          ]
+        `);
+      });
+
+      it('ignores invalid children', async () => {
+        const html = `
+          <h1><p>p not allowed inside h1</p></h1>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+      });
+
+      it('allows hyperlink as children', async () => {
+        const html = `
+          <h1>span <a href="#">hyperlink</a></h1>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "type": "span",
+              "value": "span ",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "hyperlink",
+                },
+              ],
+              "type": "link",
+              "url": "#",
+            },
+          ]
+        `);
+      });
+    });
   });
 
-  it('fixture 1', async () => {
+  it.skip('fixture 1', async () => {
     const dast = await htmlToDast(
       `
       <div>
@@ -302,27 +364,27 @@ describe('toDast', () => {
             "type": "paragraph",
           },
           Object {
-            "code": "        
-                
+            "code": "
+
       var foo;
 
-                
 
-                
+
+
       foo = 4;
 
-              
+
             ",
             "language": undefined,
             "type": "code",
           },
           Object {
-            "code": "          
+            "code": "
       var foo;
 
-                
 
-                
+
+
       foo = 4;
 
             ",

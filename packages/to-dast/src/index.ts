@@ -2,7 +2,7 @@
 
 import minify from 'rehype-minify-whitespace';
 
-import { allowedChildren } from 'datocms-structured-text-utils';
+import { allowedChildren, Root } from 'datocms-structured-text-utils';
 
 import { parseHtml } from './lib/parse.node';
 import { wrap, needed as isWrapNeeded } from './lib/wrap';
@@ -15,7 +15,7 @@ export function htmlToDast(html: string, settings = {}) {
   return toDast(tree, settings);
 }
 
-export async function toDast(tree, settings = {}): Promise<DastTree> {
+export async function toDast(tree, settings = {}): Promise<Root> {
   minify({ newlines: settings.newlines === true })(tree);
 
   return await visitOne(createNode, tree, {
