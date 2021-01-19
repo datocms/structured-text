@@ -58,7 +58,7 @@ export const inlineNodeTypes = [
   inlineItemNodeType,
 ];
 
-type AllowedAttributes = Record<NodeType, string[]>;
+export type AllowedAttributes = Record<NodeType, string[]>;
 
 export const allowedAttributes: AllowedAttributes = {
   [blockquoteNodeType]: ['children'],
