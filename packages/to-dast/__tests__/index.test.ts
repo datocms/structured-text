@@ -319,9 +319,13 @@ describe('toDast', () => {
         `;
         const dast = await htmlToDast(html);
         expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'paragraph')).toBeTruthy();
         expect(findAll(dast, 'code')).toHaveLength(0);
         expect(findAll(dast, 'span')[0]).toMatchInlineSnapshot(`
           Object {
+            "marks": Array [
+              "code",
+            ],
             "type": "span",
             "value": "dast()",
           }
@@ -487,6 +491,31 @@ describe('toDast', () => {
           ]
         `);
       });
+
+      it('convers nested invalid children', async () => {
+        const html = `
+          <ul>
+            <li>1</li>
+            <blockquote>2</blockquote>
+            <code>3</code>
+            <li>4</li>
+            <ul><li>5</li></ul>
+          </ul>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        const lists = findAll(dast, 'list');
+        expect(lists).toHaveLength(1);
+        const list = lists[0];
+        expect(
+          list.children.every((child) => child.type === 'listItem'),
+        ).toBeTruthy();
+        expect(
+          findAll(list, 'span')
+            .map((child) => child.value)
+            .join(''),
+        ).toBe('12345');
+      });
     });
 
     describe('link', () => {
@@ -500,554 +529,86 @@ describe('toDast', () => {
         expect(find(find(dast, 'paragraph'), 'link')).toBeTruthy();
       });
 
-      it('when wrapping an heading, the heading is lifted to contain the link', async () => {
+      describe('when wrapping a heading', () => {
+        it('lifts up heading to contain the link', async () => {
+          const html = `
+            <a href="#"><h1>1</h1>2</a>
+          `;
+          const dast = await htmlToDast(html);
+          expect(validate(dast).valid).toBeTruthy();
+          expect(dast.children[0].type).toBe('heading');
+          expect(find(find(dast, 'heading'), 'link')).toBeTruthy();
+          expect(find(find(dast, 'paragraph'), 'link')).toBeTruthy();
+        });
+
+        it('ignores heading when it is not allowed in the context (eg. list)', async () => {
+          const html = `
+            <ul><a href="#"><h1>1</h1>2</a></ul>
+          `;
+          const dast = await htmlToDast(html);
+          expect(validate(dast).valid).toBeTruthy();
+          expect(findAll(dast, 'heading')).toHaveLength(0);
+        });
+      });
+    });
+
+    describe('with Marks', () => {
+      const marksTags = {
+        code: 'code',
+        kbd: 'code',
+        samp: 'code',
+        tt: 'code',
+        var: 'code',
+
+        strong: 'strong',
+        b: 'strong',
+
+        em: 'emphasis',
+        i: 'emphasis',
+
+        u: 'underline',
+
+        strike: 'strikethrough',
+        s: 'strikethrough',
+      };
+
+      describe('converts tags to marks', () => {
+        it.each(Object.keys(marksTags))(`%p`, async (tagName) => {
+          const markName = marksTags[tagName];
+          const html = `
+          <p><${tagName}>${markName}</${tagName}></p>
+        `;
+          const dast = await htmlToDast(html);
+          expect(validate(dast).valid).toBeTruthy();
+          const span = find(dast, 'span');
+          expect(span.marks).toBeTruthy();
+          expect(span.marks).toContain(markName);
+        });
+      });
+
+      it('collects marks when nesting nodes', async () => {
         const html = `
-          <a href="#"><h1>1</h1></a>
+          <p><em>em<strong>strong-em<u>u-strong-em</u>strong-em</strong>em</em></p>
         `;
         const dast = await htmlToDast(html);
         expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children[0].type).toBe('heading');
-        expect(find(find(dast, 'heading'), 'link')).toBeTruthy();
+        expect(
+          findAll(dast, 'span')
+            .map(
+              (span) =>
+                `{ value: '${span.value}', marks: ['${span.marks.join(
+                  "', '",
+                )}'] }`,
+            )
+            .join('\n'),
+        ).toMatchInlineSnapshot(`
+          "{ value: 'em', marks: ['emphasis'] }
+          { value: 'strong-em', marks: ['emphasis', 'strong'] }
+          { value: 'u-strong-em', marks: ['emphasis', 'strong', 'underline'] }
+          { value: 'strong-em', marks: ['emphasis', 'strong'] }
+          { value: 'em', marks: ['emphasis'] }"
+        `);
       });
     });
-  });
-
-  it.skip('fixture 1', async () => {
-    const dast = await htmlToDast(
-      `
-      <div>
-        <p> hi
-          <blockquote>hello <span>text in
-
-            blockquote</span>
-          </blockquote>
-        </p>
-        <p><strong><code>callback()</code></strong></p>
-        <p><p><strong><em>emphasis&strong</em> strong</strong></p></p>
-      </div>
-      <pre>
-        <code>
-          <div>var foo;</div>
-          <div></div>
-          <div>foo = 4;</div>
-        </code>
-      </pre>
-
-      <pre>
-          <div>var foo;</div>
-          <div></div>
-          <div>foo = 4;</div>
-      </pre>
-      `,
-    );
-
-    // expect(validate(dast)).toBeTruthy();
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [
-          Object {
-            "children": Array [
-              Object {
-                "marks": null,
-                "type": "span",
-                "value": "hi",
-              },
-            ],
-            "type": "paragraph",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "children": Array [
-                  Object {
-                    "marks": null,
-                    "type": "span",
-                    "value": "hello ",
-                  },
-                  Object {
-                    "marks": null,
-                    "type": "span",
-                    "value": "text in blockquote",
-                  },
-                ],
-                "type": "paragraph",
-              },
-            ],
-            "type": "blockquote",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "marks": null,
-                "type": "span",
-                "value": "callback()",
-              },
-            ],
-            "type": "paragraph",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "marks": null,
-                "type": "span",
-                "value": "emphasis&strong",
-              },
-              Object {
-                "marks": null,
-                "type": "span",
-                "value": " strong",
-              },
-            ],
-            "type": "paragraph",
-          },
-          Object {
-            "code": "
-
-      var foo;
-
-
-
-
-      foo = 4;
-
-
-            ",
-            "language": undefined,
-            "type": "code",
-          },
-          Object {
-            "code": "
-      var foo;
-
-
-
-
-      foo = 4;
-
-            ",
-            "language": undefined,
-            "type": "code",
-          },
-        ],
-        "type": "root",
-      }
-    `);
-  });
-
-  it.skip('fixture 2', async () => {
-    const html = `
-      <ul>
-        <li>1</li>
-        <li><blockquote>2</blockquote></li>
-        <li>3</li>
-        <li><div>
-        <h2>4.1 (heading)</h2>
-        <blockquote>
-          4.2 (blockquote)
-        </blockquote>
-        4.3 (paragraph)
-        </div>
-        <ul>
-          <li>4.4 (nested ul>li)</li>
-        </ul>
-        </li>
-      </ul>
-      `;
-    const dast = await htmlToDast(html);
-
-    //expect(validate(dast)).toBeTruthy();
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [
-          Object {
-            "children": Array [
-              Object {
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "1",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "type": "listItem",
-              },
-              Object {
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "2",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "type": "listItem",
-              },
-              Object {
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "3",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "type": "listItem",
-              },
-              Object {
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "4.1 (heading)",
-                      },
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "4.2 (blockquote)",
-                      },
-                      Object {
-                        "marks": null,
-                        "type": "span",
-                        "value": "4.3 (paragraph)",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                  Object {
-                    "children": Array [
-                      Object {
-                        "children": Array [
-                          Object {
-                            "children": Array [
-                              Object {
-                                "marks": null,
-                                "type": "span",
-                                "value": "4.4 (nested ul>li)",
-                              },
-                            ],
-                            "type": "paragraph",
-                          },
-                        ],
-                        "type": "listItem",
-                      },
-                    ],
-                    "type": "list",
-                  },
-                ],
-                "type": "listItem",
-              },
-            ],
-            "type": "list",
-          },
-        ],
-        "type": "root",
-      }
-    `);
-
-    expect(htmlToMdast(html)).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [
-          Object {
-            "children": Array [
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "text",
-                        "value": "1",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "children": Array [
-                          Object {
-                            "type": "text",
-                            "value": "2",
-                          },
-                        ],
-                        "type": "paragraph",
-                      },
-                    ],
-                    "type": "blockquote",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "text",
-                        "value": "3",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "text",
-                        "value": "4.1 (heading)",
-                      },
-                    ],
-                    "depth": 2,
-                    "type": "heading",
-                  },
-                  Object {
-                    "children": Array [
-                      Object {
-                        "children": Array [
-                          Object {
-                            "type": "text",
-                            "value": "4.2 (blockquote)",
-                          },
-                        ],
-                        "type": "paragraph",
-                      },
-                    ],
-                    "type": "blockquote",
-                  },
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "text",
-                        "value": "4.3 (paragraph)",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                  Object {
-                    "children": Array [
-                      Object {
-                        "checked": null,
-                        "children": Array [
-                          Object {
-                            "children": Array [
-                              Object {
-                                "type": "text",
-                                "value": "4.4 (nested ul>li)",
-                              },
-                            ],
-                            "type": "paragraph",
-                          },
-                        ],
-                        "spread": false,
-                        "type": "listItem",
-                      },
-                    ],
-                    "ordered": false,
-                    "spread": false,
-                    "start": null,
-                    "type": "list",
-                  },
-                ],
-                "spread": true,
-                "type": "listItem",
-              },
-            ],
-            "ordered": false,
-            "spread": true,
-            "start": null,
-            "type": "list",
-          },
-        ],
-        "type": "root",
-      }
-    `);
-  });
-
-  it.skip('fixture 3', () => {
-    const dast = htmlToDast(`<body>
-      <div>
-        <h1>TextHeading</h1>
-        <div>heheh</div>
-      </div>
-      <blockquote>
-        TextInsideBlockquote <strong>strong <code>inline-code</code></strong> what up
-
-        friend
-      </blockquote>
-      <ul>
-        <li>TextLiNoWrapped</li>
-        <li><div>TextLiWrappedDiv</div></li>
-        <li><p>TextLiWrappedP</p></li>
-      </ul>
-      <select><option>SelectIgnored</option></select>
-
-      <p>
-        <span>
-          <a href="#"><img src="avatar.jpg" /></a>
-        </span>
-      </p>
-      </body>`);
-
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [
-          Object {
-            "children": Array [
-              Object {
-                "type": "span",
-                "value": "TextHeading",
-              },
-            ],
-            "level": 1,
-            "type": "heading",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "type": "span",
-                "value": "heheh",
-              },
-            ],
-            "type": "paragraph",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "children": Array [
-                  Object {
-                    "type": "span",
-                    "value": "TextInsideBlockquote",
-                  },
-                ],
-                "type": "paragraph",
-              },
-              Object {
-                "marks": Array [
-                  "strong",
-                ],
-                "type": "span",
-                "value": "strong ",
-              },
-              Object {
-                "marks": Array [
-                  "strong",
-                  "code",
-                ],
-                "type": "span",
-                "value": "inline-code",
-              },
-              Object {
-                "children": Array [
-                  Object {
-                    "type": "span",
-                    "value": "what up friend",
-                  },
-                ],
-                "type": "paragraph",
-              },
-            ],
-            "type": "blockquote",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "span",
-                        "value": "TextLiNoWrapped",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "span",
-                        "value": "TextLiWrappedDiv",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-              Object {
-                "checked": null,
-                "children": Array [
-                  Object {
-                    "children": Array [
-                      Object {
-                        "type": "span",
-                        "value": "TextLiWrappedP",
-                      },
-                    ],
-                    "type": "paragraph",
-                  },
-                ],
-                "spread": false,
-                "type": "listItem",
-              },
-            ],
-            "ordered": false,
-            "spread": false,
-            "start": null,
-            "type": "list",
-          },
-          Object {
-            "children": Array [
-              Object {
-                "children": Array [],
-                "title": null,
-                "type": "link",
-                "url": "#",
-              },
-            ],
-            "type": "paragraph",
-          },
-        ],
-        "type": "root",
-      }
-    `);
   });
 });

@@ -143,12 +143,55 @@ export async function listItem(createNode, node, context) {
   }
 }
 export async function link(createNode, node, context) {
+  // Links that aren't inside of a allowedChildren context
+  // can still be valid Dast nodes in the following contexts if wrapped.
   const allowedChildrenWrapped = ['root', 'list', 'listItem'];
-  const isAllowedChild =
+
+  let isAllowedChild =
     (allowedChildren[context.name] === 'inlineNodes'
       ? inlineNodeTypes
       : allowedChildren[context.name] || []
     ).includes('link') || allowedChildrenWrapped.includes(context.name);
+
+  // When a link wraps headings we try to preserve the heading by inverting the parent-child relationship.
+  // Essentially we tweak the nodes so that the heading wraps the link.
+  //
+  // @TODO this is only checking for headings that are direct descendants of links.
+  // Decide if it is worth looking deeper.
+  const wrapsHeadings = node.children.some(
+    (child) => child.type === 'element' && child.tagName.startsWith('h'),
+  );
+  if (wrapsHeadings) {
+    let i = 0;
+    const splitChildren = [];
+    node.children.forEach((child) => {
+      if (child.type === 'element' && child.tagName.startsWith('h')) {
+        splitChildren.push({
+          ...child,
+          children: [
+            {
+              ...node,
+              children: child.children,
+            },
+          ],
+        });
+        i++;
+      } else if (splitChildren[i]) {
+        splitChildren[i].children.push(child);
+      } else {
+        splitChildren[i] = {
+          ...node,
+          children: [child],
+        };
+      }
+    });
+
+    node = {
+      type: 'unknown',
+      children: splitChildren,
+    };
+    isAllowedChild = false;
+  }
 
   const children = await visitAll(createNode, node, {
     ...context,
@@ -166,8 +209,9 @@ export async function link(createNode, node, context) {
 }
 export async function span(createNode, node, context) {
   const marks = Array.isArray(context.marks)
-    ? { marks: Array.isArray(context.marks) }
+    ? { marks: [...context.marks] }
     : {};
+
   return createNode('span', {
     value: wrapText(context, node.value),
     ...marks,
@@ -178,6 +222,7 @@ export const inlineCode = withMark('code');
 export const strong = withMark('strong');
 export const italic = withMark('emphasis');
 export const underline = withMark('underline');
+export const strikethrough = withMark('strikethrough');
 
 export async function base(createNode, node, context) {
   if (!context.baseFound) {
@@ -189,7 +234,7 @@ export async function noop() {}
 
 export function withMark(type) {
   return function markHandler(createNode, node, context) {
-    let marks = {};
+    let marks = { marks: [type] };
     if (Array.isArray(context.marks)) {
       marks = {
         marks: context.marks.includes(type)
@@ -247,6 +292,9 @@ export const handlers = {
   i: italic,
 
   u: underline,
+
+  strike: strikethrough,
+  s: strikethrough,
 
   base: base,
 
