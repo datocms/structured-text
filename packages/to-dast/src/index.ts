@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import minify from 'rehype-minify-whitespace';
 
 import { allowedChildren, Root } from 'datocms-structured-text-utils';

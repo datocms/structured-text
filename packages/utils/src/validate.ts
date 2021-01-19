@@ -8,11 +8,12 @@ import {
 } from './definitions';
 
 export function validate(root: Node): { valid: boolean; message?: string } {
-  let nodes = [root];
+  const nodes = [root];
   let node = root;
 
   while (nodes.length > 0) {
     node = nodes.pop();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { type, ...attributes } = node;
     const invalidAttribute = Object.keys(attributes).find(
       (attr) => !allowedAttributes[node.type].includes(attr),
