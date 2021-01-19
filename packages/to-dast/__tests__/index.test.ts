@@ -388,7 +388,7 @@ describe('toDast', () => {
       });
     });
 
-    describe.only('list', () => {
+    describe('list', () => {
       it('creates valid list', async () => {
         const html = `
           <ul><li>test</li></ul>
@@ -462,15 +462,52 @@ describe('toDast', () => {
         expect(find(dast, 'span').value).toBe('1');
       });
 
-      it('supports nested link', async () => {
+      it('supports nested and/or unwrapped link', async () => {
         const html = `
           <ul>
-            <li><a href="#">1</a></li>
+            <li><a href="#">1</a>2</li>
+            <a href="#">3</a>
           </ul>
         `;
         const dast = await htmlToDast(html);
         expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'link')).toHaveLength(1);
+        expect(findAll(dast, 'link')).toHaveLength(2);
+        const items = findAll(dast, 'listItem').map((listItem) =>
+          find(listItem, 'paragraph').children.map((child) => child.type),
+        );
+        expect(items).toMatchInlineSnapshot(`
+          Array [
+            Array [
+              "link",
+              "span",
+            ],
+            Array [
+              "link",
+            ],
+          ]
+        `);
+      });
+    });
+
+    describe('link', () => {
+      it('is wrapped when top level', async () => {
+        const html = `
+          <a href="#">1</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children[0].type).toBe('paragraph');
+        expect(find(find(dast, 'paragraph'), 'link')).toBeTruthy();
+      });
+
+      it('when wrapping an heading, the heading is lifted to contain the link', async () => {
+        const html = `
+          <a href="#"><h1>1</h1></a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children[0].type).toBe('heading');
+        expect(find(find(dast, 'heading'), 'link')).toBeTruthy();
       });
     });
   });

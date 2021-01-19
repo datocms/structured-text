@@ -143,14 +143,16 @@ export async function listItem(createNode, node, context) {
   }
 }
 export async function link(createNode, node, context) {
-  const isAllowedChild = (allowedChildren[context.name] === 'inlineNodes'
-    ? inlineNodeTypes
-    : allowedChildren[context.name] || []
-  ).includes('link');
+  const allowedChildrenWrapped = ['root', 'list', 'listItem'];
+  const isAllowedChild =
+    (allowedChildren[context.name] === 'inlineNodes'
+      ? inlineNodeTypes
+      : allowedChildren[context.name] || []
+    ).includes('link') || allowedChildrenWrapped.includes(context.name);
 
   const children = await visitAll(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'linkNodeType' : context.name,
+    name: isAllowedChild ? 'link' : context.name,
   });
 
   if (children.length) {
