@@ -1,9 +1,10 @@
+// @ts-nocheck
 import { allowedChildren } from 'datocms-structured-text-utils';
 import { Handler, HastElementNode, HastNode } from './types';
-import visitAll from './visit-all';
+import visitChildren from './visit-children';
 
-// visitOne() is for visiting a single node
-export default (async function visitOne(createNode, node, context) {
+// visitNode() is for visiting a single node
+export default (async function visitNode(createNode, node, context) {
   const handlers = context.handlers;
   let handler;
 
@@ -13,15 +14,17 @@ export default (async function visitOne(createNode, node, context) {
       typeof handlers[node.tagName] === 'function'
     ) {
       handler = handlers[node.tagName];
+    } else {
+      handler = unknownHandler;
     }
   } else if (node.type === 'root') {
     handler = handlers.root;
   } else if (node.type === 'text') {
-    handler = handlers.span;
+    handler = handlers.text;
   }
 
   if (typeof handler !== 'function') {
-    handler = unknownHandler;
+    return undefined;
   }
 
   return await handler(createNode, node, context);
@@ -34,5 +37,5 @@ const unknownHandler: Handler<HastElementNode> = async function unknownHandler(
   node,
   context,
 ) {
-  return visitAll(createNode, node, context);
+  return visitChildren(createNode, node, context);
 };

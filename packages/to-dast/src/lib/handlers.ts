@@ -17,7 +17,7 @@ import {
   HastRootNode,
 } from './types';
 
-import visitAll from './visit-all';
+import visitChildren from './visit-children';
 import { wrap, needed as isWrapNeeded } from './wrap';
 
 export const root: Handler<HastRootNode> = async function root(
@@ -25,7 +25,7 @@ export const root: Handler<HastRootNode> = async function root(
   node,
   context,
 ) {
-  let children = await visitAll(createNode, node, {
+  let children = await visitChildren(createNode, node, {
     ...context,
     name: 'root',
   });
@@ -50,8 +50,7 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   context,
 ) {
   const isAllowedChild = allowedChildren[context.name].includes('paragraph');
-
-  const children = await visitAll(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     name: isAllowedChild ? 'paragraph' : context.name,
   });
@@ -69,7 +68,7 @@ export const heading: Handler<HastElementNode> = async function heading(
 ) {
   const isAllowedChild = allowedChildren[context.name].includes('heading');
 
-  const children = await visitAll(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     name: isAllowedChild ? 'heading' : context.name,
     wrapText: isAllowedChild ? false : context.wrapText,
@@ -125,7 +124,7 @@ export const code: Handler<HastElementNode> = async function code(
     classList = node.properties.className;
   }
 
-  if (typeof classList === 'string') {
+  if (Array.isArray(classList)) {
     index = -1;
 
     while (++index < classList.length) {
@@ -148,7 +147,7 @@ export const blockquote: Handler<HastElementNode> = async function blockquote(
   context,
 ) {
   const isAllowedChild = allowedChildren[context.name].includes('blockquote');
-  const children = await visitAll(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     name: isAllowedChild ? 'blockquote' : context.name,
   });
@@ -168,7 +167,7 @@ export const list: Handler<HastElementNode> = async function list(
   const isAllowedChild = allowedChildren[context.name].includes('list');
 
   if (!isAllowedChild) {
-    return await visitAll(createNode, node, context);
+    return await visitChildren(createNode, node, context);
   }
 
   const children = await wrapListItems(createNode, node, {
@@ -187,7 +186,7 @@ export const listItem: Handler<HastElementNode> = async function listItem(
   context,
 ) {
   const isAllowedChild = allowedChildren[context.name].includes('listItem');
-  const children = await visitAll(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     name: isAllowedChild ? 'listItem' : context.name,
   });
@@ -258,7 +257,7 @@ export const link: Handler<HastElementNode> = async function link(
     isAllowedChild = false;
   }
 
-  const children = await visitAll(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     name: isAllowedChild ? 'link' : context.name,
   });
@@ -320,7 +319,7 @@ export function withMark(type: Mark): Handler<HastElementNode> {
           : context.marks.concat([type]),
       };
     }
-    return visitAll(createNode, node, {
+    return visitChildren(createNode, node, {
       ...context,
       ...marks,
     });
@@ -390,7 +389,7 @@ export const wrapListItems: Handler<HastElementNode> = async function wrapListIt
   node,
   context,
 ) {
-  const children = await visitAll(createNode, node, context);
+  const children = await visitChildren(createNode, node, context);
 
   if (!Array.isArray(children)) {
     return [];

@@ -12,11 +12,10 @@ import { parseHtml } from './lib/parse.node';
 import { wrap, needed as isWrapNeeded } from './lib/wrap';
 import { handlers } from './lib/handlers';
 
-import visitOne from './lib/visit-one';
+import visitNode from './lib/visit-node';
 
 export type Settings = Partial<{
   newlines: boolean;
-  debug: boolean;
   handlers: Record<string, CreateNodeFunction>;
 }>;
 
@@ -39,7 +38,7 @@ export async function toDast(
     return props;
   };
 
-  return await visitOne(createNode, tree, {
+  return await visitNode(createNode, tree, {
     parent: null,
     name: 'root',
     frozenBaseUrl: null,

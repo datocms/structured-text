@@ -1,8 +1,8 @@
 import { Handler, Node, HastNode, HastElementNode } from './types';
-import visitOne from './visit-one';
+import visitNode from './visit-node';
 
-// visitAll() is for visiting all the children of a node
-export default (async function visitAll(createNode, parent, context) {
+// visitChildren() is for visiting all the children of a node
+export default (async function visitChildren(createNode, parent, context) {
   const nodes: HastNode[] = Array.isArray(parent.children)
     ? parent.children
     : [];
@@ -11,7 +11,7 @@ export default (async function visitAll(createNode, parent, context) {
   let result;
 
   while (++index < nodes.length) {
-    result = await visitOne(createNode, nodes[index], {
+    result = await visitNode(createNode, nodes[index], {
       ...context,
       parent,
     });
