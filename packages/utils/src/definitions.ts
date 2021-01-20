@@ -28,7 +28,7 @@ export const allowedNodeTypes = [
   spanNodeType,
 ];
 
-type AllowedChildren = Record<NodeType, 'inlineNodes' | NodeType[]>;
+export type AllowedChildren = Record<NodeType, 'inlineNodes' | NodeType[]>;
 
 export const allowedChildren: AllowedChildren = {
   [blockquoteNodeType]: [paragraphNodeType],

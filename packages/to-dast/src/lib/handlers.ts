@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
 import has from 'hast-util-has-property';
@@ -8,25 +6,45 @@ import {
   inlineNodeTypes,
 } from 'datocms-structured-text-utils';
 
-import { Handler, Node, Mark, Context } from './types';
+import {
+  Handler,
+  Node,
+  Mark,
+  Context,
+  HastNode,
+  HastTextNode,
+  HastElementNode,
+  HastRootNode,
+} from './types';
 
 import visitAll from './visit-all';
 import { wrap, needed as isWrapNeeded } from './wrap';
 
-export const root: Handler = async function root(createNode, node, context) {
-  const children = await visitAll(createNode, node, {
+export const root: Handler<HastRootNode> = async function root(
+  createNode,
+  node,
+  context,
+) {
+  let children = await visitAll(createNode, node, {
     ...context,
     name: 'root',
   });
 
-  if (children.some((child) => !allowedChildren.root.includes(child.type))) {
+  if (
+    Array.isArray(children) &&
+    children.some(
+      (child: HastNode) => child && !allowedChildren.root.includes(child.type),
+    )
+  ) {
     children = wrap(children);
   }
 
-  return createNode('root', { children });
+  return createNode('root', {
+    children: Array.isArray(children) ? children : [],
+  });
 };
 
-export const paragraph: Handler = async function paragraph(
+export const paragraph: Handler<HastElementNode> = async function paragraph(
   createNode,
   node,
   context,
@@ -38,12 +56,13 @@ export const paragraph: Handler = async function paragraph(
     name: isAllowedChild ? 'paragraph' : context.name,
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return isAllowedChild ? createNode('paragraph', { children }) : children;
   }
+  return undefined;
 };
 
-export const heading: Handler = async function heading(
+export const heading: Handler<HastElementNode> = async function heading(
   createNode,
   node,
   context,
@@ -56,7 +75,7 @@ export const heading: Handler = async function heading(
     wrapText: isAllowedChild ? false : context.wrapText,
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return isAllowedChild
       ? createNode('heading', {
           level: Number(node.tagName.charAt(1)) || 1,
@@ -64,26 +83,40 @@ export const heading: Handler = async function heading(
         })
       : children;
   }
+  return undefined;
 };
 
-export const code: Handler = async function code(createNode, node, context) {
+export const code: Handler<HastElementNode> = async function code(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('code');
 
   if (!isAllowedChild) {
     return inlineCode(createNode, node, context);
   }
 
-  const prefix = context.codePrefix || 'language-';
+  const prefix =
+    typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
   const isPre = convert('pre');
   const isCode = convert('code');
   const children = node.children;
   let index = -1;
-  let classList;
+  let classList = null;
   let language = {};
 
   if (isPre(node)) {
     while (++index < children.length) {
-      if (isCode(children[index]) && has(children[index], 'className')) {
+      if (
+        typeof children[index] === 'object' &&
+        isCode(children[index]) &&
+        has(children[index], 'className')
+      ) {
+        // error TS2339: Property 'properties' does not exist on type 'HastNode'.
+        //               Property 'properties' does not exist on type 'HastTextNode'
+        // isCode (convert) checks that the node is an element and therefore it'll have properties
+        // @ts-ignore
         classList = children[index].properties.className;
         break;
       }
@@ -92,7 +125,7 @@ export const code: Handler = async function code(createNode, node, context) {
     classList = node.properties.className;
   }
 
-  if (classList) {
+  if (typeof classList === 'string') {
     index = -1;
 
     while (++index < classList.length) {
@@ -109,7 +142,7 @@ export const code: Handler = async function code(createNode, node, context) {
   });
 };
 
-export const blockquote: Handler = async function blockquote(
+export const blockquote: Handler<HastElementNode> = async function blockquote(
   createNode,
   node,
   context,
@@ -120,13 +153,18 @@ export const blockquote: Handler = async function blockquote(
     name: isAllowedChild ? 'blockquote' : context.name,
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return isAllowedChild
       ? createNode('blockquote', { children: wrap(children) })
       : children;
   }
+  return undefined;
 };
-export const list: Handler = async function list(createNode, node, context) {
+export const list: Handler<HastElementNode> = async function list(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('list');
 
   if (!isAllowedChild) {
@@ -138,11 +176,12 @@ export const list: Handler = async function list(createNode, node, context) {
     name: 'list',
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return createNode('list', { children, style: 'bulleted' });
   }
+  return undefined;
 };
-export const listItem: Handler = async function listItem(
+export const listItem: Handler<HastElementNode> = async function listItem(
   createNode,
   node,
   context,
@@ -153,24 +192,34 @@ export const listItem: Handler = async function listItem(
     name: isAllowedChild ? 'listItem' : context.name,
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return isAllowedChild
       ? createNode('listItem', {
           children: wrap(children),
         })
       : children;
   }
+  return undefined;
 };
-export const link: Handler = async function link(createNode, node, context) {
-  // Links that aren't inside of a allowedChildren context
-  // can still be valid Dast nodes in the following contexts if wrapped.
-  const allowedChildrenWrapped = ['root', 'list', 'listItem'];
+export const link: Handler<HastElementNode> = async function link(
+  createNode,
+  node,
+  context,
+) {
+  let isAllowedChild = false;
 
-  let isAllowedChild =
-    (allowedChildren[context.name] === 'inlineNodes'
-      ? inlineNodeTypes
-      : allowedChildren[context.name] || []
-    ).includes('link') || allowedChildrenWrapped.includes(context.name);
+  if (allowedChildren[context.name] === 'inlineNodes') {
+    isAllowedChild = inlineNodeTypes.includes('link');
+  } else if (Array.isArray(allowedChildren[context.name])) {
+    isAllowedChild = allowedChildren[context.name].includes('link');
+  }
+
+  if (!isAllowedChild) {
+    // Links that aren't inside of a allowedChildren context
+    // can still be valid Dast nodes in the following contexts if wrapped.
+    const allowedChildrenWrapped = ['root', 'list', 'listItem'];
+    isAllowedChild = allowedChildrenWrapped.includes(context.name);
+  }
 
   // When a link wraps headings we try to preserve the heading by inverting the parent-child relationship.
   // Essentially we tweak the nodes so that the heading wraps the link.
@@ -182,7 +231,7 @@ export const link: Handler = async function link(createNode, node, context) {
   );
   if (wrapsHeadings) {
     let i = 0;
-    const splitChildren = [];
+    const splitChildren: HastElementNode[] = [];
     node.children.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
         splitChildren.push({
@@ -205,10 +254,7 @@ export const link: Handler = async function link(createNode, node, context) {
       }
     });
 
-    node = {
-      type: 'unknown',
-      children: splitChildren,
-    };
+    node.children = splitChildren;
     isAllowedChild = false;
   }
 
@@ -217,7 +263,7 @@ export const link: Handler = async function link(createNode, node, context) {
     name: isAllowedChild ? 'link' : context.name,
   });
 
-  if (children.length) {
+  if (Array.isArray(children) && children.length) {
     return isAllowedChild
       ? createNode('link', {
           url: resolveUrl(context, node.properties.href),
@@ -225,11 +271,13 @@ export const link: Handler = async function link(createNode, node, context) {
         })
       : children;
   }
+  return undefined;
 };
-export const span: Handler = async function span(createNode, node, context) {
-  if (typeof node.value !== 'string') {
-    return undefined;
-  }
+export const span: Handler<HastTextNode> = async function span(
+  createNode,
+  node,
+  context,
+) {
   const marks = Array.isArray(context.marks)
     ? { marks: [...context.marks] }
     : {};
@@ -246,7 +294,11 @@ export const italic = withMark('emphasis');
 export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 
-export const base: Handler = async function base(createNode, node, context) {
+export const base: Handler<HastElementNode> = async function base(
+  createNode,
+  node,
+  context,
+) {
   if (
     !context.baseFound &&
     typeof node.properties === 'object' &&
@@ -258,7 +310,7 @@ export const base: Handler = async function base(createNode, node, context) {
 };
 export async function noop() {}
 
-export function withMark(type: Mark): Handler {
+export function withMark(type: Mark): Handler<HastElementNode> {
   return function markHandler(createNode, node, context) {
     let marks = { marks: [type] };
     if (Array.isArray(context.marks)) {
@@ -333,7 +385,7 @@ export const handlers = {
   text: span,
 };
 
-export const wrapListItems: Handler = async function wrapListItems(
+export const wrapListItems: Handler<HastElementNode> = async function wrapListItems(
   createNode,
   node,
   context,

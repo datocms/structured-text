@@ -1,4 +1,4 @@
-import { Handler, Node, HastNode } from './types';
+import { Handler, Node, HastNode, HastElementNode } from './types';
 import visitOne from './visit-one';
 
 // visitAll() is for visiting all the children of a node
@@ -22,4 +22,4 @@ export default (async function visitAll(createNode, parent, context) {
   }
 
   return values;
-} as Handler);
+} as Handler<HastElementNode>);

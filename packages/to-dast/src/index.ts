@@ -1,6 +1,3 @@
-// @ts-nocheck
-
-import { Node as HastNode } from 'unist';
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
@@ -9,7 +6,7 @@ import {
   Root,
   AllowedAttributes,
 } from 'datocms-structured-text-utils';
-import { Node, NodeType, CreateNodeFunction } from './lib/types';
+import { Node, NodeType, CreateNodeFunction, HastRootNode } from './lib/types';
 
 import { parseHtml } from './lib/parse.node';
 import { wrap, needed as isWrapNeeded } from './lib/wrap';
@@ -32,7 +29,7 @@ export function htmlToDast(
 }
 
 export async function toDast(
-  tree: HastNode,
+  tree: HastRootNode,
   settings: Settings = {},
 ): Promise<Node> {
   minify({ newlines: settings.newlines === true })(tree);
@@ -45,7 +42,6 @@ export async function toDast(
   return await visitOne(createNode, tree, {
     parent: null,
     name: 'root',
-    debug: settings.debug === true,
     frozenBaseUrl: null,
     wrapText: true,
     handlers: Object.assign({}, handlers, settings.handlers || {}),
