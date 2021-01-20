@@ -1,3 +1,5 @@
+yarn.lock
+
 # Logs
 **/logs
 **/*.log
@@ -20,6 +22,7 @@
 
 # TypeScript v1 declaration files
 **/typings/
+!**/to-dast/src/typings/
 
 # Optional npm cache directory
 **/.npm
