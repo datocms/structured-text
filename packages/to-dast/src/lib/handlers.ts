@@ -1,3 +1,4 @@
+// @ts-nocheck
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
 import has from 'hast-util-has-property';

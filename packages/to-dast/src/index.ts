@@ -1,3 +1,4 @@
+// @ts-nocheck
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 

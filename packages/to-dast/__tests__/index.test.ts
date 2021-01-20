@@ -60,6 +60,77 @@ describe('toDast', () => {
   });
 
   describe('handlers', () => {
+    describe('custom (user provided)', () => {
+      it('can register custom handlers', async () => {
+        const html = `
+          <unknown>span</unknown>
+        <p>already wrapped</p>
+        needs wrapping
+      `;
+        const dast = await htmlToDast(html, {
+          handlers: {
+            unknown: (createNode, node, context) => {
+              return createNode('span', {
+                value: 'custom',
+              });
+            },
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        const spans = findAll(dast, 'span');
+        expect(spans).toHaveLength(3);
+        expect(spans[0].value).toBe('custom');
+        const paragraphs = findAll(dast, 'paragraph');
+        expect(paragraphs.map((p) => p.children[0].value))
+          .toMatchInlineSnapshot(`
+          Array [
+            "custom",
+            "already wrapped",
+            "needs wrapping",
+          ]
+        `);
+      });
+
+      it('waits for async handlers to resolve', async () => {
+        const html = `
+          <custom>span</custom>
+      `;
+        const dast = await htmlToDast(html, {
+          handlers: {
+            custom: async (createNode, node, context) => {
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              return createNode('span', {
+                value: 'custom',
+              });
+            },
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'span').value).toBe('custom');
+      });
+
+      it('can override default handlers', async () => {
+        const html = `
+          <blockquote>override</blockquote>
+          <p>regular paragraph</p>
+      `;
+        const dast = await htmlToDast(html, {
+          handlers: {
+            blockquote: async (createNode, node, context) => {
+              // turn a blockquote into a paragraph
+              return context.handlers.p(createNode, node, context);
+            },
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'blockquote')).toBeFalsy();
+        const paragraphs = findAll(dast, 'paragraph');
+        expect(paragraphs).toHaveLength(2);
+        expect(find(paragraphs[0], 'span').value).toBe('override');
+        expect(find(paragraphs[1], 'span').value).toBe('regular paragraph');
+      });
+    });
+
     describe('root', () => {
       it('wraps children when necessary', async () => {
         const html = `
@@ -68,6 +139,7 @@ describe('toDast', () => {
           needs wrapping
         `;
         const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
         expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
           Array [
             "paragraph",
@@ -92,6 +164,7 @@ describe('toDast', () => {
           <a href="#">hyperlink</a>
         `;
         const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
 
         expect(
           dast.children.every((child) =>
@@ -131,6 +204,7 @@ describe('toDast', () => {
           </article>
         `;
         const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
         expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
           Array [
             "paragraph",
@@ -150,7 +224,7 @@ describe('toDast', () => {
           </p>
         `;
         const dast = await htmlToDast(html);
-
+        expect(validate(dast).valid).toBeTruthy();
         expect(dast.children).toMatchInlineSnapshot(`
           Array [
             Object {
@@ -188,7 +262,7 @@ describe('toDast', () => {
           </p>
         `;
         const dast = await htmlToDast(html);
-
+        expect(validate(dast).valid).toBeTruthy();
         expect(dast.children).toMatchInlineSnapshot(`
           Array [
             Object {
