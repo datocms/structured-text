@@ -1,7 +1,7 @@
 {
   "name": "datocms-structured-text-to-dast",
   "version": "0.1.0-alpha.15",
-  "description": "Convert HTML and Hast to Dast - DatoCMS' AST format",
+  "description": "Convert HTML and Hast to Dast - DatoCMS AST format",
   "keywords": [
     "datocms",
     "structured-text",

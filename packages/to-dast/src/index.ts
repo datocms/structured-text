@@ -1,18 +1,12 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
+
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
-import {
-  allowedChildren,
-  Root,
-  AllowedAttributes,
-} from 'datocms-structured-text-utils';
-import { Node, NodeType, CreateNodeFunction, HastRootNode } from './lib/types';
-
-import { handlers } from './lib/handlers';
-
+import { Node, CreateNodeFunction, HastRootNode } from './lib/types';
 import visitNode from './lib/visit-node';
-import { wrap, needed as isWrapNeeded } from './lib/wrap';
+import { handlers } from './lib/handlers';
 
 export type Settings = Partial<{
   newlines: boolean;

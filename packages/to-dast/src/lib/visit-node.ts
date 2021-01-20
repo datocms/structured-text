@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { allowedChildren } from 'datocms-structured-text-utils';
 import { Handler, HastElementNode, HastNode } from './types';
 import visitChildren from './visit-children';
 

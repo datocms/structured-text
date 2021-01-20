@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import extend from 'extend';
 import convert from 'unist-util-is/convert';
+import { Node } from './types';
 
 const isPhrasing = convert(['span', 'link']);
 
-export function wrap(nodes) {
+export function wrap(nodes: Node[]): Node[] {
   return runs(nodes, onphrasing);
 
   function onphrasing(nodes) {
@@ -87,7 +89,7 @@ function flatten(nodes) {
 // Check if there are non-phrasing mdast nodes returned.
 // This is needed if a fragment is given, which could just be a sentence, and
 // doesn’t need a wrapper paragraph.
-export function needed(nodes) {
+export function needed(nodes: Node[]): boolean {
   let index = -1;
   let node;
 
@@ -98,6 +100,7 @@ export function needed(nodes) {
       return true;
     }
   }
+  return false;
 }
 
 function split(node) {

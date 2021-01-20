@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { htmlToDast } from '../src';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
@@ -69,6 +70,7 @@ describe('toDast', () => {
       `;
         const dast = await htmlToDast(html, {
           handlers: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             unknown: (createNode, node, context) => {
               return createNode('span', {
                 value: 'custom',
@@ -97,6 +99,7 @@ describe('toDast', () => {
       `;
         const dast = await htmlToDast(html, {
           handlers: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             custom: async (createNode, node, context) => {
               await new Promise((resolve) => setTimeout(resolve, 200));
               return createNode('span', {

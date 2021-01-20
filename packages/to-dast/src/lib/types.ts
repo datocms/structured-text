@@ -26,6 +26,7 @@ export type Handler<HastNodeType> = (
 
 export interface HastProperties {
   className?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

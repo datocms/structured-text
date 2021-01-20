@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
@@ -9,7 +10,6 @@ import {
 
 import {
   Handler,
-  Node,
   Mark,
   Context,
   HastNode,
@@ -19,7 +19,7 @@ import {
 } from './types';
 
 import visitChildren from './visit-children';
-import { wrap, needed as isWrapNeeded } from './wrap';
+import { wrap } from './wrap';
 
 export const root: Handler<HastRootNode> = async function root(
   createNode,
@@ -308,6 +308,7 @@ export const base: Handler<HastElementNode> = async function base(
     context.baseFound = true;
   }
 };
+// eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
 export async function noop() {}
 
 export function withMark(type: Mark): Handler<HastElementNode> {
@@ -401,8 +402,6 @@ export const wrapListItems: Handler<HastElementNode> = async function wrapListIt
   }
 
   let index = -1;
-  let child;
-
   while (++index < children.length) {
     if (
       typeof children[index] !== 'undefined' &&
@@ -422,11 +421,14 @@ export const wrapListItems: Handler<HastElementNode> = async function wrapListIt
   return children;
 };
 
-export function wrapText(context: Context, value: string) {
+export function wrapText(context: Context, value: string): string {
   return context.wrapText ? value : value.replace(/\r?\n|\r/g, ' ');
 }
 
-export function resolveUrl(context: Context, url: string | null | undefined) {
+export function resolveUrl(
+  context: Context,
+  url: string | null | undefined,
+): string {
   if (url === null || url === undefined) {
     return '';
   }

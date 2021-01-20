@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { HastRootNode } from './types';
 import parse5 from 'parse5';
 import domToHast from 'hast-util-from-parse5';
