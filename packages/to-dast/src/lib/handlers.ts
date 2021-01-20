@@ -375,13 +375,17 @@ export const handlers = {
 
   base: base,
 
+  text: span,
+
   comment: noop,
   head: noop,
   script: noop,
   style: noop,
   title: noop,
-
-  text: span,
+  video: noop,
+  audio: noop,
+  embed: noop,
+  iframe: noop,
 };
 
 export const wrapListItems: Handler<HastElementNode> = async function wrapListItems(

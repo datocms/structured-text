@@ -8,21 +8,22 @@ import {
 } from 'datocms-structured-text-utils';
 import { Node, NodeType, CreateNodeFunction, HastRootNode } from './lib/types';
 
-import { parseHtml } from './lib/parse.node';
-import { wrap, needed as isWrapNeeded } from './lib/wrap';
 import { handlers } from './lib/handlers';
 
 import visitNode from './lib/visit-node';
+import { wrap, needed as isWrapNeeded } from './lib/wrap';
 
 export type Settings = Partial<{
   newlines: boolean;
   handlers: Record<string, CreateNodeFunction>;
 }>;
 
-export function htmlToDast(
+export async function htmlToDast(
   html: string,
   settings: Settings = {},
 ): Promise<Node> {
+  const mode = typeof DOMParser !== 'undefined' ? 'dom' : 'node';
+  const { parseHtml } = await import(`./lib/parse.${mode}`);
   const tree = parseHtml(html);
   return toDast(tree, settings);
 }
@@ -39,7 +40,7 @@ export async function toDast(
   };
 
   return await visitNode(createNode, tree, {
-    parent: null,
+    parentNode: null,
     name: 'root',
     frozenBaseUrl: null,
     wrapText: true,
