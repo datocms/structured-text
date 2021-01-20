@@ -1,4 +1,5 @@
 // @ts-nocheck
+
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
 import has from 'hast-util-has-property';
@@ -7,10 +8,12 @@ import {
   inlineNodeTypes,
 } from 'datocms-structured-text-utils';
 
+import { Handler, Node, Mark, Context } from './types';
+
 import visitAll from './visit-all';
 import { wrap, needed as isWrapNeeded } from './wrap';
 
-export async function root(createNode, node, context) {
+export const root: Handler = async function root(createNode, node, context) {
   const children = await visitAll(createNode, node, {
     ...context,
     name: 'root',
@@ -21,9 +24,13 @@ export async function root(createNode, node, context) {
   }
 
   return createNode('root', { children });
-}
+};
 
-export async function paragraph(createNode, node, context) {
+export const paragraph: Handler = async function paragraph(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('paragraph');
 
   const children = await visitAll(createNode, node, {
@@ -34,9 +41,13 @@ export async function paragraph(createNode, node, context) {
   if (children.length) {
     return isAllowedChild ? createNode('paragraph', { children }) : children;
   }
-}
+};
 
-export async function heading(createNode, node, context) {
+export const heading: Handler = async function heading(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('heading');
 
   const children = await visitAll(createNode, node, {
@@ -53,9 +64,9 @@ export async function heading(createNode, node, context) {
         })
       : children;
   }
-}
+};
 
-export async function code(createNode, node, context) {
+export const code: Handler = async function code(createNode, node, context) {
   const isAllowedChild = allowedChildren[context.name].includes('code');
 
   if (!isAllowedChild) {
@@ -96,9 +107,13 @@ export async function code(createNode, node, context) {
     ...language,
     code: String(wrapText(context, toText(node))).replace(/\n+$/, ''),
   });
-}
+};
 
-export async function blockquote(createNode, node, context) {
+export const blockquote: Handler = async function blockquote(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('blockquote');
   const children = await visitAll(createNode, node, {
     ...context,
@@ -110,8 +125,8 @@ export async function blockquote(createNode, node, context) {
       ? createNode('blockquote', { children: wrap(children) })
       : children;
   }
-}
-export async function list(createNode, node, context) {
+};
+export const list: Handler = async function list(createNode, node, context) {
   const isAllowedChild = allowedChildren[context.name].includes('list');
 
   if (!isAllowedChild) {
@@ -124,10 +139,14 @@ export async function list(createNode, node, context) {
   });
 
   if (children.length) {
-    return createNode('list', { children });
+    return createNode('list', { children, style: 'bulleted' });
   }
-}
-export async function listItem(createNode, node, context) {
+};
+export const listItem: Handler = async function listItem(
+  createNode,
+  node,
+  context,
+) {
   const isAllowedChild = allowedChildren[context.name].includes('listItem');
   const children = await visitAll(createNode, node, {
     ...context,
@@ -141,8 +160,8 @@ export async function listItem(createNode, node, context) {
         })
       : children;
   }
-}
-export async function link(createNode, node, context) {
+};
+export const link: Handler = async function link(createNode, node, context) {
   // Links that aren't inside of a allowedChildren context
   // can still be valid Dast nodes in the following contexts if wrapped.
   const allowedChildrenWrapped = ['root', 'list', 'listItem'];
@@ -206,8 +225,11 @@ export async function link(createNode, node, context) {
         })
       : children;
   }
-}
-export async function span(createNode, node, context) {
+};
+export const span: Handler = async function span(createNode, node, context) {
+  if (typeof node.value !== 'string') {
+    return undefined;
+  }
   const marks = Array.isArray(context.marks)
     ? { marks: [...context.marks] }
     : {};
@@ -216,7 +238,7 @@ export async function span(createNode, node, context) {
     value: wrapText(context, node.value),
     ...marks,
   });
-}
+};
 
 export const inlineCode = withMark('code');
 export const strong = withMark('strong');
@@ -224,15 +246,19 @@ export const italic = withMark('emphasis');
 export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 
-export async function base(createNode, node, context) {
-  if (!context.baseFound) {
+export const base: Handler = async function base(createNode, node, context) {
+  if (
+    !context.baseFound &&
+    typeof node.properties === 'object' &&
+    node.properties.href
+  ) {
     context.frozenBaseUrl = node.properties.href;
     context.baseFound = true;
   }
-}
+};
 export async function noop() {}
 
-export function withMark(type) {
+export function withMark(type: Mark): Handler {
   return function markHandler(createNode, node, context) {
     let marks = { marks: [type] };
     if (Array.isArray(context.marks)) {
@@ -307,13 +333,25 @@ export const handlers = {
   text: span,
 };
 
-export async function wrapListItems(createNode, node, context) {
+export const wrapListItems: Handler = async function wrapListItems(
+  createNode,
+  node,
+  context,
+) {
   const children = await visitAll(createNode, node, context);
 
+  if (!Array.isArray(children)) {
+    return [];
+  }
+
   let index = -1;
+  let child;
 
   while (++index < children.length) {
-    if (children[index].type !== 'listItem') {
+    if (
+      typeof children[index] !== 'undefined' &&
+      children[index].type !== 'listItem'
+    ) {
       children[index] = {
         type: 'listItem',
         children: [
@@ -326,13 +364,13 @@ export async function wrapListItems(createNode, node, context) {
   }
 
   return children;
-}
+};
 
-export function wrapText(context, value) {
+export function wrapText(context: Context, value: string) {
   return context.wrapText ? value : value.replace(/\r?\n|\r/g, ' ');
 }
 
-export function resolveUrl(context, url) {
+export function resolveUrl(context: Context, url: string | null | undefined) {
   if (url === null || url === undefined) {
     return '';
   }

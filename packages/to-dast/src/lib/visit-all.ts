@@ -1,10 +1,12 @@
-// @ts-nocheck
+import { Handler, Node, HastNode } from './types';
 import visitOne from './visit-one';
 
-// all() is for visiting all the children of a node
-export default async function visitAll(createNode, parent, context) {
-  const nodes = parent.children || [];
-  let values = [];
+// visitAll() is for visiting all the children of a node
+export default (async function visitAll(createNode, parent, context) {
+  const nodes: HastNode[] = Array.isArray(parent.children)
+    ? parent.children
+    : [];
+  let values: Node[] = [];
   let index = -1;
   let result;
 
@@ -20,4 +22,4 @@ export default async function visitAll(createNode, parent, context) {
   }
 
   return values;
-}
+} as Handler);
