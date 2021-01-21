@@ -54,7 +54,7 @@ export type CodeType = 'code';
 export type Code = {
   type: CodeType;
   language?: string;
-  highlightedLines?: Array<number>;
+  highlight?: Array<number>;
   code: string;
 };
 
