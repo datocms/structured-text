@@ -1,14 +1,14 @@
 {
-  "name": "datocms-structured-text-to-dast",
+  "name": "datocms-html-to-structured-text",
   "version": "0.1.0-alpha.15",
-  "description": "Convert HTML and Hast to Dast - DatoCMS AST format",
+  "description": "Convert HTML (or Hast syntax tree) to a valid DatoCMS Structured Text Dast document",
   "keywords": [
     "datocms",
     "structured-text",
     "dast"
   ],
   "author": "Giuseppe Gurgone",
-  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/to-dast#readme",
+  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/html-to-structured-text#readme",
   "license": "MIT",
   "main": "dist/lib/index.js",
   "typings": "dist/types/index.d.ts",
@@ -43,7 +43,6 @@
     "unist-util-is": "^4.0.4"
   },
   "devDependencies": {
-    "typescript": "^4.1.3",
     "unist-utils-core": "^1.0.5"
   }
 }
