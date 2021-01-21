@@ -4,9 +4,12 @@
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
-import { Node, CreateNodeFunction, HastRootNode } from './lib/types';
+import { Root, CreateNodeFunction, HastRootNode } from './lib/types';
 import visitNode from './lib/visit-node';
 import { handlers } from './lib/handlers';
+import parse5 from '@types/parse5';
+import parse5DocumentToHast from 'hast-util-from-parse5';
+import documentToHast from 'hast-util-from-dom';
 
 export type Settings = Partial<{
   newlines: boolean;
@@ -16,17 +19,29 @@ export type Settings = Partial<{
 export async function htmlToDast(
   html: string,
   settings: Settings = {},
-): Promise<Node> {
-  const mode = typeof DOMParser !== 'undefined' ? 'dom' : 'node';
-  const { parseHtml } = await import(`./lib/parse.${mode}`);
-  const tree = parseHtml(html);
-  return toDast(tree, settings);
+): Promise<Root> {
+  if (typeof DOMParser === 'undefined') {
+    throw new Error(
+      'DOMParser is not available. Consider using `parse5ToDast` instead!',
+    );
+  }
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  const tree = documentToHast(document);
+  return hastToDast(tree, settings);
 }
 
-export async function toDast(
+export async function parse5ToDast(
+  document: parse5.Document,
+  settings: Settings = {},
+): Promise<Root> {
+  const tree = parse5DocumentToHast(document);
+  return hastToDast(tree, settings);
+}
+
+export async function hastToDast(
   tree: HastRootNode,
   settings: Settings = {},
-): Promise<Node> {
+): Promise<Root> {
   minify({ newlines: settings.newlines === true })(tree);
 
   const createNode: CreateNodeFunction = (type, props) => {

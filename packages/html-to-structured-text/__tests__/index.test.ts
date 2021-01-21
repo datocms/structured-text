@@ -1,8 +1,18 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { htmlToDast } from '../src';
+import { parse5ToDast, Settings } from '../src';
+import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 import { findAll, find } from 'unist-utils-core';
+
+function htmlToDast(html: string, settings: Settings = {}) {
+  return parse5ToDast(
+    parse5.parse(html, {
+      sourceCodeLocationInfo: true,
+    }),
+    settings,
+  );
+}
 
 describe('toDast', () => {
   it('works with empty document', async () => {
