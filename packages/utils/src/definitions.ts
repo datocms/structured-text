@@ -47,6 +47,7 @@ export const allowedChildren: AllowedChildren = {
     listNodeType,
     paragraphNodeType,
     headingNodeType,
+    blockNodeType,
   ],
   [spanNodeType]: [],
 };
