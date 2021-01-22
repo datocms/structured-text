@@ -523,15 +523,12 @@ Object {
         },
         Object {
           "attrs": Object {
-            "key": "t-1",
+            "key": "footer",
           },
           "children": Array [
-            Object {
-              "key": "line-first",
-              "text": "— some German motherfucker ",
-            },
+            "some German motherfucker",
           ],
-          "tagName": "p",
+          "tagName": "footer",
         },
       ],
       "tagName": "blockquote",

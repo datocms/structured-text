@@ -66,9 +66,18 @@ export function render<
     renderRule(isListItem, ({ adapter: { renderNode }, key, children }) => {
       return renderNode('li', { key }, children);
     }),
-    renderRule(isBlockquote, ({ adapter: { renderNode }, key, children }) => {
-      return renderNode('blockquote', { key }, children);
-    }),
+    renderRule(
+      isBlockquote,
+      ({ adapter: { renderNode }, key, node, children }) => {
+        const childrenWithAttribution = node.attribution
+          ? [
+              ...children,
+              renderNode(`footer`, { key: 'footer' }, node.attribution),
+            ]
+          : children;
+        return renderNode('blockquote', { key }, childrenWithAttribution);
+      },
+    ),
     renderRule(isCode, ({ adapter: { renderNode, renderText }, key, node }) => {
       return renderNode(
         'pre',

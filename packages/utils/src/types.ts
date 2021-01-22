@@ -62,6 +62,7 @@ export type BlockquoteType = 'blockquote';
 
 export type Blockquote = {
   type: BlockquoteType;
+  attribution?: string;
   children: Array<Paragraph>;
 };
 

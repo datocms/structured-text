@@ -396,6 +396,7 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
         },
         {
           type: 'blockquote',
+          attribution: 'some German motherfucker',
           children: [
             {
               type: 'paragraph',
@@ -403,15 +404,6 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
                 {
                   type: 'span',
                   value: '"Good design is as little design as possible." ',
-                },
-              ],
-            },
-            {
-              type: 'paragraph',
-              children: [
-                {
-                  type: 'span',
-                  value: '— some German motherfucker ',
                 },
               ],
             },
