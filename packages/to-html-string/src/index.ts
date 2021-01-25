@@ -123,6 +123,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
     },
     structuredTextOrNode,
     [
+      ...customRules,
       renderRule(isInlineItem, ({ node, adapter }) => {
         if (!renderInlineRecord) {
           throw new RenderError(
@@ -203,7 +204,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           !structuredTextOrNode.blocks
         ) {
           throw new RenderError(
-            `The document contains an 'block' node, but the passed value is not a Structured Text GraphQL response, or .blocks is not present!`,
+            `The document contains a 'block' node, but the passed value is not a Structured Text GraphQL response, or .blocks is not present!`,
             node,
           );
         }
@@ -223,7 +224,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
 
         return renderBlock({ record: item, adapter });
       }),
-    ].concat(customRules),
+    ],
   );
 
   return result;

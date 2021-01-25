@@ -131,7 +131,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
       renderFragment: mergedSettings.renderFragment,
     },
     structuredTextOrNode,
-    [
+    [].concat(customRules, [
       renderRule(isInlineItem, ({ node, adapter }) => {
         if (
           !renderInlineRecord ||
@@ -205,7 +205,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
 
         return renderBlock({ record: item, adapter });
       }),
-    ].concat(customRules),
+    ]),
   );
 
   return result;

@@ -124,6 +124,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
     },
     structuredTextOrNode,
     [
+      ...customRules,
       renderRule(isInlineItem, ({ node, adapter }) => {
         if (!renderInlineRecord) {
           throw new RenderError(
@@ -224,7 +225,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
 
         return renderBlock({ record: item, adapter });
       }),
-    ].concat(customRules),
+    ],
   );
 
   return result as ReturnType<F> | null;
