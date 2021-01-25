@@ -748,4 +748,27 @@ describe('toDast', () => {
       });
     });
   });
+
+  describe('preprocessing', () => {
+    it('allows users to transform the Hast tree', async () => {
+      const html = `
+        <p>heading</p>
+      `;
+      const dast = await htmlToDast(html, {
+        preprocess: (tree) => {
+          findAll(tree, (node) => {
+            if (node.type === 'element' && node.tagName === 'p') {
+              node.tagName = 'h1';
+            }
+          });
+        },
+      });
+      expect(validate(dast).valid).toBeTruthy();
+      expect(findAll(dast, 'paragraph')).toHaveLength(0);
+      const headings = findAll(dast, 'heading');
+      expect(headings).toHaveLength(1);
+      expect(headings[0].level).toBe(1);
+      expect(find(headings[0], 'span').value).toBe('heading');
+    });
+  });
 });

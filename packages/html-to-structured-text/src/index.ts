@@ -14,6 +14,7 @@ import documentToHast from 'hast-util-from-dom';
 export type Settings = Partial<{
   newlines: boolean;
   handlers: Record<string, CreateNodeFunction>;
+  preprocess: (hast: HastRootNode) => HastRootNode;
 }>;
 
 export async function htmlToDast(
@@ -48,6 +49,10 @@ export async function hastToDast(
     props.type = type;
     return props;
   };
+
+  if (typeof settings.preprocess === 'function') {
+    settings.preprocess(tree);
+  }
 
   return await visitNode(createNode, tree, {
     parentNode: null,
