@@ -46,7 +46,7 @@ export function render<
   F extends TrasformFn
 >(
   adapter: Adapter<H, T, M, F>,
-  structuredTextOrNode: StructuredText<R> | Node,
+  structuredTextOrNode: StructuredText<R> | Node | null | undefined,
   customRules: RenderRule<H, T, M, F>[],
 ): RenderResult<H, T, M, F> {
   return genericRender(adapter, structuredTextOrNode, [
