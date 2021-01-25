@@ -54,6 +54,7 @@ export async function hastToDast(
     name: 'root',
     frozenBaseUrl: null,
     wrapText: true,
+    defaultHandlers: handlers,
     handlers: Object.assign({}, handlers, settings.handlers || {}),
   });
 }

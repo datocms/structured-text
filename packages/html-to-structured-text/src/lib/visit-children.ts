@@ -17,6 +17,16 @@ export default (async function visitChildren(createNode, parentNode, context) {
     });
 
     if (result) {
+      if (Array.isArray(result)) {
+        result = await Promise.all(
+          result.map((nodeOrPromise) => {
+            if (nodeOrPromise instanceof Promise) {
+              return nodeOrPromise;
+            }
+            return Promise.resolve(nodeOrPromise);
+          }),
+        );
+      }
       values = values.concat(result);
     }
   }

@@ -71,6 +71,56 @@ describe('toDast', () => {
   });
 
   describe('handlers', () => {
+    it('can return an array of nodes', async () => {
+      const html = `
+        <p>twice</p>
+      `;
+
+      const dast = await htmlToDast(html, {
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          text: async (createNode, node, context) => {
+            return await Promise.all([
+              createNode('span', {
+                value: node.value,
+              }),
+              createNode('span', {
+                value: node.value,
+              }),
+            ]);
+          },
+          p: async (createNode, node, context) => {
+            return await Promise.all([
+              context.defaultHandlers.p(createNode, node, context),
+              context.defaultHandlers.p(createNode, node, context),
+            ]);
+          },
+        },
+      });
+      expect(validate(dast).valid).toBeTruthy();
+      expect(findAll(dast, 'paragraph')).toHaveLength(2);
+      expect(findAll(dast, 'span')).toHaveLength(4);
+    });
+
+    it('can return an array of promises', async () => {
+      const html = `
+        <p>twice</p>
+      `;
+      const dast = await htmlToDast(html, {
+        handlers: {
+          p: (createNode, node, context) => {
+            return [
+              context.defaultHandlers.p(createNode, node, context),
+              context.defaultHandlers.p(createNode, node, context),
+            ];
+          },
+        },
+      });
+      expect(validate(dast).valid).toBeTruthy();
+      expect(findAll(dast, 'paragraph')).toHaveLength(2);
+      expect(findAll(dast, 'span')).toHaveLength(2);
+    });
+
     describe('custom (user provided)', () => {
       it('can register custom handlers', async () => {
         const html = `
