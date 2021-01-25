@@ -7,6 +7,8 @@ import {
   isBlock,
   isInlineItem,
   isItemLink,
+  isStructuredText,
+  Node,
   Record as StructuredTextGraphQlResponseRecord,
   RenderError,
   RenderResult,
@@ -76,11 +78,7 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
   adapter: Adapter<H, T, M, F>;
 };
 
-export type StructuredTextPropTypes<
-  R extends StructuredTextGraphQlResponseRecord
-> = {
-  /** The actual field value you get from DatoCMS **/
-  structuredText: StructuredTextGraphQlResponse<R> | null | undefined;
+export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to a string **/
   customRules?: RenderRule<H, T, M, F>[];
   /** Fuction that converts an 'inlineItem' node into a string **/
@@ -99,34 +97,51 @@ export type StructuredTextPropTypes<
   renderFragment?: F;
 };
 
-export function render<R extends StructuredTextGraphQlResponseRecord>({
-  structuredText,
-  renderInlineRecord,
-  renderLinkToRecord,
-  renderBlock,
-  renderText,
-  renderNode,
-  renderMark,
-  renderFragment,
-  customRules,
-}: StructuredTextPropTypes<R>): ReturnType<F> | null {
-  if (!structuredText) {
-    return null;
-  }
+export function render<R extends StructuredTextGraphQlResponseRecord>(
+  /** The actual field value you get from DatoCMS **/
+  structuredTextOrNode:
+    | StructuredTextGraphQlResponse<R>
+    | Node
+    | null
+    | undefined,
+  /** Additional render settings **/
+  settings?: RenderSettings<R>,
+): ReturnType<F> | null {
+  const mergedSettings: RenderSettings<R> = {
+    renderText: defaultAdapter.renderText,
+    renderNode: defaultAdapter.renderNode,
+    renderMark: defaultAdapter.renderMark,
+    renderFragment: defaultAdapter.renderFragment,
+    customRules: [],
+    ...settings,
+  };
+
+  const {
+    renderInlineRecord,
+    renderLinkToRecord,
+    renderBlock,
+    customRules,
+  } = mergedSettings;
 
   const result = genericHtmlRender(
     {
-      renderText: renderText || defaultAdapter.renderText,
-      renderNode: renderNode || defaultAdapter.renderNode,
-      renderMark: renderMark || defaultAdapter.renderMark,
-      renderFragment: renderFragment || defaultAdapter.renderFragment,
+      renderText: mergedSettings.renderText,
+      renderNode: mergedSettings.renderNode,
+      renderMark: mergedSettings.renderMark,
+      renderFragment: mergedSettings.renderFragment,
     },
-    structuredText,
+    structuredTextOrNode,
     [
       renderRule(isInlineItem, ({ node, adapter }) => {
-        if (!renderInlineRecord || !structuredText.links) {
+        if (
+          !renderInlineRecord ||
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.links
+        ) {
           return null;
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.links.find((item) => item.id === node.item);
 
@@ -140,9 +155,15 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
         return renderInlineRecord({ record: item, adapter });
       }),
       renderRule(isItemLink, ({ node, children, adapter }) => {
-        if (!renderLinkToRecord || !structuredText.links) {
+        if (
+          !renderLinkToRecord ||
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.links
+        ) {
           return children;
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.links.find((item) => item.id === node.item);
 
@@ -161,9 +182,15 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
         });
       }),
       renderRule(isBlock, ({ node, adapter }) => {
-        if (!renderBlock || !structuredText.blocks) {
+        if (
+          !renderBlock ||
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.blocks
+        ) {
           return null;
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.blocks.find(
           (item) => item.id === node.item,
@@ -178,7 +205,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
 
         return renderBlock({ record: item, adapter });
       }),
-    ].concat(customRules || []),
+    ].concat(customRules),
   );
 
   return result;

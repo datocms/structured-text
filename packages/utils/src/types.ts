@@ -132,3 +132,16 @@ export type NodeType =
   | CodeType
   | RootType
   | SpanType;
+
+export type StructuredText<R extends Record = Record> = {
+  value: Document;
+  blocks?: R[];
+  links?: R[];
+};
+
+export type Record = {
+  __typename: string;
+  id: string;
+} & {
+  [prop: string]: unknown;
+};

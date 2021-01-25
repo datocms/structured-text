@@ -7,6 +7,8 @@ import {
   isBlock,
   isInlineItem,
   isItemLink,
+  isStructuredText,
+  Node,
   Record as StructuredTextGraphQlResponseRecord,
   RenderError,
   RenderResult,
@@ -68,11 +70,7 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
   adapter: Adapter<H, T, M, F>;
 };
 
-export type StructuredTextPropTypes<
-  R extends StructuredTextGraphQlResponseRecord
-> = {
-  /** The actual field value you get from DatoCMS **/
-  structuredText: StructuredTextGraphQlResponse<R> | null | undefined;
+export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to HTML **/
   customRules?: RenderRule<H, T, M, F>[];
   /** Fuction that converts an 'inlineItem' node into an HTML string **/
@@ -91,44 +89,60 @@ export type StructuredTextPropTypes<
   renderFragment?: F;
 };
 
-export function render<R extends StructuredTextGraphQlResponseRecord>({
-  structuredText,
-  renderInlineRecord,
-  renderLinkToRecord,
-  renderBlock,
-  renderText,
-  renderNode,
-  renderMark,
-  renderFragment,
-  customRules,
-}: StructuredTextPropTypes<R>): ReturnType<F> | null {
-  if (!structuredText) {
-    return null;
-  }
+export function render<R extends StructuredTextGraphQlResponseRecord>(
+  /** The actual field value you get from DatoCMS **/
+  structuredTextOrNode:
+    | StructuredTextGraphQlResponse<R>
+    | Node
+    | null
+    | undefined,
+  /** Additional render settings **/
+  settings?: RenderSettings<R>,
+): ReturnType<F> | null {
+  const mergedSettings: RenderSettings<R> = {
+    renderText: defaultAdapter.renderText,
+    renderNode: defaultAdapter.renderNode,
+    renderMark: defaultAdapter.renderMark,
+    renderFragment: defaultAdapter.renderFragment,
+    customRules: [],
+    ...settings,
+  };
+
+  const {
+    renderInlineRecord,
+    renderLinkToRecord,
+    renderBlock,
+    customRules,
+  } = mergedSettings;
 
   const result = genericHtmlRender(
     {
-      renderText: renderText || defaultAdapter.renderText,
-      renderNode: renderNode || defaultAdapter.renderNode,
-      renderMark: renderMark || defaultAdapter.renderMark,
-      renderFragment: renderFragment || defaultAdapter.renderFragment,
+      renderText: mergedSettings.renderText,
+      renderNode: mergedSettings.renderNode,
+      renderMark: mergedSettings.renderMark,
+      renderFragment: mergedSettings.renderFragment,
     },
-    structuredText,
+    structuredTextOrNode,
     [
       renderRule(isInlineItem, ({ node, adapter }) => {
         if (!renderInlineRecord) {
           throw new RenderError(
-            `The Structured Text document contains an 'inlineItem' node, but no 'renderInlineRecord' prop is specified!`,
+            `The Structured Text document contains an 'inlineItem' node, but no 'renderInlineRecord' option is specified!`,
             node,
           );
         }
 
-        if (!structuredText.links) {
+        if (
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.links
+        ) {
           throw new RenderError(
-            `The Structured Text document contains an 'inlineItem' node, but .links is not present!`,
+            `The document contains an 'itemLink' node, but the passed value is not a Structured Text GraphQL response, or .links is not present!`,
             node,
           );
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.links.find((item) => item.id === node.item);
 
@@ -144,17 +158,22 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
       renderRule(isItemLink, ({ node, children, adapter }) => {
         if (!renderLinkToRecord) {
           throw new RenderError(
-            `The Structured Text document contains an 'itemLink' node, but no 'renderLinkToRecord' prop is specified!`,
+            `The Structured Text document contains an 'itemLink' node, but no 'renderLinkToRecord' option is specified!`,
             node,
           );
         }
 
-        if (!structuredText.links) {
+        if (
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.links
+        ) {
           throw new RenderError(
-            `The Structured Text document contains an 'itemLink' node, but .links is not present!`,
+            `The document contains an 'itemLink' node, but the passed value is not a Structured Text GraphQL response, or .links is not present!`,
             node,
           );
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.links.find((item) => item.id === node.item);
 
@@ -175,17 +194,22 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
       renderRule(isBlock, ({ node, adapter }) => {
         if (!renderBlock) {
           throw new RenderError(
-            `The Structured Text document contains a 'block' node, but no 'renderBlock' prop is specified!`,
+            `The Structured Text document contains a 'block' node, but no 'renderBlock' option is specified!`,
             node,
           );
         }
 
-        if (!structuredText.blocks) {
+        if (
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.blocks
+        ) {
           throw new RenderError(
-            `The Structured Text document contains a 'block' node, but .blocks is not present!`,
+            `The document contains an 'block' node, but the passed value is not a Structured Text GraphQL response, or .blocks is not present!`,
             node,
           );
         }
+
+        const structuredText = structuredTextOrNode;
 
         const item = structuredText.blocks.find(
           (item) => item.id === node.item,
@@ -200,7 +224,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>({
 
         return renderBlock({ record: item, adapter });
       }),
-    ].concat(customRules || []),
+    ].concat(customRules),
   );
 
   return result as ReturnType<F> | null;

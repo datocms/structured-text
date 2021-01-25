@@ -9,7 +9,7 @@ import { isHeading } from 'datocms-structured-text-utils';
 describe('render', () => {
   describe('with no value', () => {
     it('renders null', () => {
-      expect(render({ structuredText: null })).toMatchSnapshot();
+      expect(render(null)).toMatchSnapshot();
     });
   });
 
@@ -37,15 +37,14 @@ describe('render', () => {
 
     describe('with default rules', () => {
       it('renders the document', () => {
-        expect(render({ structuredText })).toMatchSnapshot();
+        expect(render(structuredText)).toMatchSnapshot();
       });
     });
 
     describe('with custom rules', () => {
       it('renders the document', () => {
         expect(
-          render({
-            structuredText,
+          render(structuredText, {
             renderText: (text) => {
               return text.replace(/This/, 'That');
             },
@@ -141,8 +140,7 @@ describe('render', () => {
     describe('with default rules', () => {
       it('renders the document', () => {
         expect(
-          render({
-            structuredText,
+          render(structuredText, {
             renderInlineRecord: ({ record }) => {
               switch (record.__typename) {
                 case 'DocPageRecord':
@@ -174,19 +172,21 @@ describe('render', () => {
 
     describe('with missing renderInlineRecord', () => {
       it('skips the node', () => {
-        expect(render({ structuredText })).toMatchSnapshot();
+        expect(render(structuredText)).toMatchSnapshot();
       });
     });
 
     describe('with missing record and renderInlineRecord specified', () => {
       it('raises an error', () => {
         expect(() => {
-          render({
-            structuredText: { ...structuredText, links: [] },
-            renderInlineRecord: () => null,
-            renderLinkToRecord: () => null,
-            renderBlock: () => null,
-          });
+          render(
+            { ...structuredText, links: [] },
+            {
+              renderInlineRecord: () => null,
+              renderLinkToRecord: () => null,
+              renderBlock: () => null,
+            },
+          );
         }).toThrow(RenderError);
       });
     });

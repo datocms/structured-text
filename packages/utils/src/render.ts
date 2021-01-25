@@ -1,5 +1,5 @@
-import { Document, Node } from './types';
-import { hasChildren } from './guards';
+import { Node, Record, StructuredText } from './types';
+import { hasChildren, isStructuredText } from './guards';
 import flatten from 'lodash.flatten';
 
 export class RenderError extends Error {
@@ -14,19 +14,6 @@ export class RenderError extends Error {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TrasformFn = (...args: any[]) => any;
-
-export type Record = {
-  __typename: string;
-  id: string;
-} & {
-  [prop: string]: unknown;
-};
-
-export type StructuredText<R extends Record = Record> = {
-  value: Document;
-  blocks?: R[];
-  links?: R[];
-};
 
 export type RenderResult<
   H extends TrasformFn,
@@ -142,16 +129,19 @@ export function render<
   R extends Record
 >(
   adapter: Adapter<H, T, M, F>,
-  structuredText: StructuredText<R>,
+  structuredTextOrNode: StructuredText<R> | Node | null | undefined,
   renderRules: RenderRule<H, T, M, F>[],
 ): RenderResult<H, T, M, F> {
-  if (!structuredText) {
+  if (!structuredTextOrNode) {
     return null;
   }
 
   const result = transformNode(
     adapter,
-    structuredText.value.document,
+    isStructuredText<R>(structuredTextOrNode)
+      ? structuredTextOrNode.value.document
+      : structuredTextOrNode,
+
     't-0',
     [],
     renderRules,

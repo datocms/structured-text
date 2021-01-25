@@ -18,6 +18,7 @@ import {
   StructuredText,
   TrasformFn,
   RenderError,
+  Node,
 } from 'datocms-structured-text-utils';
 
 export { renderRule, RenderError };
@@ -45,10 +46,10 @@ export function render<
   F extends TrasformFn
 >(
   adapter: Adapter<H, T, M, F>,
-  structuredText: StructuredText<R>,
+  structuredTextOrNode: StructuredText<R> | Node,
   customRules: RenderRule<H, T, M, F>[],
 ): RenderResult<H, T, M, F> {
-  return genericRender(adapter, structuredText, [
+  return genericRender(adapter, structuredTextOrNode, [
     ...customRules,
     renderRule(isRoot, ({ adapter: { renderFragment }, key, children }) => {
       return renderFragment(children, key);

@@ -15,6 +15,8 @@ import {
   WithChildrenNode,
   InlineNode,
   NodeType,
+  Record,
+  StructuredText,
 } from './types';
 
 import {
@@ -87,4 +89,17 @@ export function isItemLink(node: Node): node is ItemLink {
 
 export function isInlineItem(node: Node): node is InlineItem {
   return node.type === inlineItemNodeType;
+}
+
+export function isStructuredText<R extends Record>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  obj: any,
+): obj is StructuredText<R> {
+  return (
+    obj &&
+    'value' in obj &&
+    obj.value &&
+    'schema' in obj.value &&
+    'document' in obj.value
+  );
 }
