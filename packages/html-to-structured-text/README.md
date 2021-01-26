@@ -87,6 +87,8 @@ async function p(createDastNode, hastNode, context) {
 }
 ```
 
+Handlers can return either a promise that resolves to a Dast node, an array of Dast Nodes or `undefined` to skip the current node.
+
 To ensure that a valid Dast is generated the default handlers also check that the current `hastNode` is a valid Dast node for its parent and, if not, they ignore the current node and continue visiting its children.
 
 Information about the parent Dast node name is available in `context.name`.
@@ -144,11 +146,9 @@ It is **highly encouraged** to validate the Dast when using custom handlers as h
 
 ## preprocessing
 
-Because of the strictness of the Dast spec it is possible that some semantic or elements might be lost during the transformation. For example in Dast images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists).
+Because of the strictness of the Dast spec it is possible that some semantic or elements might be lost during the transformation.
 
-To help with this, the library allows you to register a `preprocess` function that is passed the Hast tree before it is transformed to Dast.
-
-You can use this function to make changes to the Hast that produces the desidered Dast.
+To improve the final result, you might want to modify the Hast before it is transformed to Dast with the `preprocess` hook.
 
 ```js
 import { findAll } from 'unist-utils-core';
@@ -169,6 +169,101 @@ htmlToDast(html, {
   console.log(Dast);
 });
 ```
+
+### Examples
+
+<details>
+  <summary>Split an `ul` that contains an image.</summary>
+
+In Dast images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces.
+
+```js
+import { findAll } from 'unist-utils-core';
+
+const html = `
+<ul>
+  <li>item 1</li>
+  <li><div><img src="./img.png" alt></div></li>
+  <li>item 2</li>
+</ul>
+`;
+
+const dast = await htmlToDast(html, {
+  preprocess: (tree) => {
+    findAll(tree, (node, index, parent) => {
+      if (node.tagName !== 'ul' && node.tagName !== 'ol') {
+        return;
+      }
+      let i = 0;
+      // Build up a new array of children where every element is either
+      // a ul/ol with contiguous regular children or a node with images.
+      //
+      // Example:
+      // When list items have images [ul, img, img, ul]
+      // When there aren't images [ul] the list is equal to the original
+      const splitChildren = [];
+      // Insert list item to an existing or new list in splitChildren.
+      function insertListItem(node, listItem) {
+        if (splitChildren[i]) {
+          // If we have a list add the current listItem to it.
+          splitChildren[i].children.push(listItem);
+        } else {
+          splitChildren[i] = {
+            ...node,
+            children: [listItem],
+          };
+        }
+      }
+
+      node.children.forEach((listItem) => {
+        const images = findAll(listItem, (node, index, parent) => {
+          if (node.tagName !== 'img') {
+            return;
+          }
+          // Remove the image from the listItem.
+          parent.children.splice(index, 1);
+          return true;
+        });
+        if (images.length > 0) {
+          insertListItem(node, listItem);
+          // If we find images add new item to splitChildren.
+          // This will split up the list.
+          if (splitChildren.length > 0) {
+            i++;
+          }
+          splitChildren.push({
+            type: 'element',
+            tagName: 'div',
+            children: images,
+          });
+          i++;
+        } else {
+          insertListItem(node, listItem);
+        }
+      });
+
+      if (splitChildren.length > 1) {
+        parent.children[index] = {
+          type: 'element',
+          tagName: 'div',
+          children: splitChildren,
+        };
+      }
+    });
+  },
+  handlers: {
+    img: async (createNode, node, context) => {
+      // In a real scenario you would upload the image to Dato and get back an id.
+      const item = '123';
+      return createNode('block', {
+        item,
+      });
+    },
+  },
+});
+```
+
+</details>
 
 ### Utilities
 

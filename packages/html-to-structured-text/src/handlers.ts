@@ -246,6 +246,9 @@ export const link: Handler<HastElementNode> = async function link(
     const splitChildren: HastElementNode[] = [];
     node.children.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
+        if (splitChildren.length > 0) {
+          i++;
+        }
         splitChildren.push({
           ...child,
           children: [

@@ -770,5 +770,93 @@ describe('toDast', () => {
       expect(headings[0].level).toBe(1);
       expect(find(headings[0], 'span').value).toBe('heading');
     });
+
+    it('split list with images', async () => {
+      const html = `
+      <ul>
+        <li>item 1</li>
+        <li><div><img src="./img.png" alt>item 2</div></li>
+        <li>item 3</li>
+      </ul>
+      `;
+      const dast = await htmlToDast(html, {
+        preprocess: (tree) => {
+          findAll(tree, (node, index, parent) => {
+            if (node.tagName !== 'ul' && node.tagName !== 'ol') {
+              return;
+            }
+            let i = 0;
+            // Build up a new array of children where every element is either
+            // a ul/ol with contiguous regular children or a node with images.
+            //
+            // Example:
+            // When list items have images [ul, img, img, ul]
+            // When there aren't images [ul] the list is equal to the original
+            const splitChildren = [];
+            // Insert list item to an existing or new list in splitChildren.
+            function insertListItem(node, listItem) {
+              if (splitChildren[i]) {
+                // If we have a list add the current listItem to it.
+                splitChildren[i].children.push(listItem);
+              } else {
+                splitChildren[i] = {
+                  ...node,
+                  children: [listItem],
+                };
+              }
+            }
+
+            node.children.forEach((listItem) => {
+              const images = findAll(listItem, (node, index, parent) => {
+                if (node.tagName !== 'img') {
+                  return;
+                }
+                // Remove the image from the listItem.
+                parent.children.splice(index, 1);
+                return true;
+              });
+              if (images.length > 0) {
+                insertListItem(node, listItem);
+                // If we find images add new item to splitChildren.
+                // This will split up the list.
+                if (splitChildren.length > 0) {
+                  i++;
+                }
+                splitChildren.push({
+                  type: 'element',
+                  tagName: 'div',
+                  children: images,
+                });
+                i++;
+              } else {
+                insertListItem(node, listItem);
+              }
+            });
+
+            if (splitChildren.length > 1) {
+              parent.children[index] = {
+                type: 'element',
+                tagName: 'div',
+                children: splitChildren,
+              };
+            }
+          });
+        },
+        handlers: {
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(dast).valid).toBeTruthy();
+      expect(findAll(dast, 'list')).toHaveLength(2);
+      expect(findAll(dast, 'listItem')).toHaveLength(3);
+      expect(findAll(dast, 'block')).toHaveLength(1);
+    });
   });
 });
