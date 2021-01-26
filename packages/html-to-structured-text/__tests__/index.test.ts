@@ -255,6 +255,92 @@ describe('toDast', () => {
       });
     });
 
+    describe('base', () => {
+      it('is detected during transformation', async () => {
+        expect.assertions(6);
+        const html = `
+          <base href="https://datocms.com" />
+        `;
+        const dast = await htmlToDast(html, {
+          handlers: {
+            base: async (createNode, node, context) => {
+              expect(context.shared.baseUrl).toBe(null);
+              expect(context.shared.baseUrlFound).toBe(false);
+              const result = await context.defaultHandlers.base(
+                createNode,
+                node,
+                context,
+              );
+              expect(context.shared.baseUrl).toBe('https://datocms.com');
+              expect(context.shared.baseUrlFound).toBe(true);
+              return result;
+            },
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children).toHaveLength(0);
+      });
+
+      it('resolves relative paths', async () => {
+        const html = `
+          <base href="https://datocms.com" />
+          <a href="./contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
+      it('resolves absolute paths', async () => {
+        const html = `
+          <base href="https://datocms.com/t/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/t/contact');
+      });
+
+      it('does not modify absolute URLs', async () => {
+        const html = `
+          <base href="https://datocms.com/t/" />
+          <a href="https://datocms.com/b/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/b/contact');
+      });
+
+      it('overrides user specified baseUrl', async () => {
+        const html = `
+          <base href="https://datocms.com/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html, {
+          shared: {
+            baseUrl: 'http://acme.com',
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
+      it('does not override user specified baseUrl when found', async () => {
+        const html = `
+          <base href="https://datocms.com/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html, {
+          shared: {
+            baseUrl: 'http://acme.com',
+            baseUrlFound: true,
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('http://acme.com/contact');
+      });
+    });
+
     describe('paragraph', () => {
       it('wraps children when necessary', async () => {
         const html = `

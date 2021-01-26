@@ -58,10 +58,14 @@ export async function hastToDast(
   return await visitNode(createNode, tree, {
     parentNodeType: 'root',
     parentNode: null,
-    frozenBaseUrl: null,
-    wrapText: true,
     defaultHandlers: handlers,
     handlers: Object.assign({}, handlers, settings.handlers || {}),
+    wrapText: true,
+    shared: {
+      baseUrl: null,
+      baseUrlFound: false,
+      ...(settings.shared || {}),
+    },
   });
 }
 

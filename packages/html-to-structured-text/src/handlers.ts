@@ -310,18 +310,31 @@ export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 export const highlight = withMark('highlight');
 
+export const head: Handler<HastElementNode> = async function head(
+  createNode,
+  node,
+  context,
+) {
+  const baseElement = node.children.find((child) => child.tagName === 'base');
+  if (baseElement) {
+    return context.handlers.base(createNode, baseElement, context);
+  } else {
+    return undefined;
+  }
+};
+
 export const base: Handler<HastElementNode> = async function base(
   createNode,
   node,
   context,
 ) {
   if (
-    !context.baseFound &&
+    !context.shared.baseUrlFound &&
     typeof node.properties === 'object' &&
     node.properties.href
   ) {
-    context.frozenBaseUrl = node.properties.href;
-    context.baseFound = true;
+    context.shared.baseUrl = node.properties.href.replace(/\/$/, '');
+    context.shared.baseUrlFound = true;
   }
 };
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
@@ -397,8 +410,8 @@ export const handlers = {
 
   text: span,
 
+  head: head,
   comment: noop,
-  head: noop,
   script: noop,
   style: noop,
   title: noop,
@@ -451,9 +464,16 @@ export function resolveUrl(
     return '';
   }
 
-  /* istanbul ignore next - ignored for older Node */
-  if (context.frozenBaseUrl && typeof URL !== 'undefined') {
-    return String(new URL(url, context.frozenBaseUrl));
+  if (context.shared.baseUrl && typeof URL !== 'undefined') {
+    const isRelative = /^\.?\//.test(url);
+    const parsed = new URL(url, context.shared.baseUrl);
+    if (isRelative) {
+      const parsedBase = new URL(context.shared.baseUrl);
+      if (!parsed.pathname.startsWith(parsedBase.pathname)) {
+        parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
+      }
+    }
+    return parsed.toString();
   }
 
   return url;

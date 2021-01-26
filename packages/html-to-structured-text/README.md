@@ -102,6 +102,14 @@ The default handlers are available on `context.defaultHandlers`.
 Every handler receives a `context` object that includes the following information:
 
 ```js
+export interface GlobalContext {
+  // Whether the library has found a <base> tag or should not look further.
+  // See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+  baseUrlFound?: boolean;
+  // <base> tag url. This is used for resolving relative URLs.
+  baseUrl?: string;
+}
+
 export interface Context {
   // The current parent Dast node type.
   parentNodeType: NodeType;
@@ -111,11 +119,6 @@ export interface Context {
   defaultHandlers: Record<string, Handler<unknown>>;
   // A reference to the current handlers - merged default + user handlers.
   handlers: Record<string, Handler<unknown>>;
-  // Whether the library has found a <base> tag.
-  // See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-  baseFound?: boolean;
-  // <base> tag url. This is used for resolving relative URLs.
-  frozenBaseUrl?: string;
   wrapText: boolean;
   // Marks for span nodes.
   marks?: Mark[];
@@ -123,6 +126,9 @@ export interface Context {
   // Detection is done on a class name eg class="language-html"
   // Default is `language-`
   codePrefix?: string;
+  // Properties in this object are avaliable to every handler as Context
+  // is not deeply cloned.
+  global: GlobalContext;
 }
 ```
 
