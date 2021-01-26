@@ -56,8 +56,8 @@ export async function hastToDast(
   }
 
   return await visitNode(createNode, tree, {
+    parentNodeType: 'root',
     parentNode: null,
-    name: 'root',
     frozenBaseUrl: null,
     wrapText: true,
     defaultHandlers: handlers,

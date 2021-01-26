@@ -46,9 +46,9 @@ Internally, both utilities work on a Hast. Should you have an Hast already you c
 
 ## Valid Dast
 
-Dast is a strict format that is compliant with DatoCMS' Structured Text records.
+Dast is a strict format that is compliant with DatoCMS' Structured Text records. As such the resulting document is generally a simplified, content-centric version of the input HTML.
 
-As such this library relies on semantic HTML when possible to generate a valid Dast. The resulting document is generally a simplified, content-centric version of the input HTML.
+When possible, the library relies on semantic HTML to generate a valid Dast.
 
 The `datocms-structured-text-utils` package provides a `validate` utility to validate a Dast to make sure that the resulting tree is compatible with DatoCMS.
 
@@ -101,8 +101,8 @@ Every handler receives a `context` object that includes the following informatio
 
 ```js
 export interface Context {
-  // The current parent Dast node name.
-  name: NodeType;
+  // The current parent Dast node type.
+  parentNodeType: NodeType;
   // The parent Hast node.
   parentNode: HastNode;
   // A reference to the default handlers record (map).

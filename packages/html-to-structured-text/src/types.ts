@@ -8,7 +8,7 @@ export type CreateNodeFunction = (
 ) => Node;
 
 export interface Context {
-  name: NodeType;
+  parentNodeType: NodeType;
   parentNode: HastNode;
   defaultHandlers: Record<string, Handler<unknown>>;
   handlers: Record<string, Handler<unknown>>;
