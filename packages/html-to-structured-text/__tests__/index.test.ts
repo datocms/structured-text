@@ -707,6 +707,8 @@ describe('toDast', () => {
 
         strike: 'strikethrough',
         s: 'strikethrough',
+
+        mark: 'highlight',
       };
 
       describe('converts tags to marks', () => {

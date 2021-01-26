@@ -308,6 +308,7 @@ export const strong = withMark('strong');
 export const italic = withMark('emphasis');
 export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
+export const highlight = withMark('highlight');
 
 export const base: Handler<HastElementNode> = async function base(
   createNode,
@@ -389,6 +390,8 @@ export const handlers = {
 
   strike: strikethrough,
   s: strikethrough,
+
+  mark: highlight,
 
   base: base,
 
