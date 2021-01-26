@@ -4,9 +4,10 @@
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
-import { Root, CreateNodeFunction, HastRootNode } from './lib/types';
-import visitNode from './lib/visit-node';
-import { handlers } from './lib/handlers';
+import { Root, CreateNodeFunction, HastRootNode } from './types';
+import visitNode from './visit-node';
+import visitChildren from './visit-children';
+import { handlers } from './handlers';
 import parse5 from 'parse5';
 import parse5DocumentToHast from 'hast-util-from-parse5';
 import documentToHast from 'hast-util-from-dom';
@@ -63,3 +64,5 @@ export async function hastToDast(
     handlers: Object.assign({}, handlers, settings.handlers || {}),
   });
 }
+
+export { visitNode, visitChildren };

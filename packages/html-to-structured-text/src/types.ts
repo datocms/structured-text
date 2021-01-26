@@ -10,6 +10,7 @@ export type CreateNodeFunction = (
 export interface Context {
   name: NodeType;
   parentNode: HastNode;
+  defaultHandlers: Record<string, Handler<unknown>>;
   handlers: Record<string, Handler<unknown>>;
   frozenBaseUrl?: string;
   baseFound?: boolean;
