@@ -181,11 +181,11 @@ In Dast images can be presented as `Block` nodes but these are not allowed insid
 import { findAll } from 'unist-utils-core';
 
 const html = `
-<ul>
-  <li>item 1</li>
-  <li><div><img src="./img.png" alt></div></li>
-  <li>item 2</li>
-</ul>
+  <ul>
+    <li>item 1</li>
+    <li><div><img src="./img.png" alt></div></li>
+    <li>item 2</li>
+  </ul>
 `;
 
 const dast = await htmlToDast(html, {
@@ -248,6 +248,43 @@ const dast = await htmlToDast(html, {
           tagName: 'div',
           children: splitChildren,
         };
+      }
+    });
+  },
+  handlers: {
+    img: async (createNode, node, context) => {
+      // In a real scenario you would upload the image to Dato and get back an id.
+      const item = '123';
+      return createNode('block', {
+        item,
+      });
+    },
+  },
+});
+```
+
+</details>
+
+<details>
+  <summary>Lift up an image node</summary>
+
+```js
+const html = `
+  <ul>
+    <li>item 1</li>
+    <li><div><img src="./img.png" alt>item 2</div></li>
+    <li>item 3</li>
+  </ul>
+`;
+const dast = await htmlToDast(html, {
+  preprocess: (tree) => {
+    findAll(tree, (node, index, parent) => {
+      if (node.tagName === 'img') {
+        // Add the image to the root's children.
+        tree.children.push(node);
+        // remove the image from the parent's children array.
+        parent.children.splice(index, 1);
+        return;
       }
     });
   },

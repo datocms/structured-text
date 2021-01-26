@@ -858,5 +858,45 @@ describe('toDast', () => {
       expect(findAll(dast, 'listItem')).toHaveLength(3);
       expect(findAll(dast, 'block')).toHaveLength(1);
     });
+
+    it('lift up nodes', async () => {
+      const html = `
+      <ul>
+        <li>item 1</li>
+        <li><div><img src="./img.png" alt>item 2</div></li>
+        <li>item 3</li>
+      </ul>
+      `;
+      const dast = await htmlToDast(html, {
+        preprocess: (tree) => {
+          findAll(tree, (node, index, parent) => {
+            if (node.tagName === 'img') {
+              // Add the image to the root's children.
+              tree.children.push(node);
+              // remove the image from the parent's children array.
+              parent.children.splice(index, 1);
+              return;
+            }
+          });
+        },
+        handlers: {
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(dast).valid).toBeTruthy();
+      expect(dast.children.map((node) => node.type)).toMatchInlineSnapshot(`
+      Array [
+        "list",
+        "block",
+      ]
+    `);
+    });
   });
 });
