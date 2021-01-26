@@ -53,7 +53,6 @@ describe('datocms-structured-text-utils', () => {
 
     const adapter = {
       renderNode: dummyRenderer,
-      renderMark: dummyRenderer,
       renderFragment: (chunks: string[]) => chunks,
       renderText: (text: string) => text,
     };

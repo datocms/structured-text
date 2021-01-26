@@ -18,67 +18,56 @@ export type TrasformFn = (...args: any[]) => any;
 export type RenderResult<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
-> =
-  | ReturnType<H>
-  | ReturnType<T>
-  | ReturnType<F>
-  | ReturnType<M>
-  | null
-  | undefined;
+> = ReturnType<H> | ReturnType<T> | ReturnType<F> | null | undefined;
 
 export type RenderContext<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn,
   N extends Node
 > = {
-  adapter: Adapter<H, T, M, F>;
+  adapter: Adapter<H, T, F>;
   node: N;
   ancestors: Node[];
   key: string;
-  children: RenderResult<H, T, M, F>[] | undefined;
+  children: RenderResult<H, T, F>[] | undefined;
 };
 
 export interface RenderRule<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
 > {
   appliable: (node: Node) => boolean;
-  apply: (ctx: RenderContext<H, T, M, F, Node>) => RenderResult<H, T, M, F>;
+  apply: (ctx: RenderContext<H, T, F, Node>) => RenderResult<H, T, F>;
 }
 
 export const renderRule = <
   N extends Node,
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
 >(
   guard: (node: Node) => node is N,
-  transform: (ctx: RenderContext<H, T, M, F, N>) => RenderResult<H, T, M, F>,
-): RenderRule<H, T, M, F> => ({
+  transform: (ctx: RenderContext<H, T, F, N>) => RenderResult<H, T, F>,
+): RenderRule<H, T, F> => ({
   appliable: guard,
-  apply: (ctx: RenderContext<H, T, M, F, Node>) =>
-    transform(ctx as RenderContext<H, T, M, F, N>),
+  apply: (ctx: RenderContext<H, T, F, Node>) =>
+    transform(ctx as RenderContext<H, T, F, N>),
 });
 
 export function transformNode<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
 >(
-  adapter: Adapter<H, T, M, F>,
+  adapter: Adapter<H, T, F>,
   node: Node,
   key: string,
   ancestors: Node[],
-  renderRules: RenderRule<H, T, M, F>[],
-): RenderResult<H, T, M, F> {
+  renderRules: RenderRule<H, T, F>[],
+): RenderResult<H, T, F> {
   const children = hasChildren(node)
     ? flatten(
         (node.children as Node[])
@@ -112,26 +101,23 @@ export function transformNode<
 export type Adapter<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
 > = {
   renderNode: H;
   renderText: T;
   renderFragment: F;
-  renderMark: M;
 };
 
 export function render<
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn,
   R extends Record
 >(
-  adapter: Adapter<H, T, M, F>,
+  adapter: Adapter<H, T, F>,
   structuredTextOrNode: StructuredText<R> | Node | null | undefined,
-  renderRules: RenderRule<H, T, M, F>[],
-): RenderResult<H, T, M, F> {
+  renderRules: RenderRule<H, T, F>[],
+): RenderResult<H, T, F> {
   if (!structuredTextOrNode) {
     return null;
   }

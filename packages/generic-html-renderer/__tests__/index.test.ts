@@ -503,7 +503,6 @@ const dummyRenderer = (
 
 const dummyAdapter = {
   renderNode: dummyRenderer,
-  renderMark: dummyRenderer,
   renderFragment: (children: (Tag | Text | Fragment)[], key: string) => ({
     children,
     key,

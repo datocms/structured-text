@@ -42,13 +42,12 @@ export function render<
   R extends Record,
   H extends TrasformFn,
   T extends TrasformFn,
-  M extends TrasformFn,
   F extends TrasformFn
 >(
-  adapter: Adapter<H, T, M, F>,
+  adapter: Adapter<H, T, F>,
   structuredTextOrNode: StructuredText<R> | Node | null | undefined,
-  customRules: RenderRule<H, T, M, F>[],
-): RenderResult<H, T, M, F> {
+  customRules: RenderRule<H, T, F>[],
+): RenderResult<H, T, F> {
   return genericRender(adapter, structuredTextOrNode, [
     ...customRules,
     renderRule(isRoot, ({ adapter: { renderFragment }, key, children }) => {
@@ -113,7 +112,7 @@ export function render<
             )
           : renderText(node.value, key);
 
-      return marks.reduce<RenderResult<H, T, M, F>>((children, mark) => {
+      return marks.reduce<RenderResult<H, T, F>>((children, mark) => {
         return renderNode(markToTagName(mark), { key }, children);
       }, textWithNewlinesConvertedToBr);
     }),

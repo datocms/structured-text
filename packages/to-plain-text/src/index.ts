@@ -50,13 +50,11 @@ const stringAdapter = (
 
 export const defaultAdapter = {
   renderNode: stringAdapter,
-  renderMark: stringAdapter,
   renderFragment,
   renderText: (text: string): string => text,
 };
 
 type H = typeof defaultAdapter.renderNode;
-type M = typeof defaultAdapter.renderMark;
 type T = typeof defaultAdapter.renderText;
 type F = typeof defaultAdapter.renderFragment;
 
@@ -64,23 +62,23 @@ type RenderInlineRecordContext<
   R extends StructuredTextGraphQlResponseRecord
 > = {
   record: R;
-  adapter: Adapter<H, T, M, F>;
+  adapter: Adapter<H, T, F>;
 };
 
 type RenderRecordLinkContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;
-  adapter: Adapter<H, T, M, F>;
-  children: RenderResult<H, T, M, F>;
+  adapter: Adapter<H, T, F>;
+  children: RenderResult<H, T, F>;
 };
 
 type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;
-  adapter: Adapter<H, T, M, F>;
+  adapter: Adapter<H, T, F>;
 };
 
 export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to a string **/
-  customRules?: RenderRule<H, T, M, F>[];
+  customRules?: RenderRule<H, T, F>[];
   /** Fuction that converts an 'inlineItem' node into a string **/
   renderInlineRecord?: (context: RenderInlineRecordContext<R>) => string | null;
   /** Fuction that converts an 'itemLink' node into a string **/
@@ -91,8 +89,6 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   renderText?: T;
   /** React.createElement-like function to use to convert a node into a string **/
   renderNode?: H;
-  /** React.createElement-like function to use to convert a mark into a string **/
-  renderMark?: M;
   /** Function to use to generate a React.Fragment **/
   renderFragment?: F;
 };
@@ -110,7 +106,6 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   const mergedSettings: RenderSettings<R> = {
     renderText: defaultAdapter.renderText,
     renderNode: defaultAdapter.renderNode,
-    renderMark: defaultAdapter.renderMark,
     renderFragment: defaultAdapter.renderFragment,
     customRules: [],
     ...settings,
@@ -127,7 +122,6 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
     {
       renderText: mergedSettings.renderText,
       renderNode: mergedSettings.renderNode,
-      renderMark: mergedSettings.renderMark,
       renderFragment: mergedSettings.renderFragment,
     },
     structuredTextOrNode,
