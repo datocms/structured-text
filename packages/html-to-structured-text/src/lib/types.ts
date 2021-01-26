@@ -22,7 +22,9 @@ export type Handler<HastNodeType> = (
   createNodeFunction: CreateNodeFunction,
   node: HastNodeType,
   context: Context,
-) => Promise<Node | Array<Node> | void>;
+) =>
+  | Promise<Node | Array<Node> | void>
+  | Array<Promise<Node | Array<Node> | void>>;
 
 export interface HastProperties {
   className?: string[];

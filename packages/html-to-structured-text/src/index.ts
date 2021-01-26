@@ -7,13 +7,14 @@ import minify from 'rehype-minify-whitespace';
 import { Root, CreateNodeFunction, HastRootNode } from './lib/types';
 import visitNode from './lib/visit-node';
 import { handlers } from './lib/handlers';
-import parse5 from '@types/parse5';
+import parse5 from 'parse5';
 import parse5DocumentToHast from 'hast-util-from-parse5';
 import documentToHast from 'hast-util-from-dom';
 
 export type Settings = Partial<{
   newlines: boolean;
   handlers: Record<string, CreateNodeFunction>;
+  preprocess: (hast: HastRootNode) => HastRootNode;
 }>;
 
 export async function htmlToDast(
@@ -49,11 +50,16 @@ export async function hastToDast(
     return props;
   };
 
+  if (typeof settings.preprocess === 'function') {
+    settings.preprocess(tree);
+  }
+
   return await visitNode(createNode, tree, {
     parentNode: null,
     name: 'root',
     frozenBaseUrl: null,
     wrapText: true,
+    defaultHandlers: handlers,
     handlers: Object.assign({}, handlers, settings.handlers || {}),
   });
 }

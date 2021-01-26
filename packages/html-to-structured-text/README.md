@@ -1,11 +1,11 @@
-# `to-dast`
+# `html-to-structured-text`
 
 > TODO: description
 
 ## Usage
 
 ```
-const toDast = require('to-dast');
+const { toDast } = require('html-to-structured-text');
 
 // TODO: DEMONSTRATE API
 ```
