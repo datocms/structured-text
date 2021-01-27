@@ -291,6 +291,16 @@ describe('toDast', () => {
         expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
       });
 
+      it('resolves relative paths without . or /', async () => {
+        const html = `
+          <base href="https://datocms.com" />
+          <a href="contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
       it('resolves absolute paths', async () => {
         const html = `
           <base href="https://datocms.com/t/" />
