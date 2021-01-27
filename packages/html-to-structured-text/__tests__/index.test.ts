@@ -3,7 +3,8 @@
 import { parse5ToDast, Settings } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
-import { findAll, find } from 'unist-utils-core';
+import { findAll, find, visit } from 'unist-utils-core';
+import toHTML from 'hast-util-to-html';
 
 function htmlToDast(html: string, settings: Settings = {}) {
   return parse5ToDast(
@@ -869,76 +870,97 @@ describe('toDast', () => {
       expect(find(headings[0], 'span').value).toBe('heading');
     });
 
-    it('split list with images', async () => {
+    it.only('split nodes with images', async () => {
       const html = `
       <ul>
         <li>item 1</li>
-        <li><div><img src="./img.png" alt>item 2</div></li>
+        <li><div><img src="./ul1-img.png" alt>item 2</div></li>
         <li>item 3</li>
+        <li>item 4<img src="./ul2-img.png" alt></li>
+        <li>item 5</li>
+        <li>item 6<img src="./ul3-img.png" alt>item 7</li>
+        <li>item 8</li>
       </ul>
+      <div>
+        <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
+      </div>
       `;
       const dast = await htmlToDast(html, {
         preprocess: (tree) => {
-          findAll(tree, (node, index, parent) => {
-            if (node.tagName !== 'ul' && node.tagName !== 'ol') {
+          const body = find(tree, (node) => node.tagName === 'body');
+          visit(body, (node, index, parents) => {
+            if (!node || node.tagName !== 'img' || node.__lifted) {
               return;
             }
-            let i = 0;
-            // Build up a new array of children where every element is either
-            // a ul/ol with contiguous regular children or a node with images.
-            //
-            // Example:
-            // When list items have images [ul, img, img, ul]
-            // When there aren't images [ul] the list is equal to the original
-            const splitChildren = [];
-            // Insert list item to an existing or new list in splitChildren.
-            function insertListItem(node, listItem) {
-              if (splitChildren[i]) {
-                // If we have a list add the current listItem to it.
-                splitChildren[i].children.push(listItem);
-              } else {
-                splitChildren[i] = {
-                  ...node,
-                  children: [listItem],
-                };
-              }
-            }
+            // const body = parents[0];
+            // const thisBranchRootNode = parents[1];
+            const imgParent = parents[parents.length - 1];
+            // remove image
+            imgParent.children.splice(index, 1);
+            // const insertIndex = body.children.indexOf(thisBranchRootNode);
 
-            node.children.forEach((listItem) => {
-              const images = findAll(listItem, (node, index, parent) => {
-                if (node.tagName !== 'img') {
-                  return;
-                }
-                // Remove the image from the listItem.
-                parent.children.splice(index, 1);
-                return true;
-              });
-              if (images.length > 0) {
-                insertListItem(node, listItem);
-                // If we find images add new item to splitChildren.
-                // This will split up the list.
-                if (splitChildren.length > 0) {
-                  i++;
-                }
-                splitChildren.push({
-                  type: 'element',
-                  tagName: 'div',
-                  children: images,
+            let i = parents.length;
+            let splitChildrenIndex = index;
+            let childrenAfterSplitPoint = [];
+            console.log(parents.map((p) => p.tagName));
+            // <body>
+            //   <div>
+            //     <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
+            //   </div>
+            // </body>
+            while (--i > 0) {
+              // Example: i == 2
+              // [ 'body', 'div', 'h1' ]
+              const /* h1 */ parent = parents[i];
+              const /* div */ parentsParent = parents[i - 1];
+
+              // Delete the siblings after the image
+              childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
+                splitChildrenIndex,
+              );
+              // parent.children is now == [ 'h1.1' ]
+
+              // parentsParent.children = [ 'h1' ]
+              splitChildrenIndex = parentsParent.children.indexOf(parent);
+              // splitChildrenIndex = 0
+
+              // if we reached the 'div' add the image's node
+              if (i === 1) {
+                parentsParent.children.splice(splitChildrenIndex + 1, 0, node);
+                Object.defineProperty(node, '__lifted', {
+                  value: true,
+                  enumerable: false,
                 });
-                i++;
-              } else {
-                insertListItem(node, listItem);
               }
-            });
 
-            if (splitChildren.length > 1) {
-              parent.children[index] = {
-                type: 'element',
-                tagName: 'div',
-                children: splitChildren,
-              };
+              // create a new branch with childrenAfterSplitPoint i.e.
+              // <h1>h1.2</h1>
+              parentsParent.children.splice(
+                splitChildrenIndex + (i === 1 ? 2 : 1),
+                0,
+                {
+                  ...parent,
+                  children: childrenAfterSplitPoint,
+                },
+              );
+
+              if (parent.children.length === 0) {
+                parentsParent.children.splice(splitChildrenIndex, 1);
+              }
             }
+
+            Object.defineProperty(node, '__lifted', {
+              value: true,
+              enumerable: false,
+            });
+            // body.children.splice(insertIndex + 1, 0, node);
           });
+
+          console.log(
+            toHTML(body)
+              .replace(/<ul>/g, '\n<ul>')
+              .replace(/<\/ul>/g, '</ul>\n'),
+          );
         },
         handlers: {
           img: async (createNode, node, context) => {
