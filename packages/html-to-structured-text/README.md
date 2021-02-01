@@ -179,9 +179,11 @@ htmlToDast(html, {
 ### Examples
 
 <details>
-  <summary>Split an `ul` that contains an image.</summary>
+  <summary>Split a node that contains an image.</summary>
 
-In Dast images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces.
+In Dast images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces and lift up the image.
+
+The same approach can be used to split other types of branches and lift up nodes to become root nodes.
 
 ```js
 import { findAll } from 'unist-utils-core';
@@ -196,64 +198,58 @@ const html = `
 
 const dast = await htmlToDast(html, {
   preprocess: (tree) => {
-    findAll(tree, (node, index, parent) => {
-      if (node.tagName !== 'ul' && node.tagName !== 'ol') {
+    const liftedImages = new WeakSet();
+    const body = find(tree, (node) => node.tagName === 'body');
+    visit(body, (node, index, parents) => {
+      if (!node || node.tagName !== 'img' || liftedImages.has(node)) {
         return;
       }
-      let i = 0;
-      // Build up a new array of children where every element is either
-      // a ul/ol with contiguous regular children or a node with images.
-      //
-      // Example:
-      // When list items have images [ul, img, img, ul]
-      // When there aren't images [ul] the list is equal to the original
-      const splitChildren = [];
-      // Insert list item to an existing or new list in splitChildren.
-      function insertListItem(node, listItem) {
-        if (splitChildren[i]) {
-          // If we have a list add the current listItem to it.
-          splitChildren[i].children.push(listItem);
-        } else {
-          splitChildren[i] = {
-            ...node,
-            children: [listItem],
-          };
-        }
-      }
+      // remove image
+      const imgParent = parents[parents.length - 1];
+      imgParent.children.splice(index, 1);
 
-      node.children.forEach((listItem) => {
-        const images = findAll(listItem, (node, index, parent) => {
-          if (node.tagName !== 'img') {
-            return;
-          }
-          // Remove the image from the listItem.
-          parent.children.splice(index, 1);
-          return true;
-        });
-        if (images.length > 0) {
-          insertListItem(node, listItem);
-          // If we find images add new item to splitChildren.
-          // This will split up the list.
-          if (splitChildren.length > 0) {
-            i++;
-          }
-          splitChildren.push({
-            type: 'element',
-            tagName: 'div',
-            children: images,
+      let i = parents.length;
+      let splitChildrenIndex = index;
+      let childrenAfterSplitPoint = [];
+
+      while (--i > 0) {
+        // Example: i == 2
+        // [ 'body', 'div', 'h1' ]
+        const /* h1 */ parent = parents[i];
+        const /* div */ parentsParent = parents[i - 1];
+
+        // Delete the siblings after the image and save them in a variable
+        childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
+          splitChildrenIndex,
+        );
+        // parent.children is now == [ 'h1.1' ]
+
+        // parentsParent.children = [ 'h1' ]
+        splitChildrenIndex = parentsParent.children.indexOf(parent);
+        // splitChildrenIndex = 0
+
+        // If we reached the 'div' add the image's node
+        if (i === 1) {
+          splitChildrenIndex += 1;
+          parentsParent.children.splice(splitChildrenIndex, 0, node);
+          liftedImages.add(node);
+        }
+
+        splitChildrenIndex += 1;
+        // Create a new branch with childrenAfterSplitPoint if we have any i.e.
+        // <h1>h1.2</h1>
+        if (childrenAfterSplitPoint.length > 0) {
+          parentsParent.children.splice(splitChildrenIndex, 0, {
+            ...parent,
+            children: childrenAfterSplitPoint,
           });
-          i++;
-        } else {
-          insertListItem(node, listItem);
         }
-      });
 
-      if (splitChildren.length > 1) {
-        parent.children[index] = {
-          type: 'element',
-          tagName: 'div',
-          children: splitChildren,
-        };
+        // Remove the parent if empty
+        if (parent.children.length === 0) {
+          splitChildrenIndex -= 1;
+          parentsParent.children.splice(splitChildrenIndex, 1);
+        }
       }
     });
   },

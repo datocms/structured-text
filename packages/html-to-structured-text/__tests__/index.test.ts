@@ -870,51 +870,45 @@ describe('toDast', () => {
       expect(find(headings[0], 'span').value).toBe('heading');
     });
 
-    it.only('split nodes with images', async () => {
+    it('split nodes with images', async () => {
       const html = `
-      <ul>
-        <li>item 1</li>
-        <li><div><img src="./ul1-img.png" alt>item 2</div></li>
-        <li>item 3</li>
-        <li>item 4<img src="./ul2-img.png" alt></li>
-        <li>item 5</li>
-        <li>item 6<img src="./ul3-img.png" alt>item 7</li>
-        <li>item 8</li>
-      </ul>
-      <div>
-        <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
-      </div>
+        <ul>
+          <li>item 1</li>
+          <li><div><img src="./ul1-img.png" alt>item 2</div></li>
+          <li>item 3</li>
+          <li>item 4<img src="./ul2-img.png" alt></li>
+          <li>item 5</li>
+          <li>item 6<img src="./ul3-img.png" alt>item 7</li>
+          <li>item 8</li>
+        </ul>
+        <div>
+          <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
+        </div>
       `;
+
       const dast = await htmlToDast(html, {
         preprocess: (tree) => {
+          const liftedImages = new WeakSet();
           const body = find(tree, (node) => node.tagName === 'body');
           visit(body, (node, index, parents) => {
-            if (!node || node.tagName !== 'img' || node.__lifted) {
+            if (!node || node.tagName !== 'img' || liftedImages.has(node)) {
               return;
             }
-            // const body = parents[0];
-            // const thisBranchRootNode = parents[1];
-            const imgParent = parents[parents.length - 1];
             // remove image
+            const imgParent = parents[parents.length - 1];
             imgParent.children.splice(index, 1);
-            // const insertIndex = body.children.indexOf(thisBranchRootNode);
 
             let i = parents.length;
             let splitChildrenIndex = index;
             let childrenAfterSplitPoint = [];
-            console.log(parents.map((p) => p.tagName));
-            // <body>
-            //   <div>
-            //     <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
-            //   </div>
-            // </body>
+
             while (--i > 0) {
               // Example: i == 2
               // [ 'body', 'div', 'h1' ]
               const /* h1 */ parent = parents[i];
               const /* div */ parentsParent = parents[i - 1];
 
-              // Delete the siblings after the image
+              // Delete the siblings after the image and save them in a variable
               childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
                 splitChildrenIndex,
               );
@@ -924,43 +918,30 @@ describe('toDast', () => {
               splitChildrenIndex = parentsParent.children.indexOf(parent);
               // splitChildrenIndex = 0
 
-              // if we reached the 'div' add the image's node
+              // If we reached the 'div' add the image's node
               if (i === 1) {
-                parentsParent.children.splice(splitChildrenIndex + 1, 0, node);
-                Object.defineProperty(node, '__lifted', {
-                  value: true,
-                  enumerable: false,
+                splitChildrenIndex += 1;
+                parentsParent.children.splice(splitChildrenIndex, 0, node);
+                liftedImages.add(node);
+              }
+
+              splitChildrenIndex += 1;
+              // Create a new branch with childrenAfterSplitPoint if we have any i.e.
+              // <h1>h1.2</h1>
+              if (childrenAfterSplitPoint.length > 0) {
+                parentsParent.children.splice(splitChildrenIndex, 0, {
+                  ...parent,
+                  children: childrenAfterSplitPoint,
                 });
               }
 
-              // create a new branch with childrenAfterSplitPoint i.e.
-              // <h1>h1.2</h1>
-              parentsParent.children.splice(
-                splitChildrenIndex + (i === 1 ? 2 : 1),
-                0,
-                {
-                  ...parent,
-                  children: childrenAfterSplitPoint,
-                },
-              );
-
+              // Remove the parent if empty
               if (parent.children.length === 0) {
+                splitChildrenIndex -= 1;
                 parentsParent.children.splice(splitChildrenIndex, 1);
               }
             }
-
-            Object.defineProperty(node, '__lifted', {
-              value: true,
-              enumerable: false,
-            });
-            // body.children.splice(insertIndex + 1, 0, node);
           });
-
-          console.log(
-            toHTML(body)
-              .replace(/<ul>/g, '\n<ul>')
-              .replace(/<\/ul>/g, '</ul>\n'),
-          );
         },
         handlers: {
           img: async (createNode, node, context) => {
@@ -974,9 +955,77 @@ describe('toDast', () => {
       });
 
       expect(validate(dast).valid).toBeTruthy();
-      expect(findAll(dast, 'list')).toHaveLength(2);
-      expect(findAll(dast, 'listItem')).toHaveLength(3);
-      expect(findAll(dast, 'block')).toHaveLength(1);
+      expect(findAll(dast, 'list')).toHaveLength(4);
+      expect(findAll(dast, 'listItem')).toHaveLength(8);
+      expect(findAll(dast, 'block')).toHaveLength(4);
+      expect(findAll(dast, 'heading')).toHaveLength(2);
+      expect(
+        dast.children.map((child) => {
+          if (child.children) {
+            return [child.type, [child.children.map((c) => c.type)]];
+          }
+          return child.type;
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          Array [
+            "heading",
+            Array [
+              Array [
+                "span",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "heading",
+            Array [
+              Array [
+                "span",
+              ],
+            ],
+          ],
+        ]
+      `);
     });
 
     it('lift up nodes', async () => {
@@ -1012,11 +1061,11 @@ describe('toDast', () => {
 
       expect(validate(dast).valid).toBeTruthy();
       expect(dast.children.map((node) => node.type)).toMatchInlineSnapshot(`
-      Array [
-        "list",
-        "block",
-      ]
-    `);
+              Array [
+                "list",
+                "block",
+              ]
+          `);
     });
   });
 });
