@@ -1049,6 +1049,7 @@ describe('toDast', () => {
           });
         },
         handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           img: async (createNode, node, context) => {
             // In a real scenario you would upload the image to Dato and get back an id.
             const item = '123';
