@@ -64,6 +64,18 @@ export function validate(root: Node): { valid: boolean; message?: string } {
           }"'s children is not an Array:\n\n ${JSON.stringify(node, null, 2)}`,
         };
       }
+      if (node.children.length === 0) {
+        return {
+          valid: false,
+          message: `"${
+            node.type
+          }"'s children cannot be an empty Array:\n\n ${JSON.stringify(
+            node,
+            null,
+            2,
+          )}`,
+        };
+      }
       let allowed = allowedChildren[node.type];
       if (typeof allowed === 'string' && allowed === 'inlineNodes') {
         allowed = inlineNodeTypes;
