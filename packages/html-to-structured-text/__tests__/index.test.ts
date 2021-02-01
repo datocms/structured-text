@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { parse5ToDast, Settings } from '../src';
+import { parse5ToStructuredText, Settings } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit } from 'unist-utils-core';
 
-function htmlToDast(html: string, settings: Settings = {}) {
-  return parse5ToDast(
+function htmlToStructuredText(html: string, settings: Settings = {}) {
+  return parse5ToStructuredText(
     parse5.parse(html, {
       sourceCodeLocationInfo: true,
     }),
@@ -17,26 +17,16 @@ function htmlToDast(html: string, settings: Settings = {}) {
 describe('toDast', () => {
   it('works with empty document', async () => {
     const html = '';
-    const dast = await htmlToDast(html);
-    expect(validate(dast).valid).toBeTruthy();
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [],
-        "type": "root",
-      }
-    `);
+    const result = await htmlToStructuredText(html);
+    expect(validate(result).valid).toBeTruthy();
+    expect(result).toMatchInlineSnapshot(`null`);
   });
 
   it('ignores doctype and HTML comments', async () => {
     const html = `<!doctype html> <!-- <p>test</p> -->`;
-    const dast = await htmlToDast(html);
-    expect(validate(dast).valid).toBeTruthy();
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [],
-        "type": "root",
-      }
-    `);
+    const result = await htmlToStructuredText(html);
+    expect(validate(result).valid).toBeTruthy();
+    expect(result).toMatchInlineSnapshot(`null`);
   });
 
   it('ignores script, style, link, head, meta', async () => {
@@ -60,14 +50,9 @@ describe('toDast', () => {
       <script>console.log('script')</script>
     `;
 
-    const dast = await htmlToDast(html);
-    expect(validate(dast).valid).toBeTruthy();
-    expect(dast).toMatchInlineSnapshot(`
-      Object {
-        "children": Array [],
-        "type": "root",
-      }
-    `);
+    const result = await htmlToStructuredText(html);
+    expect(validate(result).valid).toBeTruthy();
+    expect(result).toMatchInlineSnapshot(`null`);
   });
 
   describe('handlers', () => {
@@ -76,7 +61,7 @@ describe('toDast', () => {
         <p>twice</p>
       `;
 
-      const dast = await htmlToDast(html, {
+      const result = await htmlToStructuredText(html, {
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           text: async (createNode, node, context) => {
@@ -97,16 +82,16 @@ describe('toDast', () => {
           },
         },
       });
-      expect(validate(dast).valid).toBeTruthy();
-      expect(findAll(dast, 'paragraph')).toHaveLength(2);
-      expect(findAll(dast, 'span')).toHaveLength(4);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'paragraph')).toHaveLength(2);
+      expect(findAll(result.document, 'span')).toHaveLength(4);
     });
 
     it('can return an array of promises', async () => {
       const html = `
         <p>twice</p>
       `;
-      const dast = await htmlToDast(html, {
+      const result = await htmlToStructuredText(html, {
         handlers: {
           p: (createNode, node, context) => {
             return [
@@ -116,9 +101,9 @@ describe('toDast', () => {
           },
         },
       });
-      expect(validate(dast).valid).toBeTruthy();
-      expect(findAll(dast, 'paragraph')).toHaveLength(2);
-      expect(findAll(dast, 'span')).toHaveLength(2);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'paragraph')).toHaveLength(2);
+      expect(findAll(result.document, 'span')).toHaveLength(2);
     });
 
     describe('custom (user provided)', () => {
@@ -128,7 +113,7 @@ describe('toDast', () => {
         <p>already wrapped</p>
         needs wrapping
       `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             unknown: (createNode, node, context) => {
@@ -138,11 +123,11 @@ describe('toDast', () => {
             },
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        const spans = findAll(dast, 'span');
+        expect(validate(result).valid).toBeTruthy();
+        const spans = findAll(result.document, 'span');
         expect(spans).toHaveLength(3);
         expect(spans[0].value).toBe('custom');
-        const paragraphs = findAll(dast, 'paragraph');
+        const paragraphs = findAll(result.document, 'paragraph');
         expect(paragraphs.map((p) => p.children[0].value))
           .toMatchInlineSnapshot(`
           Array [
@@ -157,7 +142,7 @@ describe('toDast', () => {
         const html = `
           <custom>span</custom>
       `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             custom: async (createNode, node, context) => {
@@ -168,8 +153,8 @@ describe('toDast', () => {
             },
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'span').value).toBe('custom');
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'span').value).toBe('custom');
       });
 
       it('can override default handlers', async () => {
@@ -177,7 +162,7 @@ describe('toDast', () => {
           <blockquote>override</blockquote>
           <p>regular paragraph</p>
       `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           handlers: {
             blockquote: async (createNode, node, context) => {
               // turn a blockquote into a paragraph
@@ -185,9 +170,9 @@ describe('toDast', () => {
             },
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'blockquote')).toBeFalsy();
-        const paragraphs = findAll(dast, 'paragraph');
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'blockquote')).toBeFalsy();
+        const paragraphs = findAll(result.document, 'paragraph');
         expect(paragraphs).toHaveLength(2);
         expect(find(paragraphs[0], 'span').value).toBe('override');
         expect(find(paragraphs[1], 'span').value).toBe('regular paragraph');
@@ -201,9 +186,10 @@ describe('toDast', () => {
           <p>already wrapped</p>
           needs wrapping
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
           Array [
             "paragraph",
             "paragraph",
@@ -226,11 +212,11 @@ describe('toDast', () => {
           </section>
           <a href="#">hyperlink</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
 
         expect(
-          dast.children.every((child) =>
+          result.document.children.every((child) =>
             allowedChildren['root'].includes(child.type),
           ),
         ).toBeTruthy();
@@ -241,7 +227,8 @@ describe('toDast', () => {
         //   <div><div>inline nested</div></div>
         // </section>
         // <a href="#">hyperlink</a>
-        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
           Array [
             "heading",
             "paragraph",
@@ -261,7 +248,7 @@ describe('toDast', () => {
         const html = `
           <base href="https://datocms.com" />
         `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           handlers: {
             base: async (createNode, node, context) => {
               expect(context.shared.baseUrl).toBe(null);
@@ -277,8 +264,8 @@ describe('toDast', () => {
             },
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children).toHaveLength(0);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result).toBeNull();
       });
 
       it('resolves relative paths', async () => {
@@ -286,9 +273,11 @@ describe('toDast', () => {
           <base href="https://datocms.com" />
           <a href="./contact">contact</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'https://datocms.com/contact',
+        );
       });
 
       it('resolves relative paths without . or /', async () => {
@@ -296,9 +285,11 @@ describe('toDast', () => {
           <base href="https://datocms.com" />
           <a href="contact">contact</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'https://datocms.com/contact',
+        );
       });
 
       it('resolves absolute paths', async () => {
@@ -306,9 +297,11 @@ describe('toDast', () => {
           <base href="https://datocms.com/t/" />
           <a href="/contact">contact</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('https://datocms.com/t/contact');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'https://datocms.com/t/contact',
+        );
       });
 
       it('does not modify absolute URLs', async () => {
@@ -316,9 +309,11 @@ describe('toDast', () => {
           <base href="https://datocms.com/t/" />
           <a href="https://datocms.com/b/contact">contact</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('https://datocms.com/b/contact');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'https://datocms.com/b/contact',
+        );
       });
 
       it('overrides user specified baseUrl', async () => {
@@ -326,13 +321,15 @@ describe('toDast', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           shared: {
             baseUrl: 'http://acme.com',
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'https://datocms.com/contact',
+        );
       });
 
       it('does not override user specified baseUrl when found', async () => {
@@ -340,14 +337,16 @@ describe('toDast', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const dast = await htmlToDast(html, {
+        const result = await htmlToStructuredText(html, {
           shared: {
             baseUrl: 'http://acme.com',
             baseUrlFound: true,
           },
         });
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'link').url).toBe('http://acme.com/contact');
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'link').url).toBe(
+          'http://acme.com/contact',
+        );
       });
     });
 
@@ -362,9 +361,10 @@ describe('toDast', () => {
             nested implicit paragraph
           </article>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
           Array [
             "paragraph",
             "paragraph",
@@ -382,9 +382,9 @@ describe('toDast', () => {
             <span>[span becomes simple text]</span>
           </p>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children).toMatchInlineSnapshot(`
           Array [
             Object {
               "children": Array [
@@ -420,9 +420,9 @@ describe('toDast', () => {
             <div>[separate paragraph]</div>
           </p>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children).toMatchInlineSnapshot(`
           Array [
             Object {
               "children": Array [
@@ -452,10 +452,10 @@ describe('toDast', () => {
         const html = `
           <h1>needs wrapping</h1>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children[0].type).toBe('heading');
-        expect(dast.children[0].children[0].type).toBe('span');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('heading');
+        expect(result.document.children[0].children[0].type).toBe('span');
       });
 
       it('ignores invalid heading numbers', async () => {
@@ -463,33 +463,34 @@ describe('toDast', () => {
           <h7>needs wrapping</h7>
           <p>hello</p>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
           Array [
             "paragraph",
             "paragraph",
           ]
         `);
-        expect(findAll(dast, 'heading')).toHaveLength(0);
+        expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
 
       it('ignores invalid children', async () => {
         const html = `
           <h1><p>p not allowed inside h1</p></h1>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'paragraph')).toHaveLength(0);
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'paragraph')).toHaveLength(0);
       });
 
       it('allows link as children', async () => {
         const html = `
           <h1>span <a href="#">link</a></h1>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children[0].children).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].children).toMatchInlineSnapshot(`
           Array [
             Object {
               "type": "span",
@@ -522,9 +523,9 @@ describe('toDast', () => {
             </code>
           </pre>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'heading')).toHaveLength(0);
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
     });
 
@@ -533,9 +534,9 @@ describe('toDast', () => {
         const html = `
           <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">import</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"file.html"</span> /&gt;</span></code></pre>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children[0]).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
           Object {
             "code": "<import src=\\"file.html\\" />",
             "language": "html",
@@ -550,11 +551,11 @@ describe('toDast', () => {
             <li><pre><code class="language-html">dast()</code></pre></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(dast, 'paragraph')).toBeTruthy();
-        expect(findAll(dast, 'code')).toHaveLength(0);
-        expect(findAll(dast, 'span')[0]).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(result.document, 'paragraph')).toBeTruthy();
+        expect(findAll(result.document, 'code')).toHaveLength(0);
+        expect(findAll(result.document, 'span')[0]).toMatchInlineSnapshot(`
           Object {
             "marks": Array [
               "code",
@@ -569,10 +570,10 @@ describe('toDast', () => {
         const html = `
           <code class="language-html">dast()</code>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'code')).toHaveLength(1);
-        expect(findAll(dast, 'code')[0]).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'code')).toHaveLength(1);
+        expect(findAll(result.document, 'code')[0]).toMatchInlineSnapshot(`
           Object {
             "code": "dast()",
             "language": "html",
@@ -585,10 +586,10 @@ describe('toDast', () => {
         const html = `
           <code>dast()</code>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'code')).toHaveLength(1);
-        expect(findAll(dast, 'code')[0].language).toBeFalsy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'code')).toHaveLength(1);
+        expect(findAll(result.document, 'code')[0].language).toBeFalsy();
       });
     });
 
@@ -598,15 +599,16 @@ describe('toDast', () => {
           <blockquote>1</blockquote>
           <blockquote><span>2</span></blockquote>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children.map((child) => child.type)).toMatchInlineSnapshot(`
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
           Array [
             "blockquote",
             "blockquote",
           ]
         `);
-        expect(dast.children[0]).toMatchInlineSnapshot(`
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
           Object {
             "children": Array [
               Object {
@@ -630,8 +632,8 @@ describe('toDast', () => {
         const html = `
           <ul><li>test</li></ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
       });
 
       it('wraps children with listItem', async () => {
@@ -643,10 +645,10 @@ describe('toDast', () => {
             <li><p>4</p></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
         expect(
-          find(dast, 'list').children.every(
+          find(result.document, 'list').children.every(
             (child) => child.type === 'listItem',
           ),
         ).toBeTruthy();
@@ -658,9 +660,9 @@ describe('toDast', () => {
             <li><ul><li>1</li></ul></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(find(find(dast, 'list'), 'list')).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(find(find(result.document, 'list'), 'list')).toBeTruthy();
       });
 
       it('converts nested blockquote to text', async () => {
@@ -669,10 +671,10 @@ describe('toDast', () => {
             <li><blockquote>1</blockquote></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'blockquote')).toHaveLength(0);
-        expect(find(dast, 'span').value).toBe('1');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'blockquote')).toHaveLength(0);
+        expect(find(result.document, 'span').value).toBe('1');
       });
 
       it('converts nested heading to text', async () => {
@@ -681,10 +683,10 @@ describe('toDast', () => {
             <li><h1>1</h1></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'h1')).toHaveLength(0);
-        expect(find(dast, 'span').value).toBe('1');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'h1')).toHaveLength(0);
+        expect(find(result.document, 'span').value).toBe('1');
       });
 
       it('converts nested code to text', async () => {
@@ -693,10 +695,10 @@ describe('toDast', () => {
             <li><code>1</code></li>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'code')).toHaveLength(0);
-        expect(find(dast, 'span').value).toBe('1');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'code')).toHaveLength(0);
+        expect(find(result.document, 'span').value).toBe('1');
       });
 
       it('supports nested and/or unwrapped link', async () => {
@@ -706,10 +708,10 @@ describe('toDast', () => {
             <a href="#">3</a>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(findAll(dast, 'link')).toHaveLength(2);
-        const items = findAll(dast, 'listItem').map((listItem) =>
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'link')).toHaveLength(2);
+        const items = findAll(result.document, 'listItem').map((listItem) =>
           find(listItem, 'paragraph').children.map((child) => child.type),
         );
         expect(items).toMatchInlineSnapshot(`
@@ -735,9 +737,9 @@ describe('toDast', () => {
             <ul><li>5</li></ul>
           </ul>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        const lists = findAll(dast, 'list');
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        const lists = findAll(result.document, 'list');
         expect(lists).toHaveLength(1);
         const list = lists[0];
         expect(
@@ -756,10 +758,10 @@ describe('toDast', () => {
         const html = `
           <a href="#">1</a>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
-        expect(dast.children[0].type).toBe('paragraph');
-        expect(find(find(dast, 'paragraph'), 'link')).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
       });
 
       describe('when wrapping a heading', () => {
@@ -767,20 +769,20 @@ describe('toDast', () => {
           const html = `
             <a href="#"><h1>1</h1>2</a>
           `;
-          const dast = await htmlToDast(html);
-          expect(validate(dast).valid).toBeTruthy();
-          expect(dast.children[0].type).toBe('heading');
-          expect(find(find(dast, 'heading'), 'link')).toBeTruthy();
-          expect(find(find(dast, 'paragraph'), 'link')).toBeTruthy();
+          const result = await htmlToStructuredText(html);
+          expect(validate(result).valid).toBeTruthy();
+          expect(result.document.children[0].type).toBe('heading');
+          expect(find(find(result.document, 'heading'), 'link')).toBeTruthy();
+          expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
         });
 
         it('ignores heading when it is not allowed in the context (eg. list)', async () => {
           const html = `
             <ul><a href="#"><h1>1</h1>2</a></ul>
           `;
-          const dast = await htmlToDast(html);
-          expect(validate(dast).valid).toBeTruthy();
-          expect(findAll(dast, 'heading')).toHaveLength(0);
+          const result = await htmlToStructuredText(html);
+          expect(validate(result).valid).toBeTruthy();
+          expect(findAll(result.document, 'heading')).toHaveLength(0);
         });
       });
     });
@@ -813,9 +815,9 @@ describe('toDast', () => {
           const html = `
           <p><${tagName}>${markName}</${tagName}></p>
         `;
-          const dast = await htmlToDast(html);
-          expect(validate(dast).valid).toBeTruthy();
-          const span = find(dast, 'span');
+          const result = await htmlToStructuredText(html);
+          expect(validate(result).valid).toBeTruthy();
+          const span = find(result.document, 'span');
           expect(span.marks).toBeTruthy();
           expect(span.marks).toContain(markName);
         });
@@ -825,10 +827,10 @@ describe('toDast', () => {
         const html = `
           <p><em>em<strong>strong-em<u>u-strong-em</u>strong-em</strong>em</em></p>
         `;
-        const dast = await htmlToDast(html);
-        expect(validate(dast).valid).toBeTruthy();
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
         expect(
-          findAll(dast, 'span')
+          findAll(result.document, 'span')
             .map(
               (span) =>
                 `{ value: '${span.value}', marks: ['${span.marks.join(
@@ -852,7 +854,7 @@ describe('toDast', () => {
       const html = `
         <p>heading</p>
       `;
-      const dast = await htmlToDast(html, {
+      const result = await htmlToStructuredText(html, {
         preprocess: (tree) => {
           findAll(tree, (node) => {
             if (node.type === 'element' && node.tagName === 'p') {
@@ -861,9 +863,9 @@ describe('toDast', () => {
           });
         },
       });
-      expect(validate(dast).valid).toBeTruthy();
-      expect(findAll(dast, 'paragraph')).toHaveLength(0);
-      const headings = findAll(dast, 'heading');
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'paragraph')).toHaveLength(0);
+      const headings = findAll(result.document, 'heading');
       expect(headings).toHaveLength(1);
       expect(headings[0].level).toBe(1);
       expect(find(headings[0], 'span').value).toBe('heading');
@@ -887,7 +889,7 @@ describe('toDast', () => {
         </div>
       `;
 
-      const dast = await htmlToDast(html, {
+      const result = await htmlToStructuredText(html, {
         preprocess: (tree) => {
           const liftedImages = new Set();
           const body = find(tree, (node) => node.tagName === 'body');
@@ -961,13 +963,13 @@ describe('toDast', () => {
         },
       });
 
-      expect(validate(dast).valid).toBeTruthy();
-      expect(findAll(dast, 'list')).toHaveLength(4);
-      expect(findAll(dast, 'listItem')).toHaveLength(8);
-      expect(findAll(dast, 'block')).toHaveLength(6);
-      expect(findAll(dast, 'heading')).toHaveLength(2);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'list')).toHaveLength(4);
+      expect(findAll(result.document, 'listItem')).toHaveLength(8);
+      expect(findAll(result.document, 'block')).toHaveLength(6);
+      expect(findAll(result.document, 'heading')).toHaveLength(2);
       expect(
-        dast.children.map((child) => {
+        result.document.children.map((child) => {
           if (child.children) {
             return [child.type, [child.children.map((c) => c.type)]];
           }
@@ -1045,7 +1047,7 @@ describe('toDast', () => {
         <li>item 3</li>
       </ul>
       `;
-      const dast = await htmlToDast(html, {
+      const result = await htmlToStructuredText(html, {
         preprocess: (tree) => {
           findAll(tree, (node, index, parent) => {
             if (node.tagName === 'img') {
@@ -1069,8 +1071,9 @@ describe('toDast', () => {
         },
       });
 
-      expect(validate(dast).valid).toBeTruthy();
-      expect(dast.children.map((node) => node.type)).toMatchInlineSnapshot(`
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children.map((node) => node.type))
+        .toMatchInlineSnapshot(`
               Array [
                 "list",
                 "block",

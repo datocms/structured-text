@@ -40,6 +40,10 @@ export const root: Handler<HastRootNode> = async function root(
     children = wrap(children);
   }
 
+  if (!Array.isArray(children) || children.length === 0) {
+    return null;
+  }
+
   return createNode('root', {
     children: Array.isArray(children) ? children : [],
   });

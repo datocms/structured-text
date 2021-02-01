@@ -1,4 +1,4 @@
-import { Node, Mark } from './types';
+import { Node, Mark, Document } from './types';
 
 import {
   allowedAttributes,
@@ -7,12 +7,30 @@ import {
   inlineNodeTypes,
 } from './definitions';
 
-export function validate(root: Node): { valid: boolean; message?: string } {
-  const nodes = [root];
-  let node = root;
+export function validate(
+  document: Document | null | undefined,
+): { valid: boolean; message?: string } {
+  if (document === null || document === undefined) {
+    return { valid: true };
+  }
+
+  if (document.schema !== 'dast') {
+    return {
+      valid: false,
+      message: `.schema is not "dast":\n\n ${JSON.stringify(
+        document,
+        null,
+        2,
+      )}`,
+    };
+  }
+
+  const nodes: Node[] = [document.document];
+  let node: Node = document.document;
 
   while (nodes.length > 0) {
     node = nodes.pop();
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { type, ...attributes } = node;
     const invalidAttribute = Object.keys(attributes).find(
@@ -80,14 +98,15 @@ export function validate(root: Node): { valid: boolean; message?: string } {
       if (typeof allowed === 'string' && allowed === 'inlineNodes') {
         allowed = inlineNodeTypes;
       }
-      const invalidChild = (node.children as Array<Node>).find(
-        (child: Node) => !allowed.includes(child.type),
+      const invalidChildIndex = (node.children as Array<Node | null>).findIndex(
+        (child: Node) => !child || !allowed.includes(child.type),
       );
-      if (invalidChild) {
+      if (invalidChildIndex !== -1) {
+        const invalidChild = node.children[invalidChildIndex];
         return {
           valid: false,
           message: `"${node.type}" has invalid child "${
-            invalidChild.type
+            invalidChild ? invalidChild.type : invalidChild
           }":\n\n ${JSON.stringify(node, null, 2)}`,
         };
       }
@@ -96,6 +115,7 @@ export function validate(root: Node): { valid: boolean; message?: string } {
       }
     }
   }
+
   return {
     valid: true,
   };

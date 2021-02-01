@@ -6,12 +6,12 @@ Dast stands for Dato Abstract Syntax Tree.
 
 ## Usage
 
-The main utility is `htmlToDast` which takes a string of HTML and transforms it into a valid Dast.
+The main utility is `htmlToStructuredText` which takes a string of HTML and transforms it into a valid Dast.
 
-`htmlToDast` returns a `Promise` that resolves with a `Dast`.
+`htmlToStructuredText` returns a `Promise` that resolves with a `Dast`.
 
 ```js
-import { htmlToDast } from 'html-to-structured-text';
+import { htmlToStructuredText } from 'html-to-structured-text';
 
 const html = `
   <article>
@@ -20,25 +20,25 @@ const html = `
   </article>
 `;
 
-htmlToDast(html).then((Dast) => {
-  console.log(Dast);
+htmlToStructuredText(html).then((structuredText) => {
+  console.log(structuredText);
 });
 ```
 
-`htmlToDast` is meant to be used in a browser environment.
+`htmlToStructuredText` is meant to be used in a browser environment.
 
-In Node.js you can use the `parse5ToDast` helper which instead takes a document generated with `parse5`.
+In Node.js you can use the `parse5ToStructuredText` helper which instead takes a document generated with `parse5`.
 
 ```js
 import parse5 from 'parse5';
-import { parse5ToDast } from 'html-to-structured-text';
+import { parse5ToStructuredText } from 'html-to-structured-text';
 
-parse5ToDast(
+parse5ToStructuredText(
   parse5.parse(html, {
     sourceCodeLocationInfo: true,
   }),
-).then((Dast) => {
-  console.log(Dast);
+).then((structuredText) => {
+  console.log(structuredText);
 });
 ```
 
@@ -48,17 +48,17 @@ Internally, both utilities work on a Hast. Should you have an Hast already you c
 
 Dast is a strict format that is compliant with DatoCMS' Structured Text records. As such the resulting document is generally a simplified, content-centric version of the input HTML.
 
-When possible, the library relies on semantic HTML to generate a valid Dast.
+When possible, the library relies on semantic HTML to generate a valid Dast document.
 
-The `datocms-structured-text-utils` package provides a `validate` utility to validate a Dast to make sure that the resulting tree is compatible with DatoCMS.
+The `datocms-structured-text-utils` package provides a `validate` utility to validate a value to make sure that the resulting tree is compatible with DatoCMS' Structured Text field.
 
 ```js
 import { validate } from 'datocms-structured-text-utils';
 
 // ...
 
-htmlToDast(html).then((Dast) => {
-  const { valid, message } = validate(Dast);
+htmlToStructuredText(html).then((structuredText) => {
+  const { valid, message } = validate(structuredText);
 
   if (!valid) {
     throw new Error(message);
@@ -139,12 +139,12 @@ It is possible to register custom handlers and override the default behavior via
 ```js
 import { paragraphHandler } from './customHandlers';
 
-htmlToDast(html, {
+htmlToStructuredText(html, {
   handlers: {
     p: paragraphHandler,
   },
-}).then((Dast) => {
-  console.log(Dast);
+}).then((structuredText) => {
+  console.log(structuredText);
 });
 ```
 
@@ -162,7 +162,7 @@ const html = `
   <p>convert this to an h1</p>
 `;
 
-htmlToDast(html, {
+htmlToStructuredText(html, {
   preprocess: (tree) => {
     // Transform <p> to <h1>
     findAll(tree, (node) => {
@@ -171,8 +171,8 @@ htmlToDast(html, {
       }
     });
   },
-}).then((Dast) => {
-  console.log(Dast);
+}).then((structuredText) => {
+  console.log(structuredText);
 });
 ```
 
@@ -196,7 +196,7 @@ const html = `
   </ul>
 `;
 
-const dast = await htmlToDast(html, {
+const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
     const liftedImages = new WeakSet();
     const body = find(tree, (node) => node.tagName === 'body');
@@ -283,7 +283,7 @@ const html = `
     <li>item 3</li>
   </ul>
 `;
-const dast = await htmlToDast(html, {
+const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
     findAll(tree, (node, index, parent) => {
       if (node.tagName === 'img') {

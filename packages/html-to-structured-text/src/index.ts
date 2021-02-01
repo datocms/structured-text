@@ -11,6 +11,7 @@ import { handlers } from './handlers';
 import parse5 from 'parse5';
 import parse5DocumentToHast from 'hast-util-from-parse5';
 import documentToHast from 'hast-util-from-dom';
+import { Document } from 'datocms-structured-text-utils';
 
 export type Settings = Partial<{
   newlines: boolean;
@@ -18,32 +19,32 @@ export type Settings = Partial<{
   preprocess: (hast: HastRootNode) => HastRootNode;
 }>;
 
-export async function htmlToDast(
+export async function htmlToStructuredText(
   html: string,
   settings: Settings = {},
-): Promise<Root> {
+): Promise<Root | null> {
   if (typeof DOMParser === 'undefined') {
     throw new Error(
-      'DOMParser is not available. Consider using `parse5ToDast` instead!',
+      'DOMParser is not available. Consider using `parse5ToStructuredText` instead!',
     );
   }
   const document = new DOMParser().parseFromString(html, 'text/html');
   const tree = documentToHast(document);
-  return hastToDast(tree, settings);
+  return hastToStructuredText(tree, settings);
 }
 
-export async function parse5ToDast(
+export async function parse5ToStructuredText(
   document: parse5.Document,
   settings: Settings = {},
-): Promise<Root> {
+): Promise<Root | null> {
   const tree = parse5DocumentToHast(document);
-  return hastToDast(tree, settings);
+  return hastToStructuredText(tree, settings);
 }
 
-export async function hastToDast(
+export async function hastToStructuredText(
   tree: HastRootNode,
   settings: Settings = {},
-): Promise<Root> {
+): Promise<Document | null> {
   minify({ newlines: settings.newlines === true })(tree);
 
   const createNode: CreateNodeFunction = (type, props) => {
@@ -55,7 +56,7 @@ export async function hastToDast(
     settings.preprocess(tree);
   }
 
-  return await visitNode(createNode, tree, {
+  const rootNode = await visitNode(createNode, tree, {
     parentNodeType: 'root',
     parentNode: null,
     defaultHandlers: handlers,
@@ -67,6 +68,15 @@ export async function hastToDast(
       ...(settings.shared || {}),
     },
   });
+
+  if (rootNode) {
+    return {
+      schema: 'dast',
+      document: rootNode,
+    };
+  }
+
+  return null;
 }
 
 export { visitNode, visitChildren };
