@@ -28,7 +28,7 @@ export const root: Handler<HastRootNode> = async function root(
 ) {
   let children = await visitChildren(createNode, node, {
     ...context,
-    name: 'root',
+    parentNodeType: 'root',
   });
 
   if (
@@ -50,10 +50,12 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('paragraph');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'paragraph',
+  );
   const children = await visitChildren(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'paragraph' : context.name,
+    parentNodeType: isAllowedChild ? 'paragraph' : context.parentNodeType,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -67,11 +69,13 @@ export const heading: Handler<HastElementNode> = async function heading(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('heading');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'heading',
+  );
 
   const children = await visitChildren(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'heading' : context.name,
+    parentNodeType: isAllowedChild ? 'heading' : context.parentNodeType,
     wrapText: isAllowedChild ? false : context.wrapText,
   });
 
@@ -91,7 +95,9 @@ export const code: Handler<HastElementNode> = async function code(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('code');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'code',
+  );
 
   if (!isAllowedChild) {
     return inlineCode(createNode, node, context);
@@ -147,10 +153,12 @@ export const blockquote: Handler<HastElementNode> = async function blockquote(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('blockquote');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'blockquote',
+  );
   const children = await visitChildren(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'blockquote' : context.name,
+    parentNodeType: isAllowedChild ? 'blockquote' : context.parentNodeType,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -165,7 +173,9 @@ export const list: Handler<HastElementNode> = async function list(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('list');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'list',
+  );
 
   if (!isAllowedChild) {
     return await visitChildren(createNode, node, context);
@@ -173,7 +183,7 @@ export const list: Handler<HastElementNode> = async function list(
 
   const children = await wrapListItems(createNode, node, {
     ...context,
-    name: 'list',
+    parentNodeType: 'list',
   });
 
   if (Array.isArray(children) && children.length) {
@@ -186,10 +196,12 @@ export const listItem: Handler<HastElementNode> = async function listItem(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.name].includes('listItem');
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'listItem',
+  );
   const children = await visitChildren(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'listItem' : context.name,
+    parentNodeType: isAllowedChild ? 'listItem' : context.parentNodeType,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -208,17 +220,17 @@ export const link: Handler<HastElementNode> = async function link(
 ) {
   let isAllowedChild = false;
 
-  if (allowedChildren[context.name] === 'inlineNodes') {
+  if (allowedChildren[context.parentNodeType] === 'inlineNodes') {
     isAllowedChild = inlineNodeTypes.includes('link');
-  } else if (Array.isArray(allowedChildren[context.name])) {
-    isAllowedChild = allowedChildren[context.name].includes('link');
+  } else if (Array.isArray(allowedChildren[context.parentNodeType])) {
+    isAllowedChild = allowedChildren[context.parentNodeType].includes('link');
   }
 
   if (!isAllowedChild) {
     // Links that aren't inside of a allowedChildren context
     // can still be valid Dast nodes in the following contexts if wrapped.
     const allowedChildrenWrapped = ['root', 'list', 'listItem'];
-    isAllowedChild = allowedChildrenWrapped.includes(context.name);
+    isAllowedChild = allowedChildrenWrapped.includes(context.parentNodeType);
   }
 
   // When a link wraps headings we try to preserve the heading by inverting the parent-child relationship.
@@ -234,6 +246,9 @@ export const link: Handler<HastElementNode> = async function link(
     const splitChildren: HastElementNode[] = [];
     node.children.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
+        if (splitChildren.length > 0) {
+          i++;
+        }
         splitChildren.push({
           ...child,
           children: [
@@ -260,7 +275,7 @@ export const link: Handler<HastElementNode> = async function link(
 
   const children = await visitChildren(createNode, node, {
     ...context,
-    name: isAllowedChild ? 'link' : context.name,
+    parentNodeType: isAllowedChild ? 'link' : context.parentNodeType,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -293,6 +308,20 @@ export const strong = withMark('strong');
 export const italic = withMark('emphasis');
 export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
+export const highlight = withMark('highlight');
+
+export const head: Handler<HastElementNode> = async function head(
+  createNode,
+  node,
+  context,
+) {
+  const baseElement = node.children.find((child) => child.tagName === 'base');
+  if (baseElement) {
+    return context.handlers.base(createNode, baseElement, context);
+  } else {
+    return undefined;
+  }
+};
 
 export const base: Handler<HastElementNode> = async function base(
   createNode,
@@ -300,12 +329,12 @@ export const base: Handler<HastElementNode> = async function base(
   context,
 ) {
   if (
-    !context.baseFound &&
+    !context.shared.baseUrlFound &&
     typeof node.properties === 'object' &&
     node.properties.href
   ) {
-    context.frozenBaseUrl = node.properties.href;
-    context.baseFound = true;
+    context.shared.baseUrl = node.properties.href.replace(/\/$/, '');
+    context.shared.baseUrlFound = true;
   }
 };
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
@@ -375,12 +404,14 @@ export const handlers = {
   strike: strikethrough,
   s: strikethrough,
 
+  mark: highlight,
+
   base: base,
 
   text: span,
 
+  head: head,
   comment: noop,
-  head: noop,
   script: noop,
   style: noop,
   title: noop,
@@ -433,9 +464,16 @@ export function resolveUrl(
     return '';
   }
 
-  /* istanbul ignore next - ignored for older Node */
-  if (context.frozenBaseUrl && typeof URL !== 'undefined') {
-    return String(new URL(url, context.frozenBaseUrl));
+  if (context.shared.baseUrl && typeof URL !== 'undefined') {
+    const isRelative = /^\.?\//.test(url);
+    const parsed = new URL(url, context.shared.baseUrl);
+    if (isRelative) {
+      const parsedBase = new URL(context.shared.baseUrl);
+      if (!parsed.pathname.startsWith(parsedBase.pathname)) {
+        parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
+      }
+    }
+    return parsed.toString();
   }
 
   return url;

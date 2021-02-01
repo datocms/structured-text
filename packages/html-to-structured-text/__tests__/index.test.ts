@@ -3,7 +3,7 @@
 import { parse5ToDast, Settings } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
-import { findAll, find } from 'unist-utils-core';
+import { findAll, find, visit } from 'unist-utils-core';
 
 function htmlToDast(html: string, settings: Settings = {}) {
   return parse5ToDast(
@@ -252,6 +252,102 @@ describe('toDast', () => {
             "paragraph",
           ]
         `);
+      });
+    });
+
+    describe('base', () => {
+      it('is detected during transformation', async () => {
+        expect.assertions(6);
+        const html = `
+          <base href="https://datocms.com" />
+        `;
+        const dast = await htmlToDast(html, {
+          handlers: {
+            base: async (createNode, node, context) => {
+              expect(context.shared.baseUrl).toBe(null);
+              expect(context.shared.baseUrlFound).toBe(false);
+              const result = await context.defaultHandlers.base(
+                createNode,
+                node,
+                context,
+              );
+              expect(context.shared.baseUrl).toBe('https://datocms.com');
+              expect(context.shared.baseUrlFound).toBe(true);
+              return result;
+            },
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(dast.children).toHaveLength(0);
+      });
+
+      it('resolves relative paths', async () => {
+        const html = `
+          <base href="https://datocms.com" />
+          <a href="./contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
+      it('resolves relative paths without . or /', async () => {
+        const html = `
+          <base href="https://datocms.com" />
+          <a href="contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
+      it('resolves absolute paths', async () => {
+        const html = `
+          <base href="https://datocms.com/t/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/t/contact');
+      });
+
+      it('does not modify absolute URLs', async () => {
+        const html = `
+          <base href="https://datocms.com/t/" />
+          <a href="https://datocms.com/b/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html);
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/b/contact');
+      });
+
+      it('overrides user specified baseUrl', async () => {
+        const html = `
+          <base href="https://datocms.com/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html, {
+          shared: {
+            baseUrl: 'http://acme.com',
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('https://datocms.com/contact');
+      });
+
+      it('does not override user specified baseUrl when found', async () => {
+        const html = `
+          <base href="https://datocms.com/" />
+          <a href="/contact">contact</a>
+        `;
+        const dast = await htmlToDast(html, {
+          shared: {
+            baseUrl: 'http://acme.com',
+            baseUrlFound: true,
+          },
+        });
+        expect(validate(dast).valid).toBeTruthy();
+        expect(find(dast, 'link').url).toBe('http://acme.com/contact');
       });
     });
 
@@ -707,6 +803,8 @@ describe('toDast', () => {
 
         strike: 'strikethrough',
         s: 'strikethrough',
+
+        mark: 'highlight',
       };
 
       describe('converts tags to marks', () => {
@@ -769,6 +867,215 @@ describe('toDast', () => {
       expect(headings).toHaveLength(1);
       expect(headings[0].level).toBe(1);
       expect(find(headings[0], 'span').value).toBe('heading');
+    });
+
+    it('split nodes with images', async () => {
+      const html = `
+        <ul>
+          <li>item 1</li>
+          <li><div><img src="./ul1-img.png" alt>item 2</div></li>
+          <li>item 3</li>
+          <li>item 4<img src="./ul2-img.png" alt></li>
+          <li>item 5</li>
+          <li>item 6<img src="./ul3-img.png" alt>item 7</li>
+          <li>item 8</li>
+          <li><img src="./ul4-img.png" alt></li>
+        </ul>
+        <img src="./root1-img.png" alt>
+        <div>
+          <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
+        </div>
+      `;
+
+      const dast = await htmlToDast(html, {
+        preprocess: (tree) => {
+          const liftedImages = new Set();
+          const body = find(tree, (node) => node.tagName === 'body');
+          visit(body, (node, index, parents) => {
+            if (
+              !node ||
+              node.tagName !== 'img' ||
+              liftedImages.has(node) ||
+              parents.length === 1 // is a top level img
+            ) {
+              return;
+            }
+            // remove image
+            const imgParent = parents[parents.length - 1];
+            imgParent.children.splice(index, 1);
+
+            let i = parents.length;
+            let splitChildrenIndex = index;
+            let childrenAfterSplitPoint = [];
+
+            while (--i > 0) {
+              // Example: i == 2
+              // [ 'body', 'div', 'h1' ]
+              const /* h1 */ parent = parents[i];
+              const /* div */ parentsParent = parents[i - 1];
+
+              // Delete the siblings after the image and save them in a variable
+              childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
+                splitChildrenIndex,
+              );
+              // parent.children is now == [ 'h1.1' ]
+
+              // parentsParent.children = [ 'h1' ]
+              splitChildrenIndex = parentsParent.children.indexOf(parent);
+              // splitChildrenIndex = 0
+
+              // If we reached the 'div' add the image's node
+              if (i === 1) {
+                splitChildrenIndex += 1;
+                parentsParent.children.splice(splitChildrenIndex, 0, node);
+                liftedImages.add(node);
+              }
+
+              splitChildrenIndex += 1;
+              // Create a new branch with childrenAfterSplitPoint if we have any i.e.
+              // <h1>h1.2</h1>
+              if (childrenAfterSplitPoint.length > 0) {
+                parentsParent.children.splice(splitChildrenIndex, 0, {
+                  ...parent,
+                  children: childrenAfterSplitPoint,
+                });
+              }
+
+              // Remove the parent if empty
+              if (parent.children.length === 0) {
+                splitChildrenIndex -= 1;
+                parentsParent.children.splice(splitChildrenIndex, 1);
+              }
+            }
+          });
+        },
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(dast).valid).toBeTruthy();
+      expect(findAll(dast, 'list')).toHaveLength(4);
+      expect(findAll(dast, 'listItem')).toHaveLength(8);
+      expect(findAll(dast, 'block')).toHaveLength(6);
+      expect(findAll(dast, 'heading')).toHaveLength(2);
+      expect(
+        dast.children.map((child) => {
+          if (child.children) {
+            return [child.type, [child.children.map((c) => c.type)]];
+          }
+          return child.type;
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          "block",
+          Array [
+            "heading",
+            Array [
+              Array [
+                "span",
+              ],
+            ],
+          ],
+          "block",
+          Array [
+            "heading",
+            Array [
+              Array [
+                "span",
+              ],
+            ],
+          ],
+        ]
+      `);
+    });
+
+    it('lift up nodes', async () => {
+      const html = `
+      <ul>
+        <li>item 1</li>
+        <li><div><img src="./img.png" alt>item 2</div></li>
+        <li>item 3</li>
+      </ul>
+      `;
+      const dast = await htmlToDast(html, {
+        preprocess: (tree) => {
+          findAll(tree, (node, index, parent) => {
+            if (node.tagName === 'img') {
+              // Add the image to the root's children.
+              tree.children.push(node);
+              // remove the image from the parent's children array.
+              parent.children.splice(index, 1);
+              return;
+            }
+          });
+        },
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(dast).valid).toBeTruthy();
+      expect(dast.children.map((node) => node.type)).toMatchInlineSnapshot(`
+              Array [
+                "list",
+                "block",
+              ]
+          `);
     });
   });
 });
