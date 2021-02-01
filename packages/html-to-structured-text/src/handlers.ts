@@ -57,6 +57,7 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'paragraph',
   );
+
   const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: isAllowedChild ? 'paragraph' : context.parentNodeType,
@@ -73,9 +74,9 @@ export const heading: Handler<HastElementNode> = async function heading(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'heading',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('heading') &&
+    context.allowedBlocks.includes('heading');
 
   const children = await visitChildren(createNode, node, {
     ...context,
@@ -105,6 +106,10 @@ export const code: Handler<HastElementNode> = async function code(
 
   if (!isAllowedChild) {
     return inlineCode(createNode, node, context);
+  }
+
+  if (!context.allowedBlocks.includes('code')) {
+    return visitChildren(createNode, node, context);
   }
 
   const prefix =
@@ -157,9 +162,10 @@ export const blockquote: Handler<HastElementNode> = async function blockquote(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'blockquote',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('blockquote') &&
+    context.allowedBlocks.includes('blockquote');
+
   const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: isAllowedChild ? 'blockquote' : context.parentNodeType,
@@ -177,9 +183,9 @@ export const list: Handler<HastElementNode> = async function list(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'list',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('list') &&
+    context.allowedBlocks.includes('list');
 
   if (!isAllowedChild) {
     return await visitChildren(createNode, node, context);
@@ -200,9 +206,10 @@ export const listItem: Handler<HastElementNode> = async function listItem(
   node,
   context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'listItem',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('listItem') &&
+    context.allowedBlocks.includes('list');
+
   const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: isAllowedChild ? 'listItem' : context.parentNodeType,
@@ -222,6 +229,10 @@ export const link: Handler<HastElementNode> = async function link(
   node,
   context,
 ) {
+  if (!context.allowedBlocks.includes('link')) {
+    return visitChildren(createNode, node, context);
+  }
+
   let isAllowedChild = false;
 
   if (allowedChildren[context.parentNodeType] === 'inlineNodes') {
@@ -297,9 +308,16 @@ export const span: Handler<HastTextNode> = async function span(
   node,
   context,
 ) {
-  const marks = Array.isArray(context.marks)
-    ? { marks: [...context.marks] }
-    : {};
+  const marks = {};
+
+  if (Array.isArray(context.marks)) {
+    const allowedMarks = context.marks.filter((mark) =>
+      context.allowedMarks.includes(mark),
+    );
+    if (allowedMarks.length > 0) {
+      marks.marks = allowedMarks;
+    }
+  }
 
   return createNode('span', {
     value: wrapText(context, node.value),
@@ -333,12 +351,12 @@ export const base: Handler<HastElementNode> = async function base(
   context,
 ) {
   if (
-    !context.shared.baseUrlFound &&
+    !context.global.baseUrlFound &&
     typeof node.properties === 'object' &&
     node.properties.href
   ) {
-    context.shared.baseUrl = node.properties.href.replace(/\/$/, '');
-    context.shared.baseUrlFound = true;
+    context.global.baseUrl = node.properties.href.replace(/\/$/, '');
+    context.global.baseUrlFound = true;
   }
 };
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
@@ -346,6 +364,10 @@ export async function noop() {}
 
 export function withMark(type: Mark): Handler<HastElementNode> {
   return function markHandler(createNode, node, context) {
+    if (!context.allowedMarks.includes(type)) {
+      return visitChildren(createNode, node, context);
+    }
+
     let marks = { marks: [type] };
     if (Array.isArray(context.marks)) {
       marks = {
@@ -468,11 +490,11 @@ export function resolveUrl(
     return '';
   }
 
-  if (context.shared.baseUrl && typeof URL !== 'undefined') {
+  if (context.global.baseUrl && typeof URL !== 'undefined') {
     const isRelative = /^\.?\//.test(url);
-    const parsed = new URL(url, context.shared.baseUrl);
+    const parsed = new URL(url, context.global.baseUrl);
     if (isRelative) {
-      const parsedBase = new URL(context.shared.baseUrl);
+      const parsedBase = new URL(context.global.baseUrl);
       if (!parsed.pathname.startsWith(parsedBase.pathname)) {
         parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
       }

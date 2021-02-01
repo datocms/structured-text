@@ -20,10 +20,11 @@ export interface Context {
   parentNodeType: NodeType;
   // The parent Hast node.
   parentNode: HastNode;
-  // A reference to the default handlers record (map).
-  defaultHandlers: Record<string, Handler<unknown>>;
   // A reference to the current handlers - merged default + user handlers.
   handlers: Record<string, Handler<unknown>>;
+  // A reference to the default handlers record (map).
+  defaultHandlers: Record<string, Handler<unknown>>;
+  // true if the content can include newlines, and false if not (such as in headings).
   wrapText: boolean;
   // Marks for span nodes.
   marks?: Mark[];

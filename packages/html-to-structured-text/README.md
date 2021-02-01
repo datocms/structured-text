@@ -70,6 +70,26 @@ We recommend to validate every Dast to avoid errors later when creating records.
 
 ## Advanced Usage
 
+### Options
+
+All the `*ToStructuredText` utils accept an optional `options` object as second argument.
+
+```js
+type Options = Partial<{
+  newlines: boolean,
+  // Override existing Hast node handlers or add new ones.
+  handlers: Record<string, CreateNodeFunction>,
+  // Allows to tweak the Hast tree before transforming it to a Dast document.
+  preprocess: (hast: HastRootNode) => HastRootNode,
+  // Array of allowed Block nodes.
+  allowedBlocks: Array<
+    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
+  >,
+  // Array of allowed marks.
+  allowedMarks: Mark[],
+}>;
+```
+
 ### Transforming Nodes
 
 This library traverses a Hast tree and transforms supported nodes to Dast nodes. The transformation is done by working on a Hast node with a handler (async) function.
@@ -115,10 +135,11 @@ export interface Context {
   parentNodeType: NodeType;
   // The parent Hast node.
   parentNode: HastNode;
-  // A reference to the default handlers record (map).
-  defaultHandlers: Record<string, Handler<unknown>>;
   // A reference to the current handlers - merged default + user handlers.
   handlers: Record<string, Handler<unknown>>;
+  // A reference to the default handlers record (map).
+  defaultHandlers: Record<string, Handler<unknown>>;
+  // true if the content can include newlines, and false if not (such as in headings).
   wrapText: boolean;
   // Marks for span nodes.
   marks?: Mark[];
@@ -126,6 +147,12 @@ export interface Context {
   // Detection is done on a class name eg class="language-html"
   // Default is `language-`
   codePrefix?: string;
+  // Array of allowed Block types.
+  allowedBlocks: Array<
+    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
+  >;
+  // Array of allowed marks.
+  allowedMarks: Mark[];
   // Properties in this object are avaliable to every handler as Context
   // is not deeply cloned.
   global: GlobalContext;
@@ -134,7 +161,7 @@ export interface Context {
 
 ### Custom Handlers
 
-It is possible to register custom handlers and override the default behavior via settings:
+It is possible to register custom handlers and override the default behavior via options:
 
 ```js
 import { paragraphHandler } from './customHandlers';

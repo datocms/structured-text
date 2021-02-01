@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { parse5ToStructuredText, Settings } from '../src';
+import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit } from 'unist-utils-core';
 
-function htmlToStructuredText(html: string, settings: Settings = {}) {
+function htmlToStructuredText(html: string, options: Options = {}) {
   return parse5ToStructuredText(
     parse5.parse(html, {
       sourceCodeLocationInfo: true,
     }),
-    settings,
+    options,
   );
 }
 
@@ -251,15 +251,15 @@ describe('toDast', () => {
         const result = await htmlToStructuredText(html, {
           handlers: {
             base: async (createNode, node, context) => {
-              expect(context.shared.baseUrl).toBe(null);
-              expect(context.shared.baseUrlFound).toBe(false);
+              expect(context.global.baseUrl).toBe(null);
+              expect(context.global.baseUrlFound).toBe(false);
               const result = await context.defaultHandlers.base(
                 createNode,
                 node,
                 context,
               );
-              expect(context.shared.baseUrl).toBe('https://datocms.com');
-              expect(context.shared.baseUrlFound).toBe(true);
+              expect(context.global.baseUrl).toBe('https://datocms.com');
+              expect(context.global.baseUrlFound).toBe(true);
               return result;
             },
           },
@@ -527,6 +527,19 @@ describe('toDast', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
+
+      it('when not allowed produces paragraphs', async () => {
+        const html = `
+          <h1>dato</h1>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedBlocks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'heading')).toHaveLength(0);
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        expect(find(result.document, 'span').value).toBe('dato');
+      });
     });
 
     describe('code', () => {
@@ -591,6 +604,19 @@ describe('toDast', () => {
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0].language).toBeFalsy();
       });
+
+      it('when not allowed produces paragraphs', async () => {
+        const html = `
+          <code>let dato</code>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedBlocks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'code')).toHaveLength(0);
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        expect(find(result.document, 'span').value).toBe('let dato');
+      });
     });
 
     describe('blockquote', () => {
@@ -624,6 +650,19 @@ describe('toDast', () => {
             "type": "blockquote",
           }
         `);
+      });
+
+      it('when not allowed produces paragraphs', async () => {
+        const html = `
+          <blockquote>dato</blockquote>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedBlocks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'blockquote')).toHaveLength(0);
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        expect(find(result.document, 'span').value).toBe('dato');
       });
     });
 
@@ -727,7 +766,7 @@ describe('toDast', () => {
         `);
       });
 
-      it('convers nested invalid children', async () => {
+      it('convert nested invalid children', async () => {
         const html = `
           <ul>
             <li>1</li>
@@ -750,6 +789,21 @@ describe('toDast', () => {
             .map((child) => child.value)
             .join(''),
         ).toBe('12345');
+      });
+
+      it('when not allowed produces paragraphs', async () => {
+        const html = `
+          <ul>
+            <li>dato</li>
+          </ul>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedBlocks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'list')).toHaveLength(0);
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        expect(find(result.document, 'span').value).toBe('dato');
       });
     });
 
@@ -784,6 +838,20 @@ describe('toDast', () => {
           expect(validate(result).valid).toBeTruthy();
           expect(findAll(result.document, 'heading')).toHaveLength(0);
         });
+      });
+
+      it('when not allowed produces paragraphs', async () => {
+        const html = `
+          <a href="#"><h1>dato</h1>2</a>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedBlocks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'link')).toHaveLength(0);
+        expect(findAll(result.document, 'heading')).toHaveLength(0);
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        expect(find(result.document, 'span').value).toBe('dato');
       });
     });
 
@@ -820,6 +888,21 @@ describe('toDast', () => {
           const span = find(result.document, 'span');
           expect(span.marks).toBeTruthy();
           expect(span.marks).toContain(markName);
+        });
+      });
+
+      describe('ignore mark tags when not in allowedMarks', () => {
+        it.each(Object.keys(marksTags))(`%p`, async (tagName) => {
+          const markName = marksTags[tagName];
+          const html = `
+          <p><${tagName}>${markName}</${tagName}></p>
+        `;
+          const result = await htmlToStructuredText(html, {
+            allowedMarks: [],
+          });
+          expect(validate(result).valid).toBeTruthy();
+          const span = find(result.document, 'span');
+          expect(span.marks).toBeFalsy();
         });
       });
 
