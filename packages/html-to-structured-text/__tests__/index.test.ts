@@ -4,7 +4,6 @@ import { parse5ToDast, Settings } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit } from 'unist-utils-core';
-import toHTML from 'hast-util-to-html';
 
 function htmlToDast(html: string, settings: Settings = {}) {
   return parse5ToDast(
@@ -888,7 +887,7 @@ describe('toDast', () => {
 
       const dast = await htmlToDast(html, {
         preprocess: (tree) => {
-          const liftedImages = new WeakSet();
+          const liftedImages = new Set();
           const body = find(tree, (node) => node.tagName === 'body');
           visit(body, (node, index, parents) => {
             if (!node || node.tagName !== 'img' || liftedImages.has(node)) {
@@ -944,6 +943,7 @@ describe('toDast', () => {
           });
         },
         handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           img: async (createNode, node, context) => {
             // In a real scenario you would upload the image to Dato and get back an id.
             const item = '123';
