@@ -879,7 +879,9 @@ describe('toDast', () => {
           <li>item 5</li>
           <li>item 6<img src="./ul3-img.png" alt>item 7</li>
           <li>item 8</li>
+          <li><img src="./ul4-img.png" alt></li>
         </ul>
+        <img src="./root1-img.png" alt>
         <div>
           <h1>h1.1<img src="./h1-img.png" alt>h1.2</h1>
         </div>
@@ -890,7 +892,12 @@ describe('toDast', () => {
           const liftedImages = new Set();
           const body = find(tree, (node) => node.tagName === 'body');
           visit(body, (node, index, parents) => {
-            if (!node || node.tagName !== 'img' || liftedImages.has(node)) {
+            if (
+              !node ||
+              node.tagName !== 'img' ||
+              liftedImages.has(node) ||
+              parents.length === 1 // is a top level img
+            ) {
               return;
             }
             // remove image
@@ -957,7 +964,7 @@ describe('toDast', () => {
       expect(validate(dast).valid).toBeTruthy();
       expect(findAll(dast, 'list')).toHaveLength(4);
       expect(findAll(dast, 'listItem')).toHaveLength(8);
-      expect(findAll(dast, 'block')).toHaveLength(4);
+      expect(findAll(dast, 'block')).toHaveLength(6);
       expect(findAll(dast, 'heading')).toHaveLength(2);
       expect(
         dast.children.map((child) => {
@@ -1007,6 +1014,8 @@ describe('toDast', () => {
               ],
             ],
           ],
+          "block",
+          "block",
           Array [
             "heading",
             Array [

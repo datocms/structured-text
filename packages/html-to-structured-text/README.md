@@ -201,7 +201,12 @@ const dast = await htmlToDast(html, {
     const liftedImages = new WeakSet();
     const body = find(tree, (node) => node.tagName === 'body');
     visit(body, (node, index, parents) => {
-      if (!node || node.tagName !== 'img' || liftedImages.has(node)) {
+      if (
+        !node ||
+        node.tagName !== 'img' ||
+        liftedImages.has(node) ||
+        parents.length === 1 // is a top level img
+      ) {
         return;
       }
       // remove image
