@@ -197,7 +197,10 @@ export const list: Handler<HastElementNode> = async function list(
   });
 
   if (Array.isArray(children) && children.length) {
-    return createNode('list', { children, style: 'bulleted' });
+    return createNode('list', {
+      children,
+      style: node.tagName === 'ol' ? 'numbered' : 'bulleted',
+    });
   }
   return undefined;
 };
