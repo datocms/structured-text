@@ -1,4 +1,4 @@
-# `html-to-structured-text`
+# `datocms-html-to-structured-text`
 
 Convert HTML (or [Hast](https://github.com/syntax-tree/hast) syntax tree) to a valid DatoCMS Structured Text Dast document.
 
@@ -11,7 +11,7 @@ The main utility is `htmlToStructuredText` which takes a string of HTML and tran
 `htmlToStructuredText` returns a `Promise` that resolves with a `Dast`.
 
 ```js
-import { htmlToStructuredText } from 'html-to-structured-text';
+import { htmlToStructuredText } from 'datocms-html-to-structured-text';
 
 const html = `
   <article>
@@ -31,7 +31,7 @@ In Node.js you can use the `parse5ToStructuredText` helper which instead takes a
 
 ```js
 import parse5 from 'parse5';
-import { parse5ToStructuredText } from 'html-to-structured-text';
+import { parse5ToStructuredText } from 'datocms-html-to-structured-text';
 
 parse5ToStructuredText(
   parse5.parse(html, {
@@ -97,7 +97,7 @@ This library traverses a Hast tree and transforms supported nodes to Dast nodes.
 Handlers are associated to Hast nodes by `tagName` or `type` when `node.type !== 'element'` and look as follow:
 
 ```js
-import { visitChildren } from 'html-to-structured-text';
+import { visitChildren } from 'datocms-html-to-structured-text';
 
 // Handler for the <p> tag.
 async function p(createDastNode, hastNode, context) {
