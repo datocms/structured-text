@@ -1,6 +1,6 @@
 {
   "name": "datocms-html-to-structured-text",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Convert HTML (or Hast syntax tree) to a valid DatoCMS Structured Text Dast document",
   "keywords": [
     "datocms",
