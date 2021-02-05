@@ -39,10 +39,10 @@
     "hast-util-is-element": "^1.1.0",
     "hast-util-to-text": "^2.0.1",
     "rehype-minify-whitespace": "^4.0.5",
-    "unist-util-is": "^4.0.4"
+    "unist-util-is": "^4.0.4",
+    "unist-utils-core": "^1.0.5"
   },
   "devDependencies": {
-    "parse5": "^6.0.1",
-    "unist-utils-core": "^1.0.5"
+    "parse5": "^6.0.1"
   }
 }

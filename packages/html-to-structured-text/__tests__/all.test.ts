@@ -4,6 +4,7 @@ import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit } from 'unist-utils-core';
+import googleDocsPreprocessor from '../src/preprocessors/google-docs';
 
 function htmlToStructuredText(html: string, options: Options = {}) {
   return parse5ToStructuredText(
@@ -14,7 +15,7 @@ function htmlToStructuredText(html: string, options: Options = {}) {
   );
 }
 
-describe('toDast', () => {
+describe('htmlToStructuredText', () => {
   it('works with empty document', async () => {
     const html = '';
     const result = await htmlToStructuredText(html);
@@ -673,6 +674,16 @@ describe('toDast', () => {
         `;
         const result = await htmlToStructuredText(html);
         expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].style).toBe('bulleted');
+      });
+
+      it('creates a numbered list from OL elements', async () => {
+        const html = `
+          <ol><li>test</li></ol>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].style).toBe('numbered');
       });
 
       it('wraps children with listItem', async () => {
@@ -929,6 +940,24 @@ describe('toDast', () => {
           { value: 'em', marks: ['emphasis'] }"
         `);
       });
+
+      describe('code', () => {
+        it('turns inline code tags to span with code mark', async () => {
+          const html = `<p>To make it even easier to offer responsive, progressive images on your projects, we released a package called <a href="https://github.com/datocms/react-datocms"><code>react-datocms</code></a> that exposes an <code>&lt;Image /&gt;</code> component and pairs perfectly with the <code>responsiveImage</code> query.</p>`;
+          const result = await htmlToStructuredText(html);
+          expect(validate(result).valid).toBeTruthy();
+          expect(findAll(result.document, 'code')).toHaveLength(0);
+          const spans = findAll(result.document, 'span').filter(
+            (s) => Array.isArray(s.marks) && s.marks.includes('code'),
+          );
+          expect(spans).toHaveLength(3);
+          expect(spans.map((s) => s.value).join('\n')).toMatchInlineSnapshot(`
+            "react-datocms
+            <Image />
+            responsiveImage"
+          `);
+        });
+      });
     });
   });
 
@@ -1162,6 +1191,103 @@ describe('toDast', () => {
                 "block",
               ]
           `);
+    });
+  });
+});
+
+describe('preprocessors', () => {
+  describe('Google Docs', () => {
+    const googleDocsToStructuredText = (html: string, options: Options) =>
+      htmlToStructuredText(html, {
+        ...options,
+        preprocess: googleDocsPreprocessor,
+      });
+
+    it('detects a Google Doc and remove proprietary tag', async () => {
+      const html = `
+      <meta charset="utf-8" /><b
+        style="font-weight: normal"
+        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
+        ><p>dato</p>
+        <b
+        style="font-weight: normal"
+        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028b"
+        ><p>dato2</p>
+      `;
+
+      const result = await googleDocsToStructuredText(html);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'b')).toHaveLength(0);
+      expect(findAll(result.document, 'meta')).toHaveLength(0);
+      const paragraphs = findAll(result.document, 'paragraph');
+      expect(paragraphs).toHaveLength(2);
+      expect(paragraphs.map((p) => find(p, 'span').value).join(',')).toBe(
+        'dato,dato2',
+      );
+    });
+
+    it('converts span with inline styles to equivalent nested tags', async () => {
+      const html = `
+      <meta charset="utf-8" /><b
+        style="font-weight: normal"
+        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
+        ><p>
+          <span style="font-weight: 600; font-style:italic ;text-decoration: underline">
+            dato
+          </span>
+        </p>
+      `;
+
+      const result = await googleDocsToStructuredText(html);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'b')).toHaveLength(0);
+      expect(findAll(result.document, 'meta')).toHaveLength(0);
+      expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+      const spans = findAll(result.document, 'span');
+      expect(spans).toHaveLength(1);
+      expect(spans[0].marks).toEqual(['strong', 'emphasis', 'underline']);
+    });
+
+    it('preserves nested tags', async () => {
+      const html = `
+      <meta charset="utf-8" /><b
+        style="font-weight: normal"
+        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
+        ><p>
+          <span style="font-weight: bold;">
+            <strong>dato</strong>
+          </span>
+        </p>
+      `;
+
+      const result = await googleDocsToStructuredText(html);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'b')).toHaveLength(0);
+      expect(findAll(result.document, 'meta')).toHaveLength(0);
+      expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+      const spans = findAll(result.document, 'span');
+      expect(spans).toHaveLength(1);
+      expect(spans[0].marks).toEqual(['strong']);
+    });
+
+    it('does not modify branches that are not from a Google Doc', async () => {
+      const html = `
+      <b
+        style="font-weight: normal"
+        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
+        >
+        </b>
+        <span style="font-weight: bold;">ok</span>
+      `;
+
+      const result = await googleDocsToStructuredText(html);
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'b')).toHaveLength(0);
+      expect(findAll(result.document, 'meta')).toHaveLength(0);
+      expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+      const spans = findAll(result.document, 'span');
+      expect(spans).toHaveLength(1);
+      expect(spans[0].marks).toBe(undefined);
     });
   });
 });

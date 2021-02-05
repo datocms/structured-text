@@ -25,7 +25,7 @@ import {
 export type Options = Partial<{
   newlines: boolean;
   handlers: Record<string, CreateNodeFunction>;
-  preprocess: (hast: HastRootNode) => HastRootNode;
+  preprocess: (hast: HastRootNode) => void;
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType
   >;
