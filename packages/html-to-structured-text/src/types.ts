@@ -8,32 +8,38 @@ export type CreateNodeFunction = (
 ) => Node;
 
 export interface GlobalContext {
-  // Whether the library has found a <base> tag or should not look further.
-  // See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+  /**
+   * Whether the library has found a <base> tag or should not look further.
+   * See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+   */
   baseUrlFound?: boolean;
-  // <base> tag url. This is used for resolving relative URLs.
+  /** <base> tag url. This is used for resolving relative URLs. */
   baseUrl?: string;
 }
 
 export interface Context {
-  // The current parent Dast node type.
+  /** The current parent Dast node type. */
   parentNodeType: NodeType;
-  // The parent Hast node.
+  /** The parent Hast node. */
   parentNode: HastNode;
-  // A reference to the current handlers - merged default + user handlers.
+  /** A reference to the current handlers - merged default + user handlers. */
   handlers: Record<string, Handler<unknown>>;
-  // A reference to the default handlers record (map).
+  /** A reference to the default handlers record (map). */
   defaultHandlers: Record<string, Handler<unknown>>;
-  // true if the content can include newlines, and false if not (such as in headings).
+  /** true if the content can include newlines, and false if not (such as in headings). */
   wrapText: boolean;
-  // Marks for span nodes.
+  /** Marks for span nodes. */
   marks?: Mark[];
-  // Prefix for language detection in code blocks.
-  // Detection is done on a class name eg class="language-html"
-  // Default is `language-`
+  /**
+   * Prefix for language detection in code blocks.
+   *
+   * Detection is done on a class name eg class="language-html".
+   * Default is `language-`.
+   */
   codePrefix?: string;
-  // Properties in this object are avaliable to every handler as Context
-  // is not deeply cloned.
+  /** Properties in this object are avaliable to every handler as Context
+   * is not deeply cloned.
+   */
   global: GlobalContext;
 }
 
