@@ -940,6 +940,24 @@ describe('htmlToStructuredText', () => {
           { value: 'em', marks: ['emphasis'] }"
         `);
       });
+
+      describe('code', () => {
+        it('turns inline code tags to span with code mark', async () => {
+          const html = `<p>To make it even easier to offer responsive, progressive images on your projects, we released a package called <a href="https://github.com/datocms/react-datocms"><code>react-datocms</code></a> that exposes an <code>&lt;Image /&gt;</code> component and pairs perfectly with the <code>responsiveImage</code> query.</p>`;
+          const result = await htmlToStructuredText(html);
+          expect(validate(result).valid).toBeTruthy();
+          expect(findAll(result.document, 'code')).toHaveLength(0);
+          const spans = findAll(result.document, 'span').filter(
+            (s) => Array.isArray(s.marks) && s.marks.includes('code'),
+          );
+          expect(spans).toHaveLength(3);
+          expect(spans.map((s) => s.value).join('\n')).toMatchInlineSnapshot(`
+            "react-datocms
+            <Image />
+            responsiveImage"
+          `);
+        });
+      });
     });
   });
 
