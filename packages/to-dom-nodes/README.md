@@ -1,3 +1,5 @@
+![Node.js CI](https://github.com/stefanoverna/structured-text/workflows/Node.js%20CI/badge.svg)
+
 # datocms-structured-text-to-dom-nodes
 
 DOM nodes renderer for the DatoCMS Structured Text field type. To be used inside the browser, as it uses `document.createElement`.
