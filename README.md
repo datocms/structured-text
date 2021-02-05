@@ -8,6 +8,8 @@ Monorepo with Typescript libraries for handling and rendering DatoCMS Structured
 
 ### Official
 
+- [`html-to-structured-text`](https://github.com/datocms/structured-text/tree/master/packages/html-to-structured-text)
+  - Convert HTML (or [Hast](https://github.com/syntax-tree/hast) syntax tree) to a valid Structured Text document.
 - [`datocms-structured-text-utils`](https://github.com/datocms/structured-text/tree/master/packages/utils)
   - A set of Typescript types and helpers to work with DatoCMS Structured Text fields.
 - [`datocms-structured-text-to-plain-text`](https://github.com/datocms/structured-text/tree/master/packages/to-plain-text)
@@ -19,9 +21,9 @@ Monorepo with Typescript libraries for handling and rendering DatoCMS Structured
 - [`<datocms-structured-text />`](https://github.com/datocms/vue-datocms#structured-text)
   - Vue component that you can use to render Structured Text documents.
 - [`datocms-structured-text-to-dom-nodes`](https://github.com/datocms/structured-text/tree/master/packages/to-dom-nodes)
-  - DOM nodes renderer for the DatoCMS Structured Text field type. To be used inside the browser, as it uses `document.createElement`.
+  - DOM nodes renderer for the DatoCMS Structured Text field type. To be used inside the browser, as it expects to find `document.createElement`.
 
-## About Rich Text
+## About Structured Text
 
 - [Introduction](https://www.datocms.com/docs/content-modelling/structured-text)
 - [Migrating to Structured Text](https://www.datocms.com/docs/pro-tips/migrating-content-to-structured-text)
@@ -31,4 +33,4 @@ Monorepo with Typescript libraries for handling and rendering DatoCMS Structured
 
 ## License
 
-This repository is published under the [MIT](LICENSE) license.
+This repository is published under the [MIT](LICENSE.md) license.
