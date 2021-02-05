@@ -2,7 +2,7 @@
 // @ts-nocheck
 import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
-import { allowedChildren, validate } from 'datocms-structured-text-utils';
+import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
 
@@ -1226,7 +1226,30 @@ describe('preprocessors', () => {
       );
     });
 
-    it('converts span with inline styles to equivalent nested tags', async () => {
+    it('converts span with inline styles to equivalent nested tags /1', async () => {
+      // eslint-disable-next-line no-useless-escape
+      const html = `
+        <meta charset="utf-8">
+        <span style="font-weight:700;font-style:normal" id="docs-internal-guid-66c5a8a6-7fff-9224-fa8c-424e47353bc6">uno</span>
+        <span style="font-weight:400;font-style:normal">due</span>
+        <span style="font-weight:700;font-style:normal">tre</span>
+        <span style="font-weight:400;font-style:normal">quattro</span>
+      `;
+      const result = await googleDocsToStructuredText(html);
+      const spans: Span[] = findAll(result.document, 'span');
+      expect(spans).toHaveLength(7);
+      expect(spans.map((span) => span.marks)).toEqual([
+        ['strong'],
+        undefined,
+        undefined,
+        undefined,
+        ['strong'],
+        undefined,
+        undefined,
+      ]);
+    });
+
+    it('converts span with inline styles to equivalent nested tags /2', async () => {
       const html = `
       <meta charset="utf-8" /><b
         style="font-weight: normal"
