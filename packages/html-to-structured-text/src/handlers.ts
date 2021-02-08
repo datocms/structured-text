@@ -362,6 +362,57 @@ export const base: Handler<HastElementNode> = async function base(
     context.global.baseUrlFound = true;
   }
 };
+
+export const extractInlineStyles: Handler<HastElementNode> = async function extractInlineStyles(
+  createNode,
+  node,
+  context,
+) {
+  let marks = { marks: Array.isArray(context.marks) ? context.marks : [] };
+  if (node.properties && typeof node.properties.style === 'string') {
+    const newMarks = [];
+    node.properties.style.split(';').forEach((declaration) => {
+      const [firstChunk, ...otherChunks] = declaration.split(':');
+      const prop = firstChunk.trim();
+      const value = otherChunks.join(':').trim();
+      switch (prop) {
+        case 'font-weight':
+          if (value === 'bold' || Number(value) > 400) {
+            newMarks.push('strong');
+          }
+          break;
+        case 'font-style':
+          if (value === 'italic') {
+            newMarks.push('emphasis');
+          }
+          break;
+        case 'text-decoration':
+          if (value === 'underline') {
+            newMarks.push('underline');
+          }
+          break;
+        default:
+          break;
+      }
+    });
+    if (newMarks.length > 0) {
+      marks.marks = marks.marks.concat(
+        newMarks.filter(
+          (mark) =>
+            !marks.marks.includes(mark) && context.allowedMarks.includes(mark),
+        ),
+      );
+    }
+  }
+  if (marks.marks.length === 0) {
+    marks = {};
+  }
+  return visitChildren(createNode, node, {
+    ...context,
+    ...marks,
+  });
+};
+
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
 export async function noop() {}
 
@@ -437,6 +488,7 @@ export const handlers = {
 
   base: base,
 
+  span: extractInlineStyles,
   text: span,
 
   head: head,

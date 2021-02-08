@@ -351,6 +351,45 @@ describe('htmlToStructuredText', () => {
       });
     });
 
+    describe('extractInlineStyles', () => {
+      it('from spans', async () => {
+        const html = `
+          <b
+          style="font-weight: bold"
+          id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
+          >b</b>
+          <span style="font-weight: bold;">span</span>
+        `;
+
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+        const spans = findAll(result.document, 'span');
+        expect(spans).toHaveLength(3);
+        expect(spans.map((span) => [span.value, span.marks]))
+          .toMatchInlineSnapshot(`
+          Array [
+            Array [
+              "b",
+              Array [
+                "strong",
+              ],
+            ],
+            Array [
+              " ",
+              undefined,
+            ],
+            Array [
+              "span",
+              Array [
+                "strong",
+              ],
+            ],
+          ]
+        `);
+      });
+    });
+
     describe('paragraph', () => {
       it('wraps children when necessary', async () => {
         const html = `
@@ -1291,26 +1330,6 @@ describe('preprocessors', () => {
       const spans = findAll(result.document, 'span');
       expect(spans).toHaveLength(1);
       expect(spans[0].marks).toEqual(['strong']);
-    });
-
-    it('does not modify branches that are not from a Google Doc', async () => {
-      const html = `
-      <b
-        style="font-weight: normal"
-        id="docs-internal-guid-c793557e-7fff-c5c5-a52b-0abb9f4c028a"
-        >
-        </b>
-        <span style="font-weight: bold;">ok</span>
-      `;
-
-      const result = await googleDocsToStructuredText(html);
-      expect(validate(result).valid).toBeTruthy();
-      expect(findAll(result.document, 'b')).toHaveLength(0);
-      expect(findAll(result.document, 'meta')).toHaveLength(0);
-      expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-      const spans = findAll(result.document, 'span');
-      expect(spans).toHaveLength(1);
-      expect(spans[0].marks).toBe(undefined);
     });
   });
 });
