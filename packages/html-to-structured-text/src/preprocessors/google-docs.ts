@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { findAll, visit } from 'unist-utils-core';
+import { findAll } from 'unist-utils-core';
 import { HastRootNode, HastNode } from '../types';
 
 export default function preprocessGoogleDocs(tree: HastRootNode): void {
