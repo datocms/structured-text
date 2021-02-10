@@ -1,14 +1,14 @@
 # `datocms-html-to-structured-text`
 
-This package contains utilities to convert HTML (or a [Hast](https://github.com/syntax-tree/hast) to a DatoCMS Structured Text Dast (Dato Abstract Syntax Tree) document.
+This package contains utilities to convert HTML (or a [Hast](https://github.com/syntax-tree/hast) to a DatoCMS Structured Text `dast` (DatoCMS Abstract Syntax Tree) document.
 
-Please refer to [the Dast format docs](https://datocms.com/docs/structured-text) to learn more about the syntax tree format and the available nodes.
+Please refer to [the `dast` format docs](https://www.datocms.com/docs/structured-text/dast) to learn more about the syntax tree format and the available nodes.
 
 ## Usage
 
-The main utility in this package is `htmlToStructuredText` which takes a string of HTML and transforms it into a valid Dast.
+The main utility in this package is `htmlToStructuredText` which takes a string of HTML and transforms it into a valid `dast` document.
 
-`htmlToStructuredText` returns a `Promise` that resolves with a structured text document.
+`htmlToStructuredText` returns a `Promise` that resolves with a Structured Text document.
 
 ```js
 import { htmlToStructuredText } from 'datocms-html-to-structured-text';
@@ -42,13 +42,13 @@ parse5ToStructuredText(
 });
 ```
 
-Internally, both utilities work on a [Hast](https://github.com/syntax-tree/hast). Should you have a Hast already you can use a third utility called `hastToDast`.
+Internally, both utilities work on a [Hast](https://github.com/syntax-tree/hast). Should you have a `hast` already you can use a third utility called `hastToDast`.
 
-## Validate Dast
+## Validate `dast` documents
 
-Dast is a strict format that is compliant with DatoCMS' Structured Text records. As such the resulting document is generally a simplified, content-centric version of the input HTML.
+`dast` is a strict format for DatoCMS' Structured Text fields. As such the resulting document is generally a simplified, content-centric version of the input HTML.
 
-When possible, the library relies on semantic HTML to generate a valid Dast document.
+When possible, the library relies on semantic HTML to generate a valid `dast` document.
 
 The `datocms-structured-text-utils` package provides a `validate` utility to validate a value to make sure that the resulting tree is compatible with DatoCMS' Structured Text field.
 
@@ -66,7 +66,7 @@ htmlToStructuredText(html).then((structuredText) => {
 });
 ```
 
-We recommend to validate every Dast to avoid errors later when creating records.
+We recommend to validate every `dast` to avoid errors later when creating records.
 
 ## Advanced Usage
 
@@ -77,9 +77,9 @@ All the `*ToStructuredText` utils accept an optional `options` object as second 
 ```js
 type Options = Partial<{
   newlines: boolean,
-  // Override existing Hast node handlers or add new ones.
+  // Override existing `hast` node handlers or add new ones.
   handlers: Record<string, CreateNodeFunction>,
-  // Allows to tweak the Hast tree before transforming it to a Dast document.
+  // Allows to tweak the `hast` tree before transforming it to a `dast` document.
   preprocess: (hast: HastRootNode) => HastRootNode,
   // Array of allowed Block nodes.
   allowedBlocks: Array<
@@ -92,9 +92,9 @@ type Options = Partial<{
 
 ### Transforming Nodes
 
-The utils in this library traverse a Hast tree and transform supported nodes to Dast nodes. The transformation is done by working on a Hast node with a handler (async) function.
+The utils in this library traverse a `hast` tree and transform supported nodes to `dast` nodes. The transformation is done by working on a `hast` node with a handler (async) function.
 
-Handlers are associated to Hast nodes by `tagName` or `type` when `node.type !== 'element'` and look as follow:
+Handlers are associated to `hast` nodes by `tagName` or `type` when `node.type !== 'element'` and look as follow:
 
 ```js
 import { visitChildren } from 'datocms-html-to-structured-text';
@@ -107,11 +107,11 @@ async function p(createDastNode, hastNode, context) {
 }
 ```
 
-Handlers can return either a promise that resolves to a Dast node, an array of Dast Nodes or `undefined` to skip the current node.
+Handlers can return either a promise that resolves to a `dast` node, an array of `dast` Nodes or `undefined` to skip the current node.
 
-To ensure that a valid Dast is generated the default handlers also check that the current `hastNode` is a valid Dast node for its parent and, if not, they ignore the current node and continue visiting its children.
+To ensure that a valid `dast` is generated the default handlers also check that the current `hastNode` is a valid `dast` node for its parent and, if not, they ignore the current node and continue visiting its children.
 
-Information about the parent Dast node name is available in `context.parentNodeType`.
+Information about the parent `dast` node name is available in `context.parentNodeType`.
 
 Please take a look at the [default handlers implementation](./handlers.ts) for examples.
 
@@ -131,9 +131,9 @@ export interface GlobalContext {
 }
 
 export interface Context {
-  // The current parent Dast node type.
+  // The current parent `dast` node type.
   parentNodeType: NodeType;
-  // The parent Hast node.
+  // The parent `hast` node.
   parentNode: HastNode;
   // A reference to the current handlers - merged default + user handlers.
   handlers: Record<string, Handler<unknown>>;
@@ -175,13 +175,13 @@ htmlToStructuredText(html, {
 });
 ```
 
-It is **highly encouraged** to validate the Dast when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS' Structured Text.
+It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS' Structured Text.
 
 ## preprocessing
 
-Because of the strictness of the Dast spec it is possible that some semantic or elements might be lost during the transformation.
+Because of the strictness of the `dast` spec it is possible that some semantic or elements might be lost during the transformation.
 
-To improve the final result, you might want to modify the Hast before it is transformed to Dast with the `preprocess` hook.
+To improve the final result, you might want to modify the `hast` before it is transformed to `dast` with the `preprocess` hook.
 
 ```js
 import { findAll } from 'unist-utils-core';
@@ -208,7 +208,7 @@ htmlToStructuredText(html, {
 <details>
   <summary>Split a node that contains an image.</summary>
 
-In Dast images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces and lift up the image.
+In `dast` images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces and lift up the image.
 
 The same approach can be used to split other types of branches and lift up nodes to become root nodes.
 
@@ -338,7 +338,7 @@ const dast = await htmlToStructuredText(html, {
 
 ### Utilities
 
-To work with Hast and Dast trees we recommend using the [unist-utils-core](https://www.npmjs.com/package/unist-utils-core) library.
+To work with `hast` and `dast` trees we recommend using the [unist-utils-core](https://www.npmjs.com/package/unist-utils-core) library.
 
 ## License
 

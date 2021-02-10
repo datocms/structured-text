@@ -246,7 +246,7 @@ export const link: Handler<HastElementNode> = async function link(
 
   if (!isAllowedChild) {
     // Links that aren't inside of a allowedChildren context
-    // can still be valid Dast nodes in the following contexts if wrapped.
+    // can still be valid `dast` nodes in the following contexts if wrapped.
     const allowedChildrenWrapped = ['root', 'list', 'listItem'];
     isAllowedChild = allowedChildrenWrapped.includes(context.parentNodeType);
   }

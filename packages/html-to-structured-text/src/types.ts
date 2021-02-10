@@ -18,9 +18,9 @@ export interface GlobalContext {
 }
 
 export interface Context {
-  /** The current parent Dast node type. */
+  /** The parent `dast` node type. */
   parentNodeType: NodeType;
-  /** The parent Hast node. */
+  /** The parent `hast` node. */
   parentNode: HastNode;
   /** A reference to the current handlers - merged default + user handlers. */
   handlers: Record<string, Handler<unknown>>;

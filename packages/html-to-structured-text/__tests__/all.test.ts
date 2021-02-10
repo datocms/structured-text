@@ -452,7 +452,7 @@ describe('htmlToStructuredText', () => {
       });
 
       it('nested invalid elements end the current paragraph and start a new one', async () => {
-        // This is how Hast parses them.
+        // This is how `hast` parses them.
 
         const html = `
           <p>
