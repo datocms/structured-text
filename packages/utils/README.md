@@ -18,7 +18,7 @@ yarn add datocms-structured-text-utils
 
 ## `dast` document validation
 
-You can use the `validate()` function to check if an object is compatible with the `dast` specification:
+You can use the `validate()` function to check if an object is compatible with the [`dast` specification](https://www.datocms.com/docs/structured-text/dast):
 
 ```js
 import { validate } from 'datocms-structured-text-utils';
@@ -54,7 +54,7 @@ if (!result.valid) {
 
 ## `dast` format specs
 
-The package exports a number of constants that represents the rules of the `dast` specification.
+The package exports a number of constants that represents the rules of the [`dast` specification](https://www.datocms.com/docs/structured-text/dast).
 
 Take a look a the [definitions.ts](https://github.com/datocms/structured-text/blob/main/packages/utils/src/definitions.ts) file for their definition:
 
@@ -104,7 +104,7 @@ const allowedMarks = [
 
 ## Typescript Types
 
-The package exports Typescript types for all the different nodes that a `dast` document can contain.
+The package exports Typescript types for all the different nodes that a [`dast` document](https://www.datocms.com/docs/structured-text/dast) can contain.
 
 Take a look a the [types.ts](https://github.com/datocms/structured-text/blob/main/packages/utils/src/types.ts) file for their definition:
 
