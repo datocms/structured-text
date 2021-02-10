@@ -72,30 +72,30 @@ const paragraphNodeType = 'paragraph';
 const rootNodeType = 'root';
 const spanNodeType = 'span';
 
-export const allowedNodeTypes = [
+const allowedNodeTypes = [
   'paragraph',
   'list',
   // ...
 ];
 
-export const allowedChildren = {
+const allowedChildren = {
   paragraph: 'inlineNodes',
   list: ['listItem'],
   // ...
 };
 
-export const inlineNodeTypes = [
+const inlineNodeTypes = [
   'span',
   'link',
   // ...
 ];
 
-export const allowedAttributes = {
+const allowedAttributes = {
   heading: ['level', 'children'],
   // ...
 };
 
-export const allowedMarks = [
+const allowedMarks = [
   'strong',
   'code',
   // ...
