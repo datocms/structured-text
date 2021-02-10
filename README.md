@@ -2,7 +2,7 @@
 
 # structured-text
 
-Monorepo with Typescript libraries for handling and rendering DatoCMS Structured Text documents.
+Monorepo with Typescript libraries for handling and rendering [DatoCMS Structured Text documents](https://www.datocms.com/docs/structured-text/dast).
 
 ## Packages
 
@@ -26,7 +26,8 @@ Monorepo with Typescript libraries for handling and rendering DatoCMS Structured
 ## About Structured Text
 
 - [Introduction](https://www.datocms.com/docs/content-modelling/structured-text)
-- [Migrating to Structured Text](https://www.datocms.com/docs/pro-tips/migrating-content-to-structured-text)
+- [Structured Text format](https://www.datocms.com/docs/structured-text/dast)
+- [Migrating to Structured Text](https://www.datocms.com/docs/structured-text/migrating-content-to-structured-text)
 - [Fetching Structured Text using DatoCMS GraphQL API](https://www.datocms.com/docs/content-delivery-api/structured-text-fields)
 - [Creating Structured Text fields using DatoCMS Rest API](https://www.datocms.com/docs/content-management-api/resources/field/create#creating-structured-text-fields)
 - [Creating records with Structured Text fields using DatoCMS Rest API](https://www.datocms.com/docs/content-management-api/resources/item/create#structured-text-fields)
