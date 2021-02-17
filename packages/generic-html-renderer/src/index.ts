@@ -21,6 +21,7 @@ import {
   Node,
   isThematicBreak,
   NodeWithMeta,
+  MetaEntry,
 } from 'datocms-structured-text-utils';
 
 export { renderRule, RenderError };
@@ -42,9 +43,7 @@ export function markToTagName(mark: Mark): string {
 
 export type TransformMetaContext = {
   node: NodeWithMeta;
-  meta: {
-    [prop: string]: unknown;
-  };
+  meta: Array<MetaEntry>;
 };
 
 export type TransformedMeta =
@@ -59,19 +58,15 @@ export type TransformMetaFn = (
 ) => TransformedMeta;
 
 export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
-  const attributes: { [a: string]: string } = {};
+  const attributes: TransformedMeta = {};
 
-  if ('openInNewWindow' in meta && meta.openInNewWindow) {
-    attributes.target = '_blank';
-  }
+  meta.forEach((entry) => {
+    if (entry.id === 'openInNewWindow') {
+      attributes.target = '_blank';
+    }
 
-  ['target', 'title', 'rel'].forEach((attr) => {
-    if (attr in meta) {
-      const value = meta[attr];
-
-      if (typeof value === 'string') {
-        attributes[attr] = value;
-      }
+    if (['target', 'title', 'rel'].includes(entry.id)) {
+      attributes[entry.id] = entry.value;
     }
   });
 

@@ -284,9 +284,11 @@ export type Span = {
    */
   marks?: Mark[];
   value: string;
-  meta?: {
-    [prop: string]: unknown;
-  };
+};
+
+export type MetaEntry = {
+  id: string;
+  value: unknown;
 };
 
 export type LinkType = 'link';
@@ -317,11 +319,9 @@ export type Link = {
   url: string;
   children: Array<Span>;
   /**
-   * Object containing custom meta-information for the link.
+   * Array of tuples containing custom meta-information for the link.
    */
-  meta?: {
-    [prop: string]: unknown;
-  };
+  meta?: Array<MetaEntry>;
 };
 
 export type ItemLinkType = 'itemLink';
@@ -359,11 +359,9 @@ export type ItemLink = {
   item: string;
   children: Array<Span>;
   /**
-   * Object containing custom meta-information for the link.
+   * Array of tuples containing custom meta-information for the link.
    */
-  meta?: {
-    [prop: string]: unknown;
-  };
+  meta?: Array<MetaEntry>;
 };
 
 export type InlineItemType = 'inlineItem';

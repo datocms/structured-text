@@ -429,11 +429,11 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
             {
               url: 'http://txti.es',
               type: 'link',
-              meta: {
-                rel: 'nofollow',
-                foo: 123,
-                openInNewWindow: true,
-              },
+              meta: [
+                { id: 'rel', value: 'nofollow' },
+                { id: 'foo', value: 123 },
+                { id: 'openInNewWindow', value: true },
+              ],
               children: [
                 {
                   type: 'span',
