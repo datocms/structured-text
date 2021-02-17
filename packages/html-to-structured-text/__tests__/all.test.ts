@@ -277,10 +277,16 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         const { meta } = find(result.document, 'link');
         expect(meta).toMatchInlineSnapshot(`
-          Object {
-            "openInNewWindow": true,
-            "title": "Foo bar",
-          }
+          Array [
+            Object {
+              "id": "openInNewWindow",
+              "value": true,
+            },
+            Object {
+              "id": "title",
+              "value": "Foo bar",
+            },
+          ]
         `);
       });
 

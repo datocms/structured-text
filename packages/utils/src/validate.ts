@@ -54,6 +54,34 @@ export function validate(
         )}`,
       };
     }
+
+    if ('meta' in node) {
+      if (!Array.isArray(node.meta)) {
+        return {
+          valid: false,
+          message: `"${node.type}"'s meta is not an Array:\n\n ${JSON.stringify(
+            node,
+            null,
+            2,
+          )}`,
+        };
+      }
+
+      const invalidMeta = node.meta.find(
+        (entry) =>
+          typeof entry !== 'object' || !('id' in entry) || !('value' in entry),
+      );
+
+      if (invalidMeta) {
+        return {
+          valid: false,
+          message: `"${node.type}" has an invalid meta ${JSON.stringify(
+            invalidMeta,
+          )}:\n\n ${JSON.stringify(node, null, 2)}`,
+        };
+      }
+    }
+
     if ('marks' in node) {
       if (!Array.isArray(node.marks)) {
         return {

@@ -20,6 +20,7 @@ import {
 
 import visitChildren from './visit-children';
 import { wrap } from './wrap';
+import { MetaEntry } from '../../utils/dist/types';
 
 export const root: Handler<HastRootNode> = async function root(
   createNode,
@@ -318,21 +319,21 @@ export const link: Handler<HastElementNode> = async function link(
       children,
     };
 
-    const meta = {};
+    const meta: Array<MetaEntry> = [];
 
     if (node.properties) {
       if (node.properties.target === '_blank') {
-        meta.openInNewWindow = true;
+        meta.push({ id: 'openInNewWindow', value: true });
       }
 
       ['rel', 'title'].forEach((attr) => {
         if (node.properties[attr]) {
-          meta[attr] = node.properties[attr];
+          meta.push({ id: attr, value: node.properties[attr] });
         }
       });
     }
 
-    if (Object.keys(meta).length > 0) {
+    if (meta.length > 0) {
       props.meta = meta;
     }
 
