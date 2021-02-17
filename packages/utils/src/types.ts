@@ -288,7 +288,7 @@ export type Span = {
 
 export type MetaEntry = {
   id: string;
-  value: unknown;
+  value: string | boolean | number;
 };
 
 export type LinkType = 'link';
