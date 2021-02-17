@@ -8,8 +8,12 @@ export type BlockNode =
   | List
   | ListItem
   | Blockquote
-  | Code;
+  | Code
+  | ThematicBreak;
+
 export type InlineNode = Span | Link | ItemLink | InlineItem;
+
+export type NodeWithMeta = Link | ItemLink;
 
 export type RootType = 'root';
 
@@ -45,7 +49,9 @@ export type RootType = 'root';
  */
 export type Root = {
   type: RootType;
-  children: Array<Paragraph | Heading | List | Code | Blockquote | Block>;
+  children: Array<
+    Paragraph | Heading | List | Code | Blockquote | Block | ThematicBreak
+  >;
 };
 
 export type ParagraphType = 'paragraph';
@@ -157,6 +163,22 @@ export type ListItem = {
   children: Array<Paragraph | List>;
 };
 
+export type ThematicBreakType = 'thematicBreak';
+
+/**
+ * A `thematicBreak` node represents a thematic break between paragraph-level elements:
+ * for example, a change of scene in a story, or a shift of topic within a section.
+ *
+ * ```json
+ * {
+ *   "type": "thematicBreak"
+ * }
+ * ```
+ */
+export type ThematicBreak = {
+  type: ThematicBreakType;
+};
+
 export type CodeType = 'code';
 
 /**
@@ -262,18 +284,25 @@ export type Span = {
    */
   marks?: Mark[];
   value: string;
+  meta?: {
+    [prop: string]: unknown;
+  };
 };
 
 export type LinkType = 'link';
 
 /**
- * A `link` node represents a normal hyperlink. You can also link to DatoCMS records using
+ * A `link` node represents a normal hyperlink. It might optionally contain a number of additional
+ * custom information under the `meta` key. You can also link to DatoCMS records using
  * the [`itemLink`](#itemLink) node.
  *
  * ```json
  * {
  *   "type": "link",
  *   "url": "https://www.datocms.com/"
+ *   "meta": {
+ *     "openInNewWindow": true
+ *   },
  *   "children": [
  *     {
  *       "type": "span",
@@ -287,6 +316,12 @@ export type Link = {
   type: LinkType;
   url: string;
   children: Array<Span>;
+  /**
+   * Object containing custom meta-information for the link.
+   */
+  meta?: {
+    [prop: string]: unknown;
+  };
 };
 
 export type ItemLinkType = 'itemLink';
@@ -296,13 +331,19 @@ export type ItemLinkType = 'itemLink';
  * linking a portion of text to a URL, it links the document to another record
  * present in the same DatoCMS project.
  *
+ * It might optionally contain a number of additional custom information under
+ * the `meta` key.
+ *
  * If you want to link to a DatoCMS record without having to specify some
  * inner content, then please use the [`inlineItem`](#inlineItem) node.
  *
  * ```json
  * {
  *   "type": "itemLink",
- *   "item": "38945648"
+ *   "item": "38945648",
+ *   "meta": {
+ *     "openInNewWindow": true,
+ *   },
  *   "children": [
  *     {
  *       "type": "span",
@@ -317,6 +358,12 @@ export type ItemLink = {
   /** The linked DatoCMS record ID */
   item: string;
   children: Array<Span>;
+  /**
+   * Object containing custom meta-information for the link.
+   */
+  meta?: {
+    [prop: string]: unknown;
+  };
 };
 
 export type InlineItemType = 'inlineItem';
@@ -342,7 +389,10 @@ export type InlineItem = {
   item: string;
 };
 
-export type WithChildrenNode = Exclude<Node, Code | Span | Block | InlineItem>;
+export type WithChildrenNode = Exclude<
+  Node,
+  Code | Span | Block | InlineItem | ThematicBreak
+>;
 
 /**
  * A Structured Text `dast`-compatible value, composed by the `dast` document
@@ -365,7 +415,8 @@ export type NodeType =
   | BlockquoteType
   | CodeType
   | RootType
-  | SpanType;
+  | SpanType
+  | ThematicBreakType;
 
 /**
  * Structured Text enables authors to create rich text content, on par with

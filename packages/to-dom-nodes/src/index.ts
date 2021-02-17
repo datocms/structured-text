@@ -1,6 +1,7 @@
 import {
   render as genericHtmlRender,
   renderRule,
+  TransformMetaFn,
 } from 'datocms-structured-text-generic-html-renderer';
 import {
   Adapter,
@@ -36,7 +37,7 @@ const hyperscriptAdapter = (
     delete attrs.key;
   }
 
-  return hyperscript(tagName, attrs, ...children);
+  return hyperscript(tagName, attrs || undefined, ...children);
 };
 
 export const defaultAdapter = {
@@ -71,6 +72,8 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
 export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to HTML **/
   customRules?: RenderRule<H, T, F>[];
+  /** Function that converts 'link' and 'itemLink' `meta` into HTML attributes */
+  metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into an HTML string **/
   renderInlineRecord?: (context: RenderInlineRecordContext<R>) => AdapterReturn;
   /** Fuction that converts an 'itemLink' node into an HTML string **/
@@ -95,26 +98,16 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   /** Additional render settings **/
   settings?: RenderSettings<R>,
 ): ReturnType<F> | null {
-  const mergedSettings: RenderSettings<R> = {
-    renderText: defaultAdapter.renderText,
-    renderNode: defaultAdapter.renderNode,
-    renderFragment: defaultAdapter.renderFragment,
-    customRules: [],
-    ...settings,
-  };
-
-  const {
-    renderInlineRecord,
-    renderLinkToRecord,
-    renderBlock,
-    customRules,
-  } = mergedSettings;
+  const renderInlineRecord = settings?.renderInlineRecord;
+  const renderLinkToRecord = settings?.renderLinkToRecord;
+  const renderBlock = settings?.renderBlock;
+  const customRules = settings?.customRules || [];
 
   const result = genericHtmlRender(
     {
-      renderText: mergedSettings.renderText,
-      renderNode: mergedSettings.renderNode,
-      renderFragment: mergedSettings.renderFragment,
+      renderText: settings?.renderText || defaultAdapter.renderText,
+      renderNode: settings?.renderNode || defaultAdapter.renderNode,
+      renderFragment: settings?.renderFragment || defaultAdapter.renderFragment,
     },
     structuredTextOrNode,
     [
@@ -137,9 +130,9 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           );
         }
 
-        const structuredText = structuredTextOrNode;
-
-        const item = structuredText.links.find((item) => item.id === node.item);
+        const item = structuredTextOrNode.links.find(
+          (item) => item.id === node.item,
+        );
 
         if (!item) {
           throw new RenderError(
@@ -168,9 +161,9 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           );
         }
 
-        const structuredText = structuredTextOrNode;
-
-        const item = structuredText.links.find((item) => item.id === node.item);
+        const item = structuredTextOrNode.links.find(
+          (item) => item.id === node.item,
+        );
 
         if (!item) {
           throw new RenderError(
@@ -204,9 +197,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           );
         }
 
-        const structuredText = structuredTextOrNode;
-
-        const item = structuredText.blocks.find(
+        const item = structuredTextOrNode.blocks.find(
           (item) => item.id === node.item,
         );
 
@@ -220,6 +211,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         return renderBlock({ record: item, adapter });
       }),
     ],
+    settings?.metaTransformer,
   );
 
   return result as ReturnType<F> | null;

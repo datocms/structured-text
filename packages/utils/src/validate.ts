@@ -29,7 +29,13 @@ export function validate(
   let node: Node = document.document;
 
   while (nodes.length > 0) {
-    node = nodes.pop();
+    const next = nodes.pop();
+
+    if (!next) {
+      break;
+    }
+
+    node = next;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { type, ...attributes } = node;
@@ -99,7 +105,7 @@ export function validate(
         allowed = inlineNodeTypes;
       }
       const invalidChildIndex = (node.children as Array<Node | null>).findIndex(
-        (child: Node) => !child || !allowed.includes(child.type),
+        (child) => !child || !allowed.includes(child.type),
       );
       if (invalidChildIndex !== -1) {
         const invalidChild = node.children[invalidChildIndex];

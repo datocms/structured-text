@@ -19,6 +19,8 @@ import {
   TrasformFn,
   RenderError,
   Node,
+  isThematicBreak,
+  NodeWithMeta,
 } from 'datocms-structured-text-utils';
 
 export { renderRule, RenderError };
@@ -38,6 +40,41 @@ export function markToTagName(mark: Mark): string {
   }
 }
 
+export type TransformMetaContext = {
+  node: NodeWithMeta;
+  meta: {
+    [prop: string]: unknown;
+  };
+};
+
+type Attributes = {
+  [prop: string]: unknown;
+};
+
+export type TransformMetaFn = (
+  context: TransformMetaContext,
+) => null | undefined | Attributes;
+
+const defaultTransformer: TransformMetaFn = ({ meta }) => {
+  const attributes: { [a: string]: string } = {};
+
+  if ('openInNewWindow' in meta && meta.openInNewWindow) {
+    attributes.target = '_blank';
+  }
+
+  ['target', 'title', 'rel'].forEach((attr) => {
+    if (attr in meta) {
+      const value = meta[attr];
+
+      if (typeof value === 'string') {
+        attributes[attr] = value;
+      }
+    }
+  });
+
+  return attributes;
+};
+
 export function render<
   R extends Record,
   H extends TrasformFn,
@@ -47,6 +84,7 @@ export function render<
   adapter: Adapter<H, T, F>,
   structuredTextOrNode: StructuredText<R> | Node | null | undefined,
   customRules: RenderRule<H, T, F>[],
+  metaTransformer: TransformMetaFn = defaultTransformer,
 ): RenderResult<H, T, F> {
   return genericRender(adapter, structuredTextOrNode, [
     ...customRules,
@@ -71,7 +109,7 @@ export function render<
       ({ adapter: { renderNode }, key, node, children }) => {
         const childrenWithAttribution = node.attribution
           ? [
-              ...children,
+              ...(children || []),
               renderNode(`footer`, { key: 'footer' }, node.attribution),
             ]
           : children;
@@ -86,7 +124,16 @@ export function render<
       );
     }),
     renderRule(isLink, ({ adapter: { renderNode }, key, children, node }) => {
-      return renderNode('a', { key, href: node.url }, children);
+      const meta = node.meta ? metaTransformer({ node, meta: node.meta }) : {};
+
+      return renderNode(
+        'a',
+        { ...(meta || {}), key, href: node.url },
+        children,
+      );
+    }),
+    renderRule(isThematicBreak, ({ adapter: { renderNode }, key }) => {
+      return renderNode('hr', { key });
     }),
     renderRule(
       isHeading,

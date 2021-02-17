@@ -54,7 +54,7 @@ describe('render', () => {
                 ({ node, children, adapter: { renderFragment } }) => {
                   return renderFragment([
                     `Heading ${node.level}:`,
-                    ...children,
+                    ...(children || []),
                   ]);
                 },
               ),

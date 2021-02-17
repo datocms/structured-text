@@ -17,6 +17,7 @@ import {
   NodeType,
   Record,
   StructuredText,
+  ThematicBreak,
 } from './types';
 
 import {
@@ -33,6 +34,7 @@ import {
   itemLinkNodeType,
   inlineItemNodeType,
   inlineNodeTypes,
+  thematicBreakNodeType,
 } from './definitions';
 
 export function hasChildren(node: Node): node is WithChildrenNode {
@@ -89,6 +91,10 @@ export function isItemLink(node: Node): node is ItemLink {
 
 export function isInlineItem(node: Node): node is InlineItem {
   return node.type === inlineItemNodeType;
+}
+
+export function isThematicBreak(node: Node): node is ThematicBreak {
+  return node.type === thematicBreakNodeType;
 }
 
 export function isStructuredText<R extends Record>(

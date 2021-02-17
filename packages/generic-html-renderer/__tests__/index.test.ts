@@ -429,6 +429,11 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
             {
               url: 'http://txti.es',
               type: 'link',
+              meta: {
+                rel: 'nofollow',
+                foo: 123,
+                openInNewWindow: true,
+              },
               children: [
                 {
                   type: 'span',
@@ -470,7 +475,9 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
 type Tag = {
   tagName: string;
   attrs: Record<string, string>;
-  children: Array<Tag | Text | Fragment>;
+  children: Array<
+    undefined | Text | Fragment | Tag | Array<Text | Fragment | Tag>
+  >;
 };
 
 type Text = {
@@ -479,35 +486,30 @@ type Text = {
 };
 
 type Fragment = {
-  children: Array<Tag | Text | Fragment>;
+  children: Array<Tag | Text | Fragment> | undefined;
   key: string;
 };
 
-const dummyRenderer = (
-  tagName: string,
-  attrs: Record<string, string>,
-  ...children: Array<Text | Fragment | Tag | Array<Text | Fragment | Tag>>
-): Tag => {
-  const sanitizedChildren = children.reduce<Array<Text | Fragment | Tag>>(
-    (acc, child) =>
-      Array.isArray(child) ? [...acc, ...child] : [...acc, child],
-    [],
-  );
-
-  return {
+const dummyAdapter = {
+  renderNode: (
+    tagName: string,
+    attrs: Record<string, string>,
+    ...children: Array<
+      undefined | Text | Fragment | Tag | Array<Text | Fragment | Tag>
+    >
+  ): Tag => ({
     tagName,
     attrs,
-    children: sanitizedChildren,
-  };
-};
-
-const dummyAdapter = {
-  renderNode: dummyRenderer,
-  renderFragment: (children: (Tag | Text | Fragment)[], key: string) => ({
+    children,
+  }),
+  renderFragment: (
+    children: (Tag | Text | Fragment)[],
+    key: string,
+  ): Fragment => ({
     children,
     key,
   }),
-  renderText: (text: string, key: string) => ({ text, key }),
+  renderText: (text: string, key: string): Text => ({ text, key }),
 };
 
 describe('render', () => {
@@ -517,17 +519,19 @@ describe('render', () => {
         renderRule(
           isInlineItem,
           ({ node, adapter: { renderNode, renderText }, key }) => {
-            const record = value.links.find(
+            const record = value.links?.find(
               (record) => record.id === node.item,
             );
 
+            if (!record) {
+              return null;
+            }
+
             switch (record.__typename) {
               case 'BlogPostRecord':
-                return renderNode(
-                  'a',
-                  { key, href: `/blog/${record.id}` },
+                return renderNode('a', { key, href: `/blog/${record.id}` }, [
                   renderText(record.title, 'p-0'),
-                );
+                ]);
               default:
                 return null;
             }
@@ -536,16 +540,20 @@ describe('render', () => {
         renderRule(
           isItemLink,
           ({ node, adapter: { renderNode }, key, children }) => {
-            const record = value.links.find(
+            const record = value.links?.find(
               (record) => record.id === node.item,
             );
+
+            if (!record) {
+              return null;
+            }
 
             switch (record.__typename) {
               case 'BlogPostRecord':
                 return renderNode(
                   'a',
                   { key, href: `/blog/${record.id}` },
-                  ...children,
+                  children,
                 );
               default:
                 return null;
@@ -553,7 +561,13 @@ describe('render', () => {
           },
         ),
         renderRule(isBlock, ({ node, adapter: { renderNode }, key }) => {
-          const record = value.blocks.find((record) => record.id === node.item);
+          const record = value.blocks?.find(
+            (record) => record.id === node.item,
+          );
+
+          if (!record) {
+            return null;
+          }
 
           switch (record.__typename) {
             case 'ImageRecord':

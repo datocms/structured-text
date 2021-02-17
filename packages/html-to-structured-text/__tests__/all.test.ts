@@ -269,6 +269,21 @@ describe('htmlToStructuredText', () => {
         expect(result).toBeNull();
       });
 
+      it('maps links attributes', async () => {
+        const html = `
+          <a href="./contact" target="_blank" title="Foo bar" other="Ignore me">contact</a>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        const { meta } = find(result.document, 'link');
+        expect(meta).toMatchInlineSnapshot(`
+          Object {
+            "openInNewWindow": true,
+            "title": "Foo bar",
+          }
+        `);
+      });
+
       it('resolves relative paths', async () => {
         const html = `
           <base href="https://datocms.com" />
@@ -839,6 +854,19 @@ describe('htmlToStructuredText', () => {
             .map((child) => child.value)
             .join(''),
         ).toBe('12345');
+      });
+
+      it('convert hr', async () => {
+        const html = `
+          <div>
+            <hr>
+            <blockquote>1<hr></blockquote>
+          </div>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        const thematicBreaks = findAll(result.document, 'thematicBreak');
+        expect(thematicBreaks).toHaveLength(1);
       });
 
       it('when not allowed produces paragraphs', async () => {

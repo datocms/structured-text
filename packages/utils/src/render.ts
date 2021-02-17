@@ -31,7 +31,7 @@ export type RenderContext<
   node: N;
   ancestors: Node[];
   key: string;
-  children: RenderResult<H, T, F>[] | undefined;
+  children: Exclude<RenderResult<H, T, F>, null | undefined>[] | undefined;
 };
 
 export interface RenderRule<
@@ -69,7 +69,7 @@ export function transformNode<
   renderRules: RenderRule<H, T, F>[],
 ): RenderResult<H, T, F> {
   const children = hasChildren(node)
-    ? flatten(
+    ? (flatten(
         (node.children as Node[])
           .map((node, index) =>
             transformNode(
@@ -81,7 +81,7 @@ export function transformNode<
             ),
           )
           .filter((x) => !!x),
-      )
+      ) as Exclude<RenderResult<H, T, F>, null | undefined>[])
     : undefined;
 
   const matchingTransform = renderRules.find((transform) =>

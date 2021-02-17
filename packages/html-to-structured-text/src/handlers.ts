@@ -69,6 +69,18 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   return undefined;
 };
 
+export const thematicBreak: Handler<HastElementNode> = async function thematicBreak(
+  createNode,
+  node,
+  context,
+) {
+  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
+    'thematicBreak',
+  );
+
+  return isAllowedChild ? createNode('thematicBreak', {}) : undefined;
+};
+
 export const heading: Handler<HastElementNode> = async function heading(
   createNode,
   node,
@@ -297,12 +309,34 @@ export const link: Handler<HastElementNode> = async function link(
   });
 
   if (Array.isArray(children) && children.length) {
-    return isAllowedChild
-      ? createNode('link', {
-          url: resolveUrl(context, node.properties.href),
-          children,
-        })
-      : children;
+    if (!isAllowedChild) {
+      return children;
+    }
+
+    const props = {
+      url: resolveUrl(context, node.properties.href),
+      children,
+    };
+
+    const meta = {};
+
+    if (node.properties) {
+      if (node.properties.target === '_blank') {
+        meta.openInNewWindow = true;
+      }
+
+      ['rel', 'title'].forEach((attr) => {
+        if (node.properties[attr]) {
+          meta[attr] = node.properties[attr];
+        }
+      });
+    }
+
+    if (Object.keys(meta).length > 0) {
+      props.meta = meta;
+    }
+
+    return createNode('link', props);
   }
   return undefined;
 };
@@ -490,6 +524,8 @@ export const handlers = {
 
   span: extractInlineStyles,
   text: span,
+
+  hr: thematicBreak,
 
   head: head,
   comment: noop,

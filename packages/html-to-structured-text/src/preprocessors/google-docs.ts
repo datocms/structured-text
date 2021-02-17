@@ -21,7 +21,12 @@ function isGoogleDocsNode(
     node.properties.id.startsWith('docs-internal-guid-');
 
   if (isGDocsNode) {
-    if ('children' in parent && 'children' in node) {
+    if (
+      'children' in parent &&
+      'children' in node &&
+      parent.children &&
+      node.children
+    ) {
       // Remove google docs tag.
       parent.children.splice(index, 1, ...node.children);
     }

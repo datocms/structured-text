@@ -12,6 +12,7 @@ export const listNodeType = 'list' as const;
 export const paragraphNodeType = 'paragraph' as const;
 export const rootNodeType = 'root' as const;
 export const spanNodeType = 'span' as const;
+export const thematicBreakNodeType = 'thematicBreak' as const;
 
 export const allowedNodeTypes = [
   blockquoteNodeType,
@@ -26,6 +27,7 @@ export const allowedNodeTypes = [
   paragraphNodeType,
   rootNodeType,
   spanNodeType,
+  thematicBreakNodeType,
 ];
 
 export type AllowedChildren = Record<NodeType, 'inlineNodes' | NodeType[]>;
@@ -48,8 +50,10 @@ export const allowedChildren: AllowedChildren = {
     paragraphNodeType,
     headingNodeType,
     blockNodeType,
+    thematicBreakNodeType,
   ],
   [spanNodeType]: [],
+  [thematicBreakNodeType]: [],
 };
 
 export const inlineNodeTypes = [
@@ -67,13 +71,14 @@ export const allowedAttributes: AllowedAttributes = {
   [codeNodeType]: ['language', 'highlight', 'code'],
   [headingNodeType]: ['level', 'children'],
   [inlineItemNodeType]: ['item'],
-  [itemLinkNodeType]: ['item', 'children'],
-  [linkNodeType]: ['url', 'children'],
+  [itemLinkNodeType]: ['item', 'children', 'meta'],
+  [linkNodeType]: ['url', 'children', 'meta'],
   [listItemNodeType]: ['children'],
   [listNodeType]: ['style', 'children'],
   [paragraphNodeType]: ['children'],
   [rootNodeType]: ['children'],
   [spanNodeType]: ['value', 'marks'],
+  [thematicBreakNodeType]: [],
 };
 
 export const allowedMarks: Mark[] = [
