@@ -47,15 +47,18 @@ export type TransformMetaContext = {
   };
 };
 
-type Attributes = {
-  [prop: string]: unknown;
-};
+export type TransformedMeta =
+  | {
+      [prop: string]: unknown;
+    }
+  | null
+  | undefined;
 
 export type TransformMetaFn = (
   context: TransformMetaContext,
-) => null | undefined | Attributes;
+) => TransformedMeta;
 
-const defaultTransformer: TransformMetaFn = ({ meta }) => {
+export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
   const attributes: { [a: string]: string } = {};
 
   if ('openInNewWindow' in meta && meta.openInNewWindow) {
@@ -84,7 +87,7 @@ export function render<
   adapter: Adapter<H, T, F>,
   structuredTextOrNode: StructuredText<R> | Node | null | undefined,
   customRules: RenderRule<H, T, F>[],
-  metaTransformer: TransformMetaFn = defaultTransformer,
+  metaTransformer: TransformMetaFn = defaultMetaTransformer,
 ): RenderResult<H, T, F> {
   return genericRender(adapter, structuredTextOrNode, [
     ...customRules,

@@ -1,6 +1,8 @@
 import {
+  defaultMetaTransformer,
   render as genericHtmlRender,
   renderRule,
+  TransformedMeta,
   TransformMetaFn,
 } from 'datocms-structured-text-generic-html-renderer';
 import {
@@ -62,6 +64,7 @@ type RenderRecordLinkContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;
   adapter: Adapter<H, T, F>;
   children: RenderResult<H, T, F>;
+  transformedMeta: TransformedMeta;
 };
 
 type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
@@ -177,6 +180,12 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           adapter,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           children: (children as any) as ReturnType<F>,
+          transformedMeta: node.meta
+            ? (settings?.metaTransformer || defaultMetaTransformer)({
+                node,
+                meta: node.meta,
+              })
+            : null,
         });
       }),
       renderRule(isBlock, ({ node, adapter }) => {

@@ -1,6 +1,9 @@
 import {
+  defaultMetaTransformer,
   render as genericHtmlRender,
   renderRule,
+  TransformedMeta,
+  TransformMetaFn,
 } from 'datocms-structured-text-generic-html-renderer';
 import {
   Adapter,
@@ -71,6 +74,7 @@ type RenderRecordLinkContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;
   adapter: Adapter<H, T, F>;
   children: RenderResult<H, T, F>;
+  transformedMeta: TransformedMeta;
 };
 
 type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
@@ -81,6 +85,8 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
 export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to a string **/
   customRules?: RenderRule<H, T, F>[];
+  /** Function that converts 'link' and 'itemLink' `meta` into HTML attributes */
+  metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into a string **/
   renderInlineRecord?: (context: RenderInlineRecordContext<R>) => AdapterReturn;
   /** Fuction that converts an 'itemLink' node into a string **/
@@ -170,6 +176,12 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
           adapter,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           children: (children as any) as ReturnType<F>,
+          transformedMeta: node.meta
+            ? (settings?.metaTransformer || defaultMetaTransformer)({
+                node,
+                meta: node.meta,
+              })
+            : null,
         });
       }),
       renderRule(isBlock, ({ node, adapter }) => {
@@ -195,6 +207,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         return renderBlock({ record: item, adapter });
       }),
     ],
+    settings?.metaTransformer,
   );
 
   return result || null;
