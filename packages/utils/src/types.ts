@@ -288,7 +288,7 @@ export type Span = {
 
 export type MetaEntry = {
   id: string;
-  value: string | boolean | number;
+  value: string;
 };
 
 export type LinkType = 'link';
@@ -302,9 +302,10 @@ export type LinkType = 'link';
  * {
  *   "type": "link",
  *   "url": "https://www.datocms.com/"
- *   "meta": {
- *     "openInNewWindow": true
- *   },
+ *   "meta": [
+ *     { "id": "rel", "value": "nofollow" },
+ *     { "id": "target", "value": "_blank" }
+ *   ],
  *   "children": [
  *     {
  *       "type": "span",
@@ -316,12 +317,15 @@ export type LinkType = 'link';
  */
 export type Link = {
   type: LinkType;
+  /**
+   * The actual URL where the link points to. Can be any string, no specific format is enforced.
+   */
   url: string;
-  children: Array<Span>;
   /**
    * Array of tuples containing custom meta-information for the link.
    */
   meta?: Array<MetaEntry>;
+  children: Array<Span>;
 };
 
 export type ItemLinkType = 'itemLink';
@@ -341,9 +345,10 @@ export type ItemLinkType = 'itemLink';
  * {
  *   "type": "itemLink",
  *   "item": "38945648",
- *   "meta": {
- *     "openInNewWindow": true,
- *   },
+ *   "meta": [
+ *     { "id": "rel", "value": "nofollow" },
+ *     { "id": "target", "value": "_blank" }
+ *   ],
  *   "children": [
  *     {
  *       "type": "span",
@@ -357,11 +362,11 @@ export type ItemLink = {
   type: ItemLinkType;
   /** The linked DatoCMS record ID */
   item: string;
-  children: Array<Span>;
   /**
    * Array of tuples containing custom meta-information for the link.
    */
   meta?: Array<MetaEntry>;
+  children: Array<Span>;
 };
 
 export type InlineItemType = 'inlineItem';

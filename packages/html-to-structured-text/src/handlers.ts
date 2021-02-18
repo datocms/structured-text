@@ -322,11 +322,7 @@ export const link: Handler<HastElementNode> = async function link(
     const meta: Array<MetaEntry> = [];
 
     if (node.properties) {
-      if (node.properties.target === '_blank') {
-        meta.push({ id: 'openInNewWindow', value: true });
-      }
-
-      ['rel', 'title'].forEach((attr) => {
+      ['target', 'rel', 'title'].forEach((attr) => {
         if (node.properties[attr]) {
           meta.push({ id: attr, value: node.properties[attr] });
         }

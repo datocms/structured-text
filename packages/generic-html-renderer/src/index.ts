@@ -61,10 +61,6 @@ export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
   const attributes: TransformedMeta = {};
 
   meta.forEach((entry) => {
-    if (entry.id === 'openInNewWindow') {
-      attributes.target = '_blank';
-    }
-
     if (['target', 'title', 'rel'].includes(entry.id)) {
       attributes[entry.id] = entry.value;
     }

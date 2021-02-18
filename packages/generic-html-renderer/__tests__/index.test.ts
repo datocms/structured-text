@@ -431,8 +431,8 @@ const value: StructuredText<ImageRecord | BlogPostRecord> = {
               type: 'link',
               meta: [
                 { id: 'rel', value: 'nofollow' },
-                { id: 'foo', value: 123 },
-                { id: 'openInNewWindow', value: true },
+                { id: 'foo', value: '123' },
+                { id: 'target', value: '_blank' },
               ],
               children: [
                 {

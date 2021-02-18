@@ -279,8 +279,8 @@ describe('htmlToStructuredText', () => {
         expect(meta).toMatchInlineSnapshot(`
           Array [
             Object {
-              "id": "openInNewWindow",
-              "value": true,
+              "id": "target",
+              "value": "_blank",
             },
             Object {
               "id": "title",
