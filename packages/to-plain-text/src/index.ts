@@ -26,16 +26,20 @@ export {
   StructuredTextGraphQlResponseRecord,
 };
 
-type AdapterReturn = string | null | undefined;
+const renderFragment = (
+  children: Array<undefined | string | string[]> | undefined,
+): string => {
+  if (!children) {
+    return '';
+  }
 
-const renderFragment = (children: Array<AdapterReturn> | undefined): string => {
   const sanitizedChildren = children
-    ?.reduce<Array<string>>(
+    .reduce<Array<undefined | string>>(
       (acc, child) =>
         Array.isArray(child) ? [...acc, ...child] : [...acc, child],
       [],
     )
-    .filter((x) => !!x)
+    .filter<string>((x): x is string => !!x)
     .map((x) => x.trim());
 
   if (!sanitizedChildren || sanitizedChildren.length === 0) {
@@ -45,16 +49,14 @@ const renderFragment = (children: Array<AdapterReturn> | undefined): string => {
   return sanitizedChildren.join(' ');
 };
 
-const stringAdapter = (
-  tagName?: string,
-  attrs?: Record<string, string>,
-  children?: AdapterReturn[],
-): string => {
-  return renderFragment(children);
-};
-
 export const defaultAdapter = {
-  renderNode: stringAdapter,
+  renderNode: (
+    tagName: string,
+    attrs: Record<string, string>,
+    ...children: Array<undefined | string | string[]>
+  ): string => {
+    return renderFragment(children);
+  },
   renderFragment,
   renderText: (text: string): string => text,
 };
@@ -88,11 +90,15 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** Function that converts 'link' and 'itemLink' `meta` into HTML attributes */
   metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into a string **/
-  renderInlineRecord?: (context: RenderInlineRecordContext<R>) => AdapterReturn;
+  renderInlineRecord?: (
+    context: RenderInlineRecordContext<R>,
+  ) => string | null | undefined;
   /** Fuction that converts an 'itemLink' node into a string **/
-  renderLinkToRecord?: (context: RenderRecordLinkContext<R>) => AdapterReturn;
+  renderLinkToRecord?: (
+    context: RenderRecordLinkContext<R>,
+  ) => string | null | undefined;
   /** Fuction that converts a 'block' node into a string **/
-  renderBlock?: (context: RenderBlockContext<R>) => AdapterReturn;
+  renderBlock?: (context: RenderBlockContext<R>) => string | null | undefined;
   /** Fuction that converts a simple string text into a string **/
   renderText?: T;
   /** React.createElement-like function to use to convert a node into a string **/

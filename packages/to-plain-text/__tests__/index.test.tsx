@@ -65,6 +65,30 @@ describe('render', () => {
     });
   });
 
+  describe('code node', () => {
+    const structuredText: StructuredTextGraphQlResponse = {
+      value: {
+        schema: 'dast',
+        document: {
+          type: 'root',
+          children: [
+            {
+              type: 'code',
+              language: 'javascript',
+              code: 'alert(1);',
+            },
+          ],
+        },
+      },
+    };
+
+    describe('with default rules', () => {
+      it('renders the document', () => {
+        expect(render(structuredText)).toMatchSnapshot();
+      });
+    });
+  });
+
   describe('with links/blocks', () => {
     type QuoteRecord = {
       id: string;
