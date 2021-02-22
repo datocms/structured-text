@@ -678,6 +678,23 @@ describe('htmlToStructuredText', () => {
         expect(findAll(result.document, 'paragraph')).toHaveLength(1);
         expect(find(result.document, 'span').value).toBe('let dato');
       });
+
+      it('it handles <br> tags', async () => {
+        const html = `
+          <pre><code>foo<br>bar</code></pre>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "code": "foo
+          bar",
+              "type": "code",
+            },
+          ]
+        `);
+      });
     });
 
     describe('blockquote', () => {
@@ -710,6 +727,41 @@ describe('htmlToStructuredText', () => {
             ],
             "type": "blockquote",
           }
+        `);
+      });
+
+      it('supports <br>', async () => {
+        const html = `
+          <blockquote>1<br>2</blockquote>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "type": "span",
+                      "value": "1",
+                    },
+                    Object {
+                      "type": "span",
+                      "value": "
+          ",
+                    },
+                    Object {
+                      "type": "span",
+                      "value": "2",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
+              ],
+              "type": "blockquote",
+            },
+          ]
         `);
       });
 
