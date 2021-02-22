@@ -266,7 +266,8 @@ export type Mark =
   | 'highlight';
 
 /**
- * A `span` node represents a text node. It might optionally contain decorators called `marks`.
+ * A `span` node represents a text node. It might optionally contain decorators called `marks`. It is worth
+ * mentioning that you can use the `\n` newline character to express line breaks.
  *
  * ```json
  * {
