@@ -1084,6 +1084,105 @@ describe('htmlToStructuredText', () => {
         });
       });
     });
+
+    describe('newLine', () => {
+      it('a document with only a <br> is empty (null)', async () => {
+        const html = `
+          <br>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result).toBe(null);
+      });
+
+      it('leading <br>', async () => {
+        const html = `
+          <br><br>hello
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(result.document.children).toHaveLength(1);
+        expect(
+          findAll(result.document, 'span')
+            .map((s) => s.value)
+            .join(''),
+        ).toBe('\n\nhello');
+      });
+
+      it('trailing <br>', async () => {
+        const html = `
+          hello<br><br>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(result.document.children).toHaveLength(1);
+        expect(
+          findAll(result.document, 'span')
+            .map((s) => s.value)
+            .join(''),
+        ).toBe('hello\n\n');
+      });
+
+      it('converts <br> to newline', async () => {
+        const html = `
+          hello<br>world
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(result.document.children).toHaveLength(1);
+        expect(
+          findAll(result.document, 'span')
+            .map((s) => s.value)
+            .join(''),
+        ).toBe('hello\nworld');
+      });
+
+      it('converts inline <br>', async () => {
+        const html = `
+          <p>hello<br>world</p>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(result.document.children).toHaveLength(1);
+        expect(
+          findAll(result.document, 'span')
+            .map((s) => s.value)
+            .join(''),
+        ).toBe('hello\nworld');
+      });
+
+      it('converts <br> in between elements', async () => {
+        const html = `
+          <p>hello</p><br><div>world</div>
+        `;
+        const result = await htmlToStructuredText(html);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((c) => c.type).join(',')).toBe(
+          'paragraph,paragraph',
+        );
+        expect(result.document.children).toHaveLength(2);
+        expect(
+          result.document.children.map((c) =>
+            findAll(c, 'span').map((s) => s.value),
+          ),
+        ).toMatchInlineSnapshot(`
+          Array [
+            Array [
+              "hello",
+            ],
+            Array [
+              "
+          ",
+              "world",
+            ],
+          ]
+        `);
+      });
+    });
   });
 
   describe('preprocessing', () => {
