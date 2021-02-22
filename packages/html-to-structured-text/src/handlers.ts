@@ -359,6 +359,14 @@ export const span: Handler<HastTextNode> = async function span(
   });
 };
 
+export const newLine: Handler<HastTextNode> = async function newLine(
+  createNode,
+) {
+  return createNode('span', {
+    value: '\n',
+  });
+};
+
 export const inlineCode = withMark('code');
 export const strong = withMark('strong');
 export const italic = withMark('emphasis');
@@ -521,6 +529,7 @@ export const handlers = {
 
   span: extractInlineStyles,
   text: span,
+  br: newLine,
 
   hr: thematicBreak,
 
