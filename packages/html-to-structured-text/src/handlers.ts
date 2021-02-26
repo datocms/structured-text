@@ -323,8 +323,11 @@ export const link: Handler<HastElementNode> = async function link(
 
     if (node.properties) {
       ['target', 'rel', 'title'].forEach((attr) => {
-        if (node.properties[attr]) {
-          meta.push({ id: attr, value: node.properties[attr] });
+        const value = Array.isArray(node.properties[attr])
+          ? node.properties[attr].join(' ')
+          : node.properties[attr];
+        if (value) {
+          meta.push({ id: attr, value });
         }
       });
     }

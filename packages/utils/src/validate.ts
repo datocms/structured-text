@@ -69,7 +69,10 @@ export function validate(
 
       const invalidMeta = node.meta.find(
         (entry) =>
-          typeof entry !== 'object' || !('id' in entry) || !('value' in entry),
+          typeof entry !== 'object' ||
+          !('id' in entry) ||
+          !('value' in entry) ||
+          typeof entry.value !== 'string',
       );
 
       if (invalidMeta) {

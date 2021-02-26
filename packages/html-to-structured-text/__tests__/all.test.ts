@@ -269,9 +269,9 @@ describe('htmlToStructuredText', () => {
         expect(result).toBeNull();
       });
 
-      it('maps links attributes', async () => {
+      it.only('maps links attributes', async () => {
         const html = `
-          <a href="./contact" target="_blank" title="Foo bar" other="Ignore me">contact</a>
+          <a href="./contact" target="_blank" title="Foo bar" other="Ignore me" rel="noopener noreferrer">contact</a>
         `;
         const result = await htmlToStructuredText(html);
         expect(validate(result).valid).toBeTruthy();
@@ -281,6 +281,10 @@ describe('htmlToStructuredText', () => {
             Object {
               "id": "target",
               "value": "_blank",
+            },
+            Object {
+              "id": "rel",
+              "value": "noopener noreferrer",
             },
             Object {
               "id": "title",
