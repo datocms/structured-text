@@ -19,6 +19,7 @@ import {
   TrasformFn,
   RenderError,
   Node,
+  Document,
   isThematicBreak,
   NodeWithMeta,
   MetaEntry,
@@ -76,7 +77,7 @@ export function render<
   F extends TrasformFn
 >(
   adapter: Adapter<H, T, F>,
-  structuredTextOrNode: StructuredText<R> | Node | null | undefined,
+  structuredTextOrNode: StructuredText<R> | Document | Node | null | undefined,
   customRules: RenderRule<H, T, F>[],
   metaTransformer: TransformMetaFn = defaultMetaTransformer,
 ): RenderResult<H, T, F> {

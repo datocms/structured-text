@@ -1,5 +1,5 @@
-import { Node, Record, StructuredText } from './types';
-import { hasChildren, isStructuredText } from './guards';
+import { Node, Record, Document, StructuredText } from './types';
+import { hasChildren, isDocument, isStructuredText } from './guards';
 import flatten from 'lodash.flatten';
 
 export class RenderError extends Error {
@@ -115,7 +115,7 @@ export function render<
   R extends Record
 >(
   adapter: Adapter<H, T, F>,
-  structuredTextOrNode: StructuredText<R> | Node | null | undefined,
+  structuredTextOrNode: StructuredText<R> | Document | Node | null | undefined,
   renderRules: RenderRule<H, T, F>[],
 ): RenderResult<H, T, F> {
   if (!structuredTextOrNode) {
@@ -126,6 +126,8 @@ export function render<
     adapter,
     isStructuredText<R>(structuredTextOrNode)
       ? structuredTextOrNode.value.document
+      : isDocument(structuredTextOrNode)
+      ? structuredTextOrNode.document
       : structuredTextOrNode,
 
     't-0',

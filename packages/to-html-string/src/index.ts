@@ -13,6 +13,7 @@ import {
   isStructuredText,
   Node,
   Record as StructuredTextGraphQlResponseRecord,
+  Document as StructuredTextDocument,
   RenderError,
   RenderResult,
   RenderRule,
@@ -25,6 +26,7 @@ export {
   RenderError,
   StructuredTextGraphQlResponse,
   StructuredTextGraphQlResponseRecord,
+  StructuredTextDocument,
 };
 
 type AdapterReturn = string | null;
@@ -94,6 +96,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   /** The actual field value you get from DatoCMS **/
   structuredTextOrNode:
     | StructuredTextGraphQlResponse<R>
+    | StructuredTextDocument
     | Node
     | null
     | undefined,

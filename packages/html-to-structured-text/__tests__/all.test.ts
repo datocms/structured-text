@@ -269,7 +269,7 @@ describe('htmlToStructuredText', () => {
         expect(result).toBeNull();
       });
 
-      it.only('maps links attributes', async () => {
+      it('maps links attributes', async () => {
         const html = `
           <a href="./contact" target="_blank" title="Foo bar" other="Ignore me" rel="noopener noreferrer">contact</a>
         `;

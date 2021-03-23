@@ -1,6 +1,7 @@
 import {
   render,
   StructuredTextGraphQlResponse,
+  StructuredTextDocument,
   RenderError,
   renderRule,
 } from '../src';
@@ -10,6 +11,33 @@ describe('render', () => {
   describe('with no value', () => {
     it('renders null', () => {
       expect(render(null)).toMatchSnapshot();
+    });
+  });
+
+  describe('simple dast /2', () => {
+    const structuredText: StructuredTextDocument = {
+      schema: 'dast',
+      document: {
+        type: 'root',
+        children: [
+          {
+            type: 'heading',
+            level: 1,
+            children: [
+              {
+                type: 'span',
+                value: 'This\nis a\ntitle!',
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    describe('with default rules', () => {
+      it('renders the document', () => {
+        expect(render(structuredText)).toMatchSnapshot();
+      });
     });
   });
 

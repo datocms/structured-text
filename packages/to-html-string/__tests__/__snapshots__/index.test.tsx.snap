@@ -1,5 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`render simple dast /2 with default rules renders the document 1`] = `"<h1>This<br>is a<br>title!</h1>"`;
+
 exports[`render simple dast with no links/blocks with custom rules renders the document 1`] = `"<h2>That<br>is a<br>title!</h2>"`;
 
 exports[`render simple dast with no links/blocks with default rules renders the document 1`] = `"<h1>This<br>is a<br>title!</h1>"`;

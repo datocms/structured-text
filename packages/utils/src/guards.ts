@@ -18,6 +18,7 @@ import {
   Record,
   StructuredText,
   ThematicBreak,
+  Document,
 } from './types';
 
 import {
@@ -101,11 +102,12 @@ export function isStructuredText<R extends Record>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   obj: any,
 ): obj is StructuredText<R> {
-  return (
-    obj &&
-    'value' in obj &&
-    obj.value &&
-    'schema' in obj.value &&
-    'document' in obj.value
-  );
+  return obj && 'value' in obj && isDocument(obj.value);
+}
+
+export function isDocument(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  obj: any,
+): obj is Document {
+  return obj && 'schema' in obj && 'document' in obj;
 }
