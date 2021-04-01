@@ -7,7 +7,7 @@ import {
   RenderError,
   renderRule,
 } from '../src';
-import { isHeading } from 'datocms-structured-text-utils';
+import { isBlock, isHeading, Node, Block } from 'datocms-structured-text-utils';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import h from 'hyperscript';
 
@@ -142,8 +142,26 @@ describe('render', () => {
               ],
             },
             {
+              type: 'paragraph',
+              children: [
+                {
+                  type: 'span',
+                  value: 'Foo',
+                },
+              ],
+            },
+            {
               type: 'block',
               item: '456',
+            },
+            {
+              type: 'paragraph',
+              children: [
+                {
+                  type: 'span',
+                  value: 'Bar',
+                },
+              ],
             },
           ],
         },
@@ -214,6 +232,101 @@ describe('render', () => {
               }
             },
           }),
+        ).toMatchSnapshot();
+      });
+    });
+
+    describe('grouping together non-block nodes', () => {
+      it('renders the document', () => {
+        type GroupNode = { type: 'group'; children: Node[] };
+
+        const modifiedStructuredText = {
+          ...structuredText,
+          value: {
+            ...structuredText.value,
+            document: {
+              type: 'root',
+              children: structuredText.value.document.children.reduce<
+                Array<Block | GroupNode>
+              >((newChildren, node) => {
+                if (isBlock(node)) {
+                  return [...newChildren, node];
+                }
+
+                const lastNode =
+                  newChildren.length > 0 && newChildren[newChildren.length - 1];
+
+                if (lastNode && lastNode.type === 'group') {
+                  lastNode.children.push(node);
+                  return newChildren;
+                }
+
+                return [...newChildren, { type: 'group', children: [node] }];
+              }, []),
+            },
+          },
+        };
+
+        expect(
+          render(
+            modifiedStructuredText as StructuredTextGraphQlResponse<
+              QuoteRecord | DocPageRecord
+            >,
+            {
+              customRules: [
+                renderRule(
+                  (node: Node | GroupNode): node is Node =>
+                    node.type === 'group',
+                  ({ adapter: { renderNode }, children, key }) => {
+                    return renderNode(`div`, { key, class: 'group' }, children);
+                  },
+                ),
+              ],
+              renderInlineRecord: ({ adapter, record }) => {
+                switch (record.__typename) {
+                  case 'DocPageRecord':
+                    return adapter.renderNode(
+                      'a',
+                      { href: `/docs/${record.slug}` },
+                      record.title,
+                    );
+                  default:
+                    return null;
+                }
+              },
+              renderLinkToRecord: ({ record, children, adapter }) => {
+                switch (record.__typename) {
+                  case 'DocPageRecord':
+                    return adapter.renderNode(
+                      'a',
+                      { href: `/docs/${record.slug}` },
+                      children,
+                    );
+                  default:
+                    return null;
+                }
+              },
+              renderBlock: ({ record }) => {
+                switch (record.__typename) {
+                  case 'QuoteRecord':
+                    // return adapter.renderNode(
+                    //   'figure',
+                    //   null,
+                    //   adapter.renderNode('blockquote', null, record.quote),
+                    //   adapter.renderNode('figcaption', null, record.author),
+                    // );
+                    return (
+                      <figure>
+                        <blockquote>{record.quote}</blockquote>
+                        <figcaption>{record.author}</figcaption>
+                      </figure>
+                    );
+                  default:
+                    return null;
+                }
+              },
+            },
+          ),
         ).toMatchSnapshot();
       });
     });
