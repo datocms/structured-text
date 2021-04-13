@@ -1,4 +1,4 @@
-![Node.js CI](https://github.com/stefanoverna/structured-text/workflows/Node.js%20CI/badge.svg)
+![Node.js CI](https://github.com/datocms/structured-text/workflows/Node.js%20CI/badge.svg)
 
 # datocms-structured-text-to-plain-text
 

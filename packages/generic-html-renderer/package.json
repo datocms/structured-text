@@ -7,7 +7,7 @@
     "structured-text"
   ],
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/stefanoverna/structured-text/tree/master/packages/generic-html-renderer#readme",
+  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/generic-html-renderer#readme",
   "license": "MIT",
   "main": "dist/lib/index.js",
   "typings": "dist/types/index.d.ts",
@@ -20,14 +20,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stefanoverna/structured-text.git"
+    "url": "git+https://github.com/datocms/structured-text.git"
   },
   "scripts": {
     "build": "tsc --module commonjs",
     "prebuild": "rimraf dist"
   },
   "bugs": {
-    "url": "https://github.com/stefanoverna/structured-text/issues"
+    "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
     "datocms-structured-text-utils": "^1.0.14"

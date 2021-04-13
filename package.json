@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/stefanoverna/structured-text.git"
+    "url": "git://github.com/datocms/structured-text.git"
   },
   "scripts": {
     "test": "npm run lint && jest",
@@ -28,5 +28,5 @@
   },
   "license": "MIT",
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/stefanoverna/structured-text"
+  "homepage": "https://github.com/datocms/structured-text"
 }
