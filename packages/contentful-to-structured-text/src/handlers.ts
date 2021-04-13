@@ -52,10 +52,6 @@ export const paragraph: Handler<ContentfulElementNode> = async function paragrap
   node,
   context,
 ) {
-  console.log('-------------------');
-  console.log(node);
-  console.log('=----------node');
-
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'paragraph',
   );
@@ -345,18 +341,22 @@ export const span: Handler<ContentfulTextNode> = async function span(
 ) {
   const marks = {};
 
-  if (Array.isArray(context.marks)) {
-    const allowedMarks = context.marks.filter((mark) =>
-      context.allowedMarks.includes(mark),
+  const datoMarks = {
+    bold: 'strong',
+    italic: 'emphasis',
+    underline: 'underline',
+    code: 'code',
+  };
+
+  if (Array.isArray(node.marks)) {
+    const allowedMarks = node.marks.filter((mark) =>
+      context.allowedMarks.includes(datoMarks[mark]),
     );
+
     if (allowedMarks.length > 0) {
-      marks.marks = allowedMarks;
+      marks.marks = allowedMarks.map((m) => datoMarks[m]);
     }
   }
-
-  console.log('=================');
-  console.log(node);
-  console.log('=================');
 
   return createNode('span', {
     value: node.value,

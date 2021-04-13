@@ -221,9 +221,6 @@ describe('contentful-to-structured-text', () => {
       };
 
       const result = await richTextToStructuredText(richText);
-      console.log('[[[[[[[[[[[[[[[[[');
-      console.log(inspect(result, { depth: Infinity }));
-      console.log('[[[[[[[[[[[[[[[[[');
 
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children.map((child) => child.type))
@@ -235,42 +232,66 @@ describe('contentful-to-structured-text', () => {
         `);
     });
 
-    // it('generates valid children', async () => {
-    //   const richText = `
-    //       <p>
-    //         <span>[simple text]</span>
-    //         <span>[span becomes simple text]</span>
-    //         <span>[span becomes simple text]</span>
-    //       </p>
-    //     `;
-    //   const result = await richTextToStructuredText(richText);
-    //   expect(validate(result).valid).toBeTruthy();
-    //   expect(result.document.children).toMatchInlineSnapshot(`
-    //       Array [
-    //         Object {
-    //           "children": Array [
-    //             Object {
-    //               "type": "span",
-    //               "value": "[simple text] ",
-    //             },
-    //             Object {
-    //               "type": "span",
-    //               "value": "[span becomes simple text]",
-    //             },
-    //             Object {
-    //               "type": "span",
-    //               "value": " ",
-    //             },
-    //             Object {
-    //               "type": "span",
-    //               "value": "[span becomes simple text]",
-    //             },
-    //           ],
-    //           "type": "paragraph",
-    //         },
-    //       ]
-    //     `);
-    // });
+    it('generates valid children', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'paragraph',
+            content: [
+              { nodeType: 'text', value: '[span text] ', marks: [], data: {} },
+              {
+                nodeType: 'text',
+                value: '[span text]',
+                marks: ['bold', 'italic', 'underline', 'code', 'xxx'],
+                data: {},
+              },
+              {
+                nodeType: 'text',
+                value: '[strong text]',
+                marks: ['bold'],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+      const result = await richTextToStructuredText(richText);
+      console.log(inspect(result, { depth: Infinity }));
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "[span text] ",
+                },
+                Object {
+                  "marks": Array [
+                    "strong",
+                    "emphasis",
+                    "underline",
+                    "code",
+                  ],
+                  "type": "span",
+                  "value": "[span text]",
+                },
+                Object {
+                  "marks": Array [
+                    "strong",
+                  ],
+                  "type": "span",
+                  "value": "[strong text]",
+                },
+              ],
+              "type": "paragraph",
+            },
+          ]
+        `);
+    });
   });
 
   //   describe('heading', () => {
