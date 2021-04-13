@@ -2,8 +2,6 @@
 // @ts-nocheck
 
 // @ts-ignore
-import minify from 'rehype-minify-whitespace';
-
 import { CreateNodeFunction, ContentfulRootNode } from './types';
 import visitNode from './visit-node';
 import visitChildren from './visit-children';
@@ -32,8 +30,6 @@ export async function richTextToStructuredText(
   tree: ContentfulRootNode,
   options: Options = {},
 ): Promise<Document | null> {
-  minify({ newlines: options.newlines === true })(tree);
-
   const createNode: CreateNodeFunction = (type, props) => {
     props.type = type;
     return props;

@@ -1,45 +1,42 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import convert from 'hast-util-is-element/convert';
-import toText from 'hast-util-to-text';
-import has from 'hast-util-has-property';
 import {
   allowedChildren,
   inlineNodeTypes,
 } from 'datocms-structured-text-utils';
-
+import { BLOCKS, INLINES } from '@contentful/rich-text-types';
 import {
   Handler,
   Mark,
   Context,
-  HastNode,
-  HastTextNode,
-  HastElementNode,
-  HastRootNode,
+  ContentfulNode,
+  ContentfulTextNode,
+  ContentfulElementNode,
+  ContentfulRootNode,
 } from './types';
 
 import visitChildren from './visit-children';
-import { wrap } from './wrap';
 import { MetaEntry } from '../../utils/dist/types';
 
-export const root: Handler<HastRootNode> = async function root(
+export const root: Handler<ContentfulRootNode> = async function root(
   createNode,
   node,
   context,
 ) {
-  let children = await visitChildren(createNode, node, {
+  const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: 'root',
   });
 
-  if (
-    Array.isArray(children) &&
-    children.some(
-      (child: HastNode) => child && !allowedChildren.root.includes(child.type),
-    )
-  ) {
-    children = wrap(children);
-  }
+  // if (
+  //   Array.isArray(children) &&
+  //   children.some(
+  //     (child: ContentfulNode) =>
+  //       child && !allowedChildren.root.includes(child.type),
+  //   )
+  // ) {
+  //   children = wrap(children);
+  // }
 
   if (!Array.isArray(children) || children.length === 0) {
     return null;
@@ -50,7 +47,7 @@ export const root: Handler<HastRootNode> = async function root(
   });
 };
 
-export const paragraph: Handler<HastElementNode> = async function paragraph(
+export const paragraph: Handler<ContentfulElementNode> = async function paragraph(
   createNode,
   node,
   context,
@@ -70,7 +67,7 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   return undefined;
 };
 
-export const thematicBreak: Handler<HastElementNode> = async function thematicBreak(
+export const thematicBreak: Handler<ContentfulElementNode> = async function thematicBreak(
   createNode,
   node,
   context,
@@ -82,7 +79,7 @@ export const thematicBreak: Handler<HastElementNode> = async function thematicBr
   return isAllowedChild ? createNode('thematicBreak', {}) : undefined;
 };
 
-export const heading: Handler<HastElementNode> = async function heading(
+export const heading: Handler<ContentfulElementNode> = async function heading(
   createNode,
   node,
   context,
@@ -108,7 +105,7 @@ export const heading: Handler<HastElementNode> = async function heading(
   return undefined;
 };
 
-export const code: Handler<HastElementNode> = async function code(
+export const code: Handler<ContentfulElementNode> = async function code(
   createNode,
   node,
   context,
@@ -127,8 +124,7 @@ export const code: Handler<HastElementNode> = async function code(
 
   const prefix =
     typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
-  const isPre = convert('pre');
-  const isCode = convert('code');
+  const isCode = true;
   const children = node.children;
   let index = -1;
   let classList = null;
@@ -138,18 +134,19 @@ export const code: Handler<HastElementNode> = async function code(
     while (++index < children.length) {
       if (
         typeof children[index] === 'object' &&
-        isCode(children[index]) &&
-        has(children[index], 'className')
+        isCode(children[index])
+        // && has(children[index], 'className')
       ) {
-        // error TS2339: Property 'properties' does not exist on type 'HastNode'.
-        //               Property 'properties' does not exist on type 'HastTextNode'
+        // error TS2339: Property 'properties' does not exist on type 'ContentfulNode'.
+        //               Property 'properties' does not exist on type 'ContentfulTextNode'
         // isCode (convert) checks that the node is an element and therefore it'll have properties
-        // @ts-ignore
-        classList = children[index].properties.className;
+        // // @ts-ignore
+        // classList = children[index].properties.className;
         break;
       }
     }
-  } else if (isCode(node) && has(node, 'className')) {
+    // } else if (isCode(node) && has(node, 'className')) {
+  } else if (isCode(node)) {
     classList = node.properties.className;
   }
 
@@ -166,11 +163,11 @@ export const code: Handler<HastElementNode> = async function code(
 
   return createNode('code', {
     ...language,
-    code: String(wrapText(context, toText(node))).replace(/\n+$/, ''),
+    code: String(wrapText(context, node)).replace(/\n+$/, ''),
   });
 };
 
-export const blockquote: Handler<HastElementNode> = async function blockquote(
+export const blockquote: Handler<ContentfulElementNode> = async function blockquote(
   createNode,
   node,
   context,
@@ -185,13 +182,12 @@ export const blockquote: Handler<HastElementNode> = async function blockquote(
   });
 
   if (Array.isArray(children) && children.length) {
-    return isAllowedChild
-      ? createNode('blockquote', { children: wrap(children) })
-      : children;
+    // ? createNode('blockquote', { children: wrap(children) })
+    return isAllowedChild ? createNode('blockquote', { children }) : children;
   }
   return undefined;
 };
-export const list: Handler<HastElementNode> = async function list(
+export const list: Handler<ContentfulElementNode> = async function list(
   createNode,
   node,
   context,
@@ -217,7 +213,7 @@ export const list: Handler<HastElementNode> = async function list(
   }
   return undefined;
 };
-export const listItem: Handler<HastElementNode> = async function listItem(
+export const listItem: Handler<ContentfulElementNode> = async function listItem(
   createNode,
   node,
   context,
@@ -232,15 +228,12 @@ export const listItem: Handler<HastElementNode> = async function listItem(
   });
 
   if (Array.isArray(children) && children.length) {
-    return isAllowedChild
-      ? createNode('listItem', {
-          children: wrap(children),
-        })
-      : children;
+    // children: wrap(children),
+    return isAllowedChild ? createNode('listItem', { children }) : children;
   }
   return undefined;
 };
-export const link: Handler<HastElementNode> = async function link(
+export const link: Handler<ContentfulElementNode> = async function link(
   createNode,
   node,
   context,
@@ -274,7 +267,7 @@ export const link: Handler<HastElementNode> = async function link(
   );
   if (wrapsHeadings) {
     let i = 0;
-    const splitChildren: HastElementNode[] = [];
+    const splitChildren: ContentfulElementNode[] = [];
     node.children.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
         if (splitChildren.length > 0) {
@@ -340,7 +333,7 @@ export const link: Handler<HastElementNode> = async function link(
   }
   return undefined;
 };
-export const span: Handler<HastTextNode> = async function span(
+export const span: Handler<ContentfulTextNode> = async function span(
   createNode,
   node,
   context,
@@ -362,7 +355,7 @@ export const span: Handler<HastTextNode> = async function span(
   });
 };
 
-export const newLine: Handler<HastTextNode> = async function newLine(
+export const newLine: Handler<ContentfulTextNode> = async function newLine(
   createNode,
 ) {
   return createNode('span', {
@@ -377,7 +370,7 @@ export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 export const highlight = withMark('highlight');
 
-export const head: Handler<HastElementNode> = async function head(
+export const head: Handler<ContentfulElementNode> = async function head(
   createNode,
   node,
   context,
@@ -390,7 +383,7 @@ export const head: Handler<HastElementNode> = async function head(
   }
 };
 
-export const base: Handler<HastElementNode> = async function base(
+export const base: Handler<ContentfulElementNode> = async function base(
   createNode,
   node,
   context,
@@ -405,7 +398,7 @@ export const base: Handler<HastElementNode> = async function base(
   }
 };
 
-export const extractInlineStyles: Handler<HastElementNode> = async function extractInlineStyles(
+export const extractInlineStyles: Handler<ContentfulElementNode> = async function extractInlineStyles(
   createNode,
   node,
   context,
@@ -458,7 +451,7 @@ export const extractInlineStyles: Handler<HastElementNode> = async function extr
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
 export async function noop() {}
 
-export function withMark(type: Mark): Handler<HastElementNode> {
+export function withMark(type: Mark): Handler<ContentfulElementNode> {
   return function markHandler(createNode, node, context) {
     if (!context.allowedMarks.includes(type)) {
       return visitChildren(createNode, node, context);
@@ -480,74 +473,96 @@ export function withMark(type: Mark): Handler<HastElementNode> {
 }
 
 export const handlers = {
-  root: root,
-
-  p: paragraph,
-  summary: paragraph,
-
-  h1: heading,
-  h2: heading,
-  h3: heading,
-  h4: heading,
-  h5: heading,
-  h6: heading,
-
-  ul: list,
-  ol: list,
-  dir: list,
-
-  dt: listItem,
-  dd: listItem,
-  li: listItem,
-
-  listing: code,
-  plaintext: code,
-  pre: code,
-  xmp: code,
-
-  blockquote: blockquote,
-
-  a: link,
-
-  code: code,
-  kbd: code,
-  samp: code,
-  tt: code,
-  var: code,
-
-  strong: strong,
-  b: strong,
-
-  em: italic,
-  i: italic,
-
-  u: underline,
-
-  strike: strikethrough,
-  s: strikethrough,
-
-  mark: highlight,
-
-  base: base,
-
-  span: extractInlineStyles,
-  text: span,
-  br: newLine,
-
-  hr: thematicBreak,
-
-  head: head,
-  comment: noop,
-  script: noop,
-  style: noop,
-  title: noop,
-  video: noop,
-  audio: noop,
-  embed: noop,
-  iframe: noop,
+  [BLOCKS.DOCUMENT]: root,
+  [BLOCKS.PARAGRAPH]: paragraph,
+  [BLOCKS.HEADING_1]: heading,
+  [BLOCKS.HEADING_2]: heading,
+  [BLOCKS.HEADING_3]: heading,
+  [BLOCKS.HEADING_4]: heading,
+  [BLOCKS.HEADING_5]: heading,
+  [BLOCKS.HEADING_6]: heading,
+  [BLOCKS.UL_LIST]: list,
+  [BLOCKS.OL_LIST]: list,
+  [BLOCKS.LIST_ITEM]: listItem,
+  [BLOCKS.QUOTE]: blockquote,
+  [BLOCKS.HR]: thematicBreak,
+  [INLINES.HYPERLINK]: link,
+  // [BLOCKS.EMBEDDED_ASSET]: EMBEDDED_ASSET,
+  // [BLOCKS.EMBEDDED_ENTRY]: EMBEDDED_ENTRY,
+  // [INLINES.ASSET_HYPERLINK]: ASSET_HYPERLINK,
+  // [INLINES.ENTRY_HYPERLINK]: ENTRY_HYPERLINK,
+  // [INLINES.EMBEDDED_ENTRY]: EMBEDDED_ENTRY,
 };
 
-export const wrapListItems: Handler<HastElementNode> = async function wrapListItems(
+// export const handlers = {
+//   root: root,
+
+//   p: paragraph,
+//   summary: paragraph,
+
+//   h1: heading,
+//   h2: heading,
+//   h3: heading,
+//   h4: heading,
+//   h5: heading,
+//   h6: heading,
+
+//   ul: list,
+//   ol: list,
+//   dir: list,
+
+//   dt: listItem,
+//   dd: listItem,
+//   li: listItem,
+
+//   listing: code,
+//   plaintext: code,
+//   pre: code,
+//   xmp: code,
+
+//   blockquote: blockquote,
+
+//   a: link,
+
+//   code: code,
+//   kbd: code,
+//   samp: code,
+//   tt: code,
+//   var: code,
+
+//   strong: strong,
+//   b: strong,
+
+//   em: italic,
+//   i: italic,
+
+//   u: underline,
+
+//   strike: strikethrough,
+//   s: strikethrough,
+
+//   mark: highlight,
+
+//   base: base,
+
+//   span: extractInlineStyles,
+//   text: span,
+//   br: newLine,
+
+//   hr: thematicBreak,
+
+//   head: head,
+//   comment: noop,
+//   script: noop,
+//   style: noop,
+//   title: noop,
+//   video: noop,
+//   audio: noop,
+//   embed: noop,
+//   iframe: noop,
+// };
+
+export const wrapListItems: Handler<ContentfulElementNode> = async function wrapListItems(
   createNode,
   node,
   context,

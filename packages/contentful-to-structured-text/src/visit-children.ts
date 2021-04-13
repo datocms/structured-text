@@ -3,8 +3,8 @@ import visitNode from './visit-node';
 
 // visitChildren() is for visiting all the children of a node
 export default (async function visitChildren(createNode, parentNode, context) {
-  const nodes: ContentfulNode[] = Array.isArray(parentNode.children)
-    ? parentNode.children
+  const nodes: ContentfulNode[] = Array.isArray(parentNode.content)
+    ? parentNode.content
     : [];
   let values: Node[] = [];
   let index = -1;

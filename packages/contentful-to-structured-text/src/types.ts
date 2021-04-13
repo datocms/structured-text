@@ -1,6 +1,6 @@
 import { Node, Root, NodeType, Mark } from 'datocms-structured-text-utils';
 import {
-  Block as ContentfulElementNode,
+  Block as ContentfulBlock,
   Inline as ContentfulInline,
   Document as ContentfulDocument,
   Text as ContentfulText,
@@ -10,7 +10,6 @@ import {
 
 export { Node, Root, NodeType, Mark };
 export {
-  ContentfulElementNode,
   ContentfulInline,
   ContentfulDocument,
   ContentfulText,
@@ -82,3 +81,5 @@ export type ContentfulNode =
   | ContentfulText
   | ContentfulElementNode
   | ContentfulRootNode;
+
+export type ContentfulElementNode = ContentfulBlock | ContentfulInline;
