@@ -95,9 +95,13 @@ export const heading: Handler<ContentfulElementNode> = async function heading(
   });
 
   if (Array.isArray(children) && children.length) {
+    console.log('aaaaaaaa');
+    console.log(node);
+    console.log('aaaaaaaa');
+
     return isAllowedChild
       ? createNode('heading', {
-          level: Number(node.tagName.charAt(1)) || 1,
+          level: Number(node.nodeType.slice(-1)) || 1,
           children,
         })
       : children;
@@ -208,7 +212,7 @@ export const list: Handler<ContentfulElementNode> = async function list(
   if (Array.isArray(children) && children.length) {
     return createNode('list', {
       children,
-      style: node.tagName === 'ol' ? 'numbered' : 'bulleted',
+      style: node.nodeType === 'ol' ? 'numbered' : 'bulleted',
     });
   }
   return undefined;
@@ -263,13 +267,13 @@ export const link: Handler<ContentfulElementNode> = async function link(
   // @TODO this is only checking for headings that are direct descendants of links.
   // Decide if it is worth looking deeper.
   const wrapsHeadings = node.children.some(
-    (child) => child.type === 'element' && child.tagName.startsWith('h'),
+    (child) => child.type === 'element' && child.nodeType.startsWith('h'),
   );
   if (wrapsHeadings) {
     let i = 0;
     const splitChildren: ContentfulElementNode[] = [];
     node.children.forEach((child) => {
-      if (child.type === 'element' && child.tagName.startsWith('h')) {
+      if (child.type === 'element' && child.nodeType.startsWith('h')) {
         if (splitChildren.length > 0) {
           i++;
         }
@@ -341,7 +345,7 @@ export const span: Handler<ContentfulTextNode> = async function span(
 ) {
   const marks = {};
 
-  const datoMarks = {
+  const datoToContentfulMarks = {
     bold: 'strong',
     italic: 'emphasis',
     underline: 'underline',
@@ -350,11 +354,11 @@ export const span: Handler<ContentfulTextNode> = async function span(
 
   if (Array.isArray(node.marks)) {
     const allowedMarks = node.marks.filter((mark) =>
-      context.allowedMarks.includes(datoMarks[mark]),
+      context.allowedMarks.includes(datoToContentfulMarks[mark]),
     );
 
     if (allowedMarks.length > 0) {
-      marks.marks = allowedMarks.map((m) => datoMarks[m]);
+      marks.marks = allowedMarks.map((m) => datoToContentfulMarks[m]);
     }
   }
 
@@ -384,7 +388,7 @@ export const head: Handler<ContentfulElementNode> = async function head(
   node,
   context,
 ) {
-  const baseElement = node.children.find((child) => child.tagName === 'base');
+  const baseElement = node.children.find((child) => child.nodeType === 'base');
   if (baseElement) {
     return context.handlers.base(createNode, baseElement, context);
   } else {
