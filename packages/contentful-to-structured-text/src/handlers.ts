@@ -52,6 +52,10 @@ export const paragraph: Handler<ContentfulElementNode> = async function paragrap
   node,
   context,
 ) {
+  console.log('-------------------');
+  console.log(node);
+  console.log('=----------node');
+
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'paragraph',
   );
@@ -163,7 +167,7 @@ export const code: Handler<ContentfulElementNode> = async function code(
 
   return createNode('code', {
     ...language,
-    code: String(wrapText(context, node)).replace(/\n+$/, ''),
+    code: String(node).replace(/\n+$/, ''),
   });
 };
 
@@ -333,6 +337,7 @@ export const link: Handler<ContentfulElementNode> = async function link(
   }
   return undefined;
 };
+
 export const span: Handler<ContentfulTextNode> = async function span(
   createNode,
   node,
@@ -349,8 +354,12 @@ export const span: Handler<ContentfulTextNode> = async function span(
     }
   }
 
+  console.log('=================');
+  console.log(node);
+  console.log('=================');
+
   return createNode('span', {
-    value: wrapText(context, node.value),
+    value: node.value,
     ...marks,
   });
 };
@@ -473,6 +482,7 @@ export function withMark(type: Mark): Handler<ContentfulElementNode> {
 }
 
 export const handlers = {
+  text: span,
   [BLOCKS.DOCUMENT]: root,
   [BLOCKS.PARAGRAPH]: paragraph,
   [BLOCKS.HEADING_1]: heading,
@@ -592,10 +602,6 @@ export const wrapListItems: Handler<ContentfulElementNode> = async function wrap
 
   return children;
 };
-
-export function wrapText(context: Context, value: string): string {
-  return context.wrapText ? value : value.replace(/\r?\n|\r/g, ' ');
-}
 
 export function resolveUrl(
   context: Context,

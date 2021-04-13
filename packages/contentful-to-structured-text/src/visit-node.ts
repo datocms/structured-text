@@ -2,6 +2,7 @@
 // @ts-nocheck
 import { Handler, ContentfulElementNode, ContentfulNode } from './types';
 import visitChildren from './visit-children';
+import { helpers } from '@contentful/rich-text-types';
 
 // visitNode() is for visiting a single node
 export default (async function visitNode(createNode, node, context) {
@@ -9,11 +10,13 @@ export default (async function visitNode(createNode, node, context) {
   let handler;
 
   if (node.nodeType === 'document') {
-    handler = handlers.root;
-  } else if (node.nodeType === 'text') {
+    handler = handlers.document;
+  } else if (helpers.isText(node)) {
     handler = handlers.text;
   } else {
-    handler = handlers[node.tagName] ? handlers[node.tagName] : unknownHandler;
+    handler = handlers[node.nodeType]
+      ? handlers[node.nodeType]
+      : unknownHandler;
   }
 
   if (typeof handler !== 'function') {
