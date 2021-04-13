@@ -348,10 +348,12 @@ export const span: Handler<ContentfulTextNode> = async function span(
     code: 'code',
   };
 
-  if (Array.isArray(node.marks)) {
-    const allowedMarks = node.marks.filter((mark) =>
-      context.allowedMarks.includes(datoToContentfulMarks[mark]),
-    );
+  if (Array.isArray(node.marks) && node.marks.length > 0) {
+    const allowedMarks = node.marks
+      .map((m) => m.type)
+      .filter((mark) =>
+        context.allowedMarks.includes(datoToContentfulMarks[mark]),
+      );
 
     if (allowedMarks.length > 0) {
       marks.marks = allowedMarks.map((m) => datoToContentfulMarks[m]);

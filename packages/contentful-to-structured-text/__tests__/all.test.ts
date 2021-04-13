@@ -244,13 +244,19 @@ describe('contentful-to-structured-text', () => {
               {
                 nodeType: 'text',
                 value: '[span text]',
-                marks: ['bold', 'italic', 'underline', 'code', 'xxx'],
+                marks: [
+                  { type: 'bold' },
+                  { type: 'italic' },
+                  { type: 'underline' },
+                  { type: 'code' },
+                  { type: 'xxx' },
+                ],
                 data: {},
               },
               {
                 nodeType: 'text',
                 value: '[strong text]',
-                marks: ['bold'],
+                marks: [{ type: 'bold' }],
                 data: {},
               },
             ],
@@ -333,7 +339,7 @@ describe('contentful-to-structured-text', () => {
               {
                 nodeType: 'text',
                 value: 'This is heading ',
-                marks: ['italic'],
+                marks: [{ type: 'italic' }],
                 data: {},
               },
               {
@@ -356,66 +362,122 @@ describe('contentful-to-structured-text', () => {
       };
 
       const result = await richTextToStructuredText(richText);
-      console.log(inspect(result, { depth: Infinity }));
-
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children[0].children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "marks": Array [
-                "emphasis",
-              ],
-              "type": "span",
-              "value": "This is heading ",
-            },
+        Array [
+          Object {
+            "marks": Array [
+              "emphasis",
+            ],
+            "type": "span",
+            "value": "This is heading ",
+          },
+          Object {
+            "children": Array [
+              Object {
+                "type": "span",
+                "value": "link",
+              },
+            ],
+            "type": "link",
+            "url": "https://fooo.com",
+          },
+          Object {
+            "type": "span",
+            "value": "!",
+          },
+        ]
+      `);
+    });
+
+    it('is converted to text when inside of another node (except root)', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'blockquote',
+            content: [
+              {
+                nodeType: 'paragraph',
+                content: [
+                  {
+                    nodeType: 'text',
+                    value: 'This is heading',
+                    marks: [{ type: 'italic' }, { type: 'code' }],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0]).toMatchInlineSnapshot(`
+        Object {
+          "children": Array [
             Object {
               "children": Array [
                 Object {
+                  "marks": Array [
+                    "emphasis",
+                    "code",
+                  ],
                   "type": "span",
-                  "value": "link",
+                  "value": "This is heading",
                 },
               ],
-              "type": "link",
-              "url": "https://fooo.com",
+              "type": "paragraph",
             },
-            Object {
-              "type": "span",
-              "value": "!",
-            },
-          ]
-        `);
+          ],
+          "type": "blockquote",
+        }
+      `);
     });
 
-    //     it('is converted to text when inside of another dast node (except root)', async () => {
-    //       const richText = `
-    //         <section>
-    //           <ul>
-    //             <h1>inside ul</h1>
-    //           </ul>
-    //         </section>
-    //         <pre>
-    //           <code>
-    //             <h1>inside code</h1>
-    //           </code>
-    //         </pre>
-    //       `;
-    //       const result = await richTextToStructuredText(richText);
-    //       expect(validate(result).valid).toBeTruthy();
-    //       expect(findAll(result.document, 'heading')).toHaveLength(0);
-    //     });
-
-    //     it('when not allowed produces paragraphs', async () => {
-    //       const richText = `
+    // it('when not allowed produces paragraphs', async () => {
+    //   const richText = `
     //         <h1>dato</h1>
     //       `;
-    //       const result = await richTextToStructuredText(richText, {
-    //         allowedBlocks: [],
-    //       });
-    //       expect(validate(result).valid).toBeTruthy();
-    //       expect(findAll(result.document, 'heading')).toHaveLength(0);
-    //       expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-    //       expect(find(result.document, 'span').value).toBe('dato');
-    //     });
+    //   const result = await richTextToStructuredText(richText, {
+    //     allowedBlocks: [],
+    //   });
+    // console.log(inspect(result, { depth: Infinity }));
+
+    //   expect(validate(result).valid).toBeTruthy();
+    //   expect(result.document.children[0].children).toMatchInlineSnapshot(`
+    //       Array [
+    //         Object {
+    //           "marks": Array [
+    //             "emphasis",
+    //           ],
+    //           "type": "span",
+    //           "value": "This is heading ",
+    //         },
+    //         Object {
+    //           "children": Array [
+    //             Object {
+    //               "type": "span",
+    //               "value": "link",
+    //             },
+    //           ],
+    //           "type": "link",
+    //           "url": "https://fooo.com",
+    //         },
+    //         Object {
+    //           "type": "span",
+    //           "value": "!",
+    //         },
+    //       ]
+    //     `);
+    //   expect(findAll(result.document, 'paragraph')).toHaveLength(1);
+    //   expect(find(result.document, 'span').value).toBe('dato');
+    // });
   });
 
   //   describe('code', () => {
