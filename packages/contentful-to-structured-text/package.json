@@ -29,6 +29,7 @@
     "prebuild": "rimraf dist"
   },
   "dependencies": {
+    "@contentful/rich-text-types": "^14.1.2",
     "datocms-structured-text-utils": "^1.0.14"
   },
   "bugs": {
