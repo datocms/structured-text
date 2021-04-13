@@ -1,6 +1,22 @@
 import { Node, Root, NodeType, Mark } from 'datocms-structured-text-utils';
+import {
+  Block as ContentfulBlock,
+  Inline as ContentfulInline,
+  Document as ContentfulDocument,
+  Text as ContentfulText,
+  Mark as ContentfulMark,
+  TopLevelBlock as ContentfulRootNode,
+} from '@contentful/rich-text-types';
 
 export { Node, Root, NodeType, Mark };
+export {
+  ContentfulBlock,
+  ContentfulInline,
+  ContentfulDocument,
+  ContentfulText,
+  ContentfulMark,
+  ContentfulRootNode,
+};
 
 export type CreateNodeFunction = (
   type: NodeType,
@@ -21,13 +37,11 @@ export interface Context {
   /** The parent `dast` node type. */
   parentNodeType: NodeType;
   /** The parent `hast` node. */
-  parentNode: RichTextNode;
+  parentNode: ContentfulNode;
   /** A reference to the current handlers - merged default + user handlers. */
   handlers: Record<string, Handler<unknown>>;
   /** A reference to the default handlers record (map). */
   defaultHandlers: Record<string, Handler<unknown>>;
-  /** true if the content can include newlines, and false if not (such as in headings). */
-  wrapText: boolean;
   /** Marks for span nodes. */
   marks?: Mark[];
   /**
@@ -43,39 +57,28 @@ export interface Context {
   global: GlobalContext;
 }
 
-export type Handler<RichTextNodeType> = (
+export type Handler<ContentfulNodeType> = (
   createNodeFunction: CreateNodeFunction,
-  node: RichTextNodeType,
+  node: ContentfulNodeType,
   context: Context,
 ) =>
   | Promise<Node | Array<Node> | void>
   | Array<Promise<Node | Array<Node> | void>>;
 
-export interface HastProperties {
-  className?: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
+// export interface HastProperties {
+//   className?: string[];
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   [key: string]: any;
+// }
 
-export interface RichTextTextNode {
-  type: 'text';
-  value: string;
-}
+// export interface RichTextElementNode {
+//   type: 'element';
+//   tagName: string;
+//   properties?: HastProperties;
+//   children?: ContentfulNode[];
+// }
 
-export interface RichTextElementNode {
-  type: 'element';
-  tagName: string;
-  properties?: HastProperties;
-  children?: RichTextNode[];
-}
-
-export interface RichTextRootNode {
-  nodeType: 'document';
-  data: {};
-  content?: RichTextNode[];
-}
-
-export type RichTextNode =
-  | RichTextTextNode
-  | RichTextElementNode
-  | RichTextRootNode;
+export type ContentfulNode =
+  | ContentfulText
+  | ContentfulBlock
+  | ContentfulRootNode;
