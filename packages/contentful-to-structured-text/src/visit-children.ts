@@ -1,9 +1,9 @@
-import { Handler, Node, HastNode, HastElementNode } from './types';
+import { Handler, Node, ContentfulNode, ContentfulElementNode } from './types';
 import visitNode from './visit-node';
 
 // visitChildren() is for visiting all the children of a node
 export default (async function visitChildren(createNode, parentNode, context) {
-  const nodes: HastNode[] = Array.isArray(parentNode.children)
+  const nodes: ContentfulNode[] = Array.isArray(parentNode.children)
     ? parentNode.children
     : [];
   let values: Node[] = [];
@@ -34,4 +34,4 @@ export default (async function visitChildren(createNode, parentNode, context) {
   }
 
   return values;
-} as Handler<HastElementNode>);
+} as Handler<ContentfulElementNode>);

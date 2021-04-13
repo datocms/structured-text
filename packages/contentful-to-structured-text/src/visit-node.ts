@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { Handler, HastElementNode, HastNode } from './types';
+import { Handler, ContentfulElementNode, ContentfulNode } from './types';
 import visitChildren from './visit-children';
 
 // visitNode() is for visiting a single node
@@ -8,19 +8,12 @@ export default (async function visitNode(createNode, node, context) {
   const handlers = context.handlers;
   let handler;
 
-  if (node.type === 'element') {
-    if (
-      typeof node.tagName === 'string' &&
-      typeof handlers[node.tagName] === 'function'
-    ) {
-      handler = handlers[node.tagName];
-    } else {
-      handler = unknownHandler;
-    }
-  } else if (node.type === 'root') {
+  if (node.nodeType === 'document') {
     handler = handlers.root;
-  } else if (node.type === 'text') {
+  } else if (node.nodeType === 'text') {
     handler = handlers.text;
+  } else {
+    handler = handlers[node.tagName] ? handlers[node.tagName] : unknownHandler;
   }
 
   if (typeof handler !== 'function') {
@@ -28,11 +21,11 @@ export default (async function visitNode(createNode, node, context) {
   }
 
   return await handler(createNode, node, context);
-} as Handler<HastNode>);
+} as Handler<ContentfulNode>);
 
 // This is a default handler for unknown nodes.
 // It skips the current node and processes its children.
-const unknownHandler: Handler<HastElementNode> = async function unknownHandler(
+const unknownHandler: Handler<ContentfulElementNode> = async function unknownHandler(
   createNode,
   node,
   context,

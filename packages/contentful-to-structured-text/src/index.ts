@@ -48,7 +48,6 @@ export async function richTextToStructuredText(
     parentNode: null,
     defaultHandlers: handlers,
     handlers: Object.assign({}, handlers, options.handlers || {}),
-    wrapText: true,
     allowedBlocks: Array.isArray(options.allowedBlocks)
       ? options.allowedBlocks
       : ['blockquote', 'code', 'heading', 'link', 'list'],
