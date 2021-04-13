@@ -95,10 +95,6 @@ export const heading: Handler<ContentfulElementNode> = async function heading(
   });
 
   if (Array.isArray(children) && children.length) {
-    console.log('aaaaaaaa');
-    console.log(node);
-    console.log('aaaaaaaa');
-
     return isAllowedChild
       ? createNode('heading', {
           level: Number(node.nodeType.slice(-1)) || 1,
@@ -129,7 +125,7 @@ export const code: Handler<ContentfulElementNode> = async function code(
   const prefix =
     typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
   const isCode = true;
-  const children = node.children;
+  const children = node.content;
   let index = -1;
   let classList = null;
   let language = {};
@@ -266,13 +262,13 @@ export const link: Handler<ContentfulElementNode> = async function link(
   //
   // @TODO this is only checking for headings that are direct descendants of links.
   // Decide if it is worth looking deeper.
-  const wrapsHeadings = node.children.some(
+  const wrapsHeadings = node.content.some(
     (child) => child.type === 'element' && child.nodeType.startsWith('h'),
   );
   if (wrapsHeadings) {
     let i = 0;
     const splitChildren: ContentfulElementNode[] = [];
-    node.children.forEach((child) => {
+    node.content.forEach((child) => {
       if (child.type === 'element' && child.nodeType.startsWith('h')) {
         if (splitChildren.length > 0) {
           i++;
@@ -282,13 +278,13 @@ export const link: Handler<ContentfulElementNode> = async function link(
           children: [
             {
               ...node,
-              children: child.children,
+              children: child.content,
             },
           ],
         });
         i++;
       } else if (splitChildren[i]) {
-        splitChildren[i].children.push(child);
+        splitChildren[i].content.push(child);
       } else {
         splitChildren[i] = {
           ...node,
@@ -297,7 +293,7 @@ export const link: Handler<ContentfulElementNode> = async function link(
       }
     });
 
-    node.children = splitChildren;
+    node.content = splitChildren;
     isAllowedChild = false;
   }
 
@@ -312,7 +308,7 @@ export const link: Handler<ContentfulElementNode> = async function link(
     }
 
     const props = {
-      url: resolveUrl(context, node.properties.href),
+      url: resolveUrl(context, node.data.uri),
       children,
     };
 
@@ -382,34 +378,6 @@ export const italic = withMark('emphasis');
 export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 export const highlight = withMark('highlight');
-
-export const head: Handler<ContentfulElementNode> = async function head(
-  createNode,
-  node,
-  context,
-) {
-  const baseElement = node.children.find((child) => child.nodeType === 'base');
-  if (baseElement) {
-    return context.handlers.base(createNode, baseElement, context);
-  } else {
-    return undefined;
-  }
-};
-
-export const base: Handler<ContentfulElementNode> = async function base(
-  createNode,
-  node,
-  context,
-) {
-  if (
-    !context.global.baseUrlFound &&
-    typeof node.properties === 'object' &&
-    node.properties.href
-  ) {
-    context.global.baseUrl = node.properties.href.replace(/\/$/, '');
-    context.global.baseUrlFound = true;
-  }
-};
 
 export const extractInlineStyles: Handler<ContentfulElementNode> = async function extractInlineStyles(
   createNode,

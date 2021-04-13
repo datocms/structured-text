@@ -322,31 +322,69 @@ describe('contentful-to-structured-text', () => {
       expect(result.document.children[0].children[0].type).toBe('span');
     });
 
-    // it('allows link as children', async () => {
-    //   const richText = `
-    //       <h1>span <a href="#">link</a></h1>
-    //     `;
-    //   const result = await richTextToStructuredText(richText);
-    //   expect(validate(result).valid).toBeTruthy();
-    //   expect(result.document.children[0].children).toMatchInlineSnapshot(`
-    //       Array [
-    //         Object {
-    //           "type": "span",
-    //           "value": "span ",
-    //         },
-    //         Object {
-    //           "children": Array [
-    //             Object {
-    //               "type": "span",
-    //               "value": "link",
-    //             },
-    //           ],
-    //           "type": "link",
-    //           "url": "#",
-    //         },
-    //       ]
-    //     `);
-    // });
+    it('allows link as children', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'heading-2',
+            content: [
+              {
+                nodeType: 'text',
+                value: 'This is heading ',
+                marks: ['italic'],
+                data: {},
+              },
+              {
+                nodeType: 'hyperlink',
+                content: [
+                  {
+                    nodeType: 'text',
+                    value: 'link',
+                    marks: [],
+                    data: {},
+                  },
+                ],
+                data: { uri: 'https://fooo.com' },
+              },
+              { nodeType: 'text', value: '!', marks: [], data: {} },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      console.log(inspect(result, { depth: Infinity }));
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "marks": Array [
+                "emphasis",
+              ],
+              "type": "span",
+              "value": "This is heading ",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "link",
+                },
+              ],
+              "type": "link",
+              "url": "https://fooo.com",
+            },
+            Object {
+              "type": "span",
+              "value": "!",
+            },
+          ]
+        `);
+    });
 
     //     it('is converted to text when inside of another dast node (except root)', async () => {
     //       const richText = `
