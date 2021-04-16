@@ -334,7 +334,7 @@ describe('contentful-to-structured-text', () => {
         data: {},
         content: [
           {
-            nodeType: 'heading-2',
+            nodeType: 'heading-3',
             content: [
               {
                 nodeType: 'text',
@@ -363,6 +363,8 @@ describe('contentful-to-structured-text', () => {
 
       const result = await richTextToStructuredText(richText);
       expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('heading');
+      expect(result.document.children[0].level).toBe(3);
       expect(result.document.children[0].children).toMatchInlineSnapshot(`
         Array [
           Object {
@@ -396,15 +398,33 @@ describe('contentful-to-structured-text', () => {
         data: {},
         content: [
           {
-            nodeType: 'blockquote',
+            nodeType: 'unordered-list',
             content: [
               {
-                nodeType: 'paragraph',
+                nodeType: 'list-item',
                 content: [
                   {
-                    nodeType: 'text',
-                    value: 'This is heading',
-                    marks: [{ type: 'italic' }, { type: 'code' }],
+                    nodeType: 'heading-1',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'This is heading ',
+                        marks: [{ type: 'code' }],
+                        data: {},
+                      },
+                      {
+                        nodeType: 'hyperlink',
+                        content: [
+                          {
+                            nodeType: 'text',
+                            value: 'foo',
+                            marks: [{ type: 'code' }],
+                            data: {},
+                          },
+                        ],
+                        data: { uri: 'https://loo.olll' },
+                      },
+                    ],
                     data: {},
                   },
                 ],
@@ -417,6 +437,7 @@ describe('contentful-to-structured-text', () => {
       };
 
       const result = await richTextToStructuredText(richText);
+
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children[0]).toMatchInlineSnapshot(`
         Object {
@@ -424,60 +445,78 @@ describe('contentful-to-structured-text', () => {
             Object {
               "children": Array [
                 Object {
-                  "marks": Array [
-                    "emphasis",
-                    "code",
+                  "children": Array [
+                    Object {
+                      "marks": Array [
+                        "code",
+                      ],
+                      "type": "span",
+                      "value": "This is heading ",
+                    },
+                    Object {
+                      "children": Array [
+                        Object {
+                          "marks": Array [
+                            "code",
+                          ],
+                          "type": "span",
+                          "value": "foo",
+                        },
+                      ],
+                      "type": "link",
+                      "url": "https://loo.olll",
+                    },
                   ],
-                  "type": "span",
-                  "value": "This is heading",
+                  "type": "paragraph",
                 },
               ],
-              "type": "paragraph",
+              "type": "listItem",
             },
           ],
-          "type": "blockquote",
+          "style": "bulleted",
+          "type": "list",
         }
       `);
     });
 
-    // it('when not allowed produces paragraphs', async () => {
-    //   const richText = `
-    //         <h1>dato</h1>
-    //       `;
-    //   const result = await richTextToStructuredText(richText, {
-    //     allowedBlocks: [],
-    //   });
-    // console.log(inspect(result, { depth: Infinity }));
+    it('when not allowed produces paragraphs', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'heading-2',
+            content: [
+              {
+                nodeType: 'text',
+                value: 'This is heading',
+                marks: [{ type: 'italic' }],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-    //   expect(validate(result).valid).toBeTruthy();
-    //   expect(result.document.children[0].children).toMatchInlineSnapshot(`
-    //       Array [
-    //         Object {
-    //           "marks": Array [
-    //             "emphasis",
-    //           ],
-    //           "type": "span",
-    //           "value": "This is heading ",
-    //         },
-    //         Object {
-    //           "children": Array [
-    //             Object {
-    //               "type": "span",
-    //               "value": "link",
-    //             },
-    //           ],
-    //           "type": "link",
-    //           "url": "https://fooo.com",
-    //         },
-    //         Object {
-    //           "type": "span",
-    //           "value": "!",
-    //         },
-    //       ]
-    //     `);
-    //   expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-    //   expect(find(result.document, 'span').value).toBe('dato');
-    // });
+      const result = await richTextToStructuredText(richText, {
+        allowedBlocks: [],
+      });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "marks": Array [
+                "emphasis",
+              ],
+              "type": "span",
+              "value": "This is heading",
+            },
+          ]
+        `);
+      expect(result.document.children[0].type).toBe('paragraph');
+    });
   });
 
   //   describe('code', () => {

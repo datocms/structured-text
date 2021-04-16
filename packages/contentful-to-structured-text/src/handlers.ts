@@ -14,6 +14,7 @@ import {
   ContentfulElementNode,
   ContentfulRootNode,
 } from './types';
+import { wrap } from './wrap';
 
 import visitChildren from './visit-children';
 import { MetaEntry } from '../../utils/dist/types';
@@ -28,15 +29,15 @@ export const root: Handler<ContentfulRootNode> = async function root(
     parentNodeType: 'root',
   });
 
-  // if (
-  //   Array.isArray(children) &&
-  //   children.some(
-  //     (child: ContentfulNode) =>
-  //       child && !allowedChildren.root.includes(child.type),
-  //   )
-  // ) {
-  //   children = wrap(children);
-  // }
+  if (
+    Array.isArray(children) &&
+    children.some(
+      (child: ContentfulNode) =>
+        child && !allowedChildren.root.includes(child.type),
+    )
+  ) {
+    children = wrap(children);
+  }
 
   if (!Array.isArray(children) || children.length === 0) {
     return null;
@@ -182,8 +183,9 @@ export const blockquote: Handler<ContentfulElementNode> = async function blockqu
   });
 
   if (Array.isArray(children) && children.length) {
-    // ? createNode('blockquote', { children: wrap(children) })
-    return isAllowedChild ? createNode('blockquote', { children }) : children;
+    return isAllowedChild
+      ? createNode('blockquote', { children: wrap(children) })
+      : children;
   }
   return undefined;
 };
@@ -228,8 +230,9 @@ export const listItem: Handler<ContentfulElementNode> = async function listItem(
   });
 
   if (Array.isArray(children) && children.length) {
-    // children: wrap(children),
-    return isAllowedChild ? createNode('listItem', { children }) : children;
+    return isAllowedChild
+      ? createNode('listItem', { children: wrap(children) })
+      : children;
   }
   return undefined;
 };
