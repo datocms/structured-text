@@ -19,6 +19,13 @@ import { wrap } from './wrap';
 import visitChildren from './visit-children';
 import { MetaEntry } from '../../utils/dist/types';
 
+const datoToContentfulMarks = {
+  bold: 'strong',
+  italic: 'emphasis',
+  underline: 'underline',
+  code: 'code',
+};
+
 export const root: Handler<ContentfulRootNode> = async function root(
   createNode,
   node,
@@ -45,6 +52,43 @@ export const root: Handler<ContentfulRootNode> = async function root(
 
   return createNode('root', {
     children: Array.isArray(children) ? children : [],
+  });
+};
+
+export const span: Handler<ContentfulTextNode> = async function span(
+  createNode,
+  node,
+  context,
+) {
+  const marks = {};
+
+  if (Array.isArray(node.marks) && node.marks.length > 0) {
+    const allowedMarks = node.marks
+      .map((m) => m.type)
+      .filter((mark) =>
+        context.allowedMarks.includes(datoToContentfulMarks[mark]),
+      );
+
+    if (allowedMarks.length > 0) {
+      marks.marks = allowedMarks.map((m) => datoToContentfulMarks[m]);
+    }
+  }
+
+  const canBeCodeBlock =
+    marks.marks &&
+    marks.marks.includes('code') &&
+    allowedChildren[context.parentNodeType].includes('code') &&
+    context.allowedBlocks.includes('code');
+
+  if (canBeCodeBlock) {
+    return createNode('code', {
+      code: node.value,
+    });
+  }
+
+  return createNode('span', {
+    value: node.value,
+    ...marks,
   });
 };
 
@@ -106,68 +150,6 @@ export const heading: Handler<ContentfulElementNode> = async function heading(
   return undefined;
 };
 
-export const code: Handler<ContentfulElementNode> = async function code(
-  createNode,
-  node,
-  context,
-) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'code',
-  );
-
-  if (!isAllowedChild) {
-    return inlineCode(createNode, node, context);
-  }
-
-  if (!context.allowedBlocks.includes('code')) {
-    return visitChildren(createNode, node, context);
-  }
-
-  const prefix =
-    typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
-  const isCode = true;
-  const children = node.content;
-  let index = -1;
-  let classList = null;
-  let language = {};
-
-  if (isPre(node)) {
-    while (++index < children.length) {
-      if (
-        typeof children[index] === 'object' &&
-        isCode(children[index])
-        // && has(children[index], 'className')
-      ) {
-        // error TS2339: Property 'properties' does not exist on type 'ContentfulNode'.
-        //               Property 'properties' does not exist on type 'ContentfulTextNode'
-        // isCode (convert) checks that the node is an element and therefore it'll have properties
-        // // @ts-ignore
-        // classList = children[index].properties.className;
-        break;
-      }
-    }
-    // } else if (isCode(node) && has(node, 'className')) {
-  } else if (isCode(node)) {
-    classList = node.properties.className;
-  }
-
-  if (Array.isArray(classList)) {
-    index = -1;
-
-    while (++index < classList.length) {
-      if (classList[index].slice(0, prefix.length) === prefix) {
-        language = { language: classList[index].slice(prefix.length) };
-        break;
-      }
-    }
-  }
-
-  return createNode('code', {
-    ...language,
-    code: String(node).replace(/\n+$/, ''),
-  });
-};
-
 export const blockquote: Handler<ContentfulElementNode> = async function blockquote(
   createNode,
   node,
@@ -189,6 +171,7 @@ export const blockquote: Handler<ContentfulElementNode> = async function blockqu
   }
   return undefined;
 };
+
 export const list: Handler<ContentfulElementNode> = async function list(
   createNode,
   node,
@@ -215,6 +198,7 @@ export const list: Handler<ContentfulElementNode> = async function list(
   }
   return undefined;
 };
+
 export const listItem: Handler<ContentfulElementNode> = async function listItem(
   createNode,
   node,
@@ -236,6 +220,7 @@ export const listItem: Handler<ContentfulElementNode> = async function listItem(
   }
   return undefined;
 };
+
 export const link: Handler<ContentfulElementNode> = async function link(
   createNode,
   node,
@@ -337,38 +322,6 @@ export const link: Handler<ContentfulElementNode> = async function link(
   return undefined;
 };
 
-export const span: Handler<ContentfulTextNode> = async function span(
-  createNode,
-  node,
-  context,
-) {
-  const marks = {};
-
-  const datoToContentfulMarks = {
-    bold: 'strong',
-    italic: 'emphasis',
-    underline: 'underline',
-    code: 'code',
-  };
-
-  if (Array.isArray(node.marks) && node.marks.length > 0) {
-    const allowedMarks = node.marks
-      .map((m) => m.type)
-      .filter((mark) =>
-        context.allowedMarks.includes(datoToContentfulMarks[mark]),
-      );
-
-    if (allowedMarks.length > 0) {
-      marks.marks = allowedMarks.map((m) => datoToContentfulMarks[m]);
-    }
-  }
-
-  return createNode('span', {
-    value: node.value,
-    ...marks,
-  });
-};
-
 export const newLine: Handler<ContentfulTextNode> = async function newLine(
   createNode,
 ) {
@@ -444,6 +397,7 @@ export function withMark(type: Mark): Handler<ContentfulElementNode> {
     }
 
     let marks = { marks: [type] };
+
     if (Array.isArray(context.marks)) {
       marks = {
         marks: context.marks.includes(type)
@@ -451,6 +405,7 @@ export function withMark(type: Mark): Handler<ContentfulElementNode> {
           : context.marks.concat([type]),
       };
     }
+
     return visitChildren(createNode, node, {
       ...context,
       ...marks,

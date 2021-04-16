@@ -8,7 +8,6 @@ import visitChildren from './visit-children';
 import { handlers } from './handlers';
 import {
   Document,
-  allowedMarks,
   Mark,
   BlockquoteType,
   CodeType,
@@ -39,6 +38,13 @@ export async function richTextToStructuredText(
     options.preprocess(tree);
   }
 
+  const contentfulAllowedMarks: Mark[] = [
+    'strong',
+    'emphasis',
+    'underline',
+    'code',
+  ];
+
   const rootNode = await visitNode(createNode, tree, {
     parentNodeType: 'root',
     parentNode: null,
@@ -49,7 +55,7 @@ export async function richTextToStructuredText(
       : ['blockquote', 'code', 'heading', 'link', 'list'],
     allowedMarks: Array.isArray(options.allowedMarks)
       ? options.allowedMarks
-      : allowedMarks,
+      : contentfulAllowedMarks,
     global: {
       baseUrl: null,
       baseUrlFound: false,

@@ -519,35 +519,95 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('code', () => {
-  //     it('creates valid code node', async () => {
-  //       const richText = `
-  //         <pre><code class="language-richText"><span class="hljs-tag">&lt;<span class="hljs-name">import</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"file.richText"</span> /&gt;</span></code></pre>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(result.document.children[0]).toMatchInlineSnapshot(`
-  //         Object {
-  //           "code": "<import src=\\"file.richText\\" />",
-  //           "language": "richText",
-  //           "type": "code",
-  //         }
-  //       `);
-  //     });
+  describe('code', () => {
+    const richText = {
+      nodeType: 'document',
+      data: {},
+      content: [
+        {
+          nodeType: 'text',
+          value: '<import src="file.richText" />',
+          marks: [{ type: 'code' }],
+          data: {},
+        },
+      ],
+    };
 
-  //     it('when not allowed produces paragraphs', async () => {
-  //       const richText = `
-  //         <code>let dato</code>
-  //       `;
-  //       const result = await richTextToStructuredText(richText, {
-  //         allowedBlocks: [],
-  //       });
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'code')).toHaveLength(0);
-  //       expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-  //       expect(find(result.document, 'span').value).toBe('let dato');
-  //     });
-  //   });
+    it('creates valid code node', async () => {
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0]).toMatchInlineSnapshot(`
+          Object {
+            "code": "<import src=\\"file.richText\\" />",
+            "type": "code",
+          }
+        `);
+    });
+
+    it('when not allowed, produces paragraphs', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'text',
+            value: '<import src="file.richText" />',
+            marks: [{ type: 'code' }],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText, {
+        allowedBlocks: [],
+      });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "marks": Array [
+                "code",
+              ],
+              "type": "span",
+              "value": "<import src=\\"file.richText\\" />",
+            },
+          ]
+        `);
+    });
+
+    it('when code not allowed in blocks and marks, produces paragraphs', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'text',
+            value: '<import src="file.richText" />',
+            marks: [{ type: 'code' }],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText, {
+        allowedBlocks: [],
+        allowedMarks: ['strong'],
+      });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "type": "span",
+              "value": "<import src=\\"file.richText\\" />",
+            },
+          ]
+        `);
+    });
+  });
 
   //   describe('blockquote', () => {
   //     it('creates valid blockquote node', async () => {
