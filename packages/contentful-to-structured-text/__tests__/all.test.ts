@@ -643,7 +643,6 @@ describe('contentful-to-structured-text', () => {
 
     it('creates valid blockquote node', async () => {
       const result = await richTextToStructuredText(richText);
-      console.log(inspect(result, { depth: Infinity }));
 
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children.map((child) => child.type))
@@ -692,113 +691,404 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('list', () => {
-  //     it('creates valid list', async () => {
-  //       const richText = `
-  //         <ul><li>test</li></ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(result.document.children[0].style).toBe('bulleted');
-  //     });
+  describe('list', () => {
+    it('creates valid list', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'Foo',
+                        marks: [{ type: 'underline' }],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'heading-1',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'Bar',
+                        marks: [{ type: 'code' }],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+      const result = await richTextToStructuredText(richText);
 
-  //     it('creates a numbered list from OL elements', async () => {
-  //       const richText = `
-  //         <ol><li>test</li></ol>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(result.document.children[0].style).toBe('numbered');
-  //     });
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].style).toBe('bulleted');
+      expect(result.document.children).toMatchInlineSnapshot(`
+            Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "children": Array [
+                      Object {
+                        "children": Array [
+                          Object {
+                            "marks": Array [
+                              "underline",
+                            ],
+                            "type": "span",
+                            "value": "Foo",
+                          },
+                        ],
+                        "type": "paragraph",
+                      },
+                    ],
+                    "type": "listItem",
+                  },
+                  Object {
+                    "children": Array [
+                      Object {
+                        "children": Array [
+                          Object {
+                            "marks": Array [
+                              "code",
+                            ],
+                            "type": "span",
+                            "value": "Bar",
+                          },
+                        ],
+                        "type": "paragraph",
+                      },
+                    ],
+                    "type": "listItem",
+                  },
+                ],
+                "style": "bulleted",
+                "type": "list",
+              },
+            ]
+          `);
+    });
 
-  //     it('supports nested lists', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li><ul><li>1</li></ul></li>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(find(find(result.document, 'list'), 'list')).toBeTruthy();
-  //     });
+    it('creates a numbered list from OL elements', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'ordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'Foo',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-  //     it('converts nested blockquote to text', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li><blockquote>1</blockquote></li>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'blockquote')).toHaveLength(0);
-  //       expect(find(result.document, 'span').value).toBe('1');
-  //     });
+      const result = await richTextToStructuredText(richText);
 
-  //     it('converts nested heading to text', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li><h1>1</h1></li>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'h1')).toHaveLength(0);
-  //       expect(find(result.document, 'span').value).toBe('1');
-  //     });
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].style).toBe('numbered');
+    });
 
-  //     it('converts nested code to text', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li><code>1</code></li>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'code')).toHaveLength(0);
-  //       expect(find(result.document, 'span').value).toBe('1');
-  //     });
+    it('supports nested lists', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'foo',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                  {
+                    nodeType: 'unordered-list',
+                    content: [
+                      {
+                        nodeType: 'list-item',
+                        content: [
+                          {
+                            nodeType: 'paragraph',
+                            content: [
+                              {
+                                nodeType: 'text',
+                                value: 'bar',
+                                marks: [],
+                                data: {},
+                              },
+                            ],
+                            data: {},
+                          },
+                        ],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-  //     it('supports nested and/or unwrapped link', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li><a href="#">1</a>2</li>
-  //           <a href="#">3</a>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'link')).toHaveLength(2);
-  //       const items = findAll(result.document, 'listItem').map((listItem) =>
-  //         find(listItem, 'paragraph').children.map((child) => child.type),
-  //       );
-  //       expect(items).toMatchInlineSnapshot(`
-  //         Array [
-  //           Array [
-  //             "link",
-  //             "span",
-  //           ],
-  //           Array [
-  //             "link",
-  //           ],
-  //         ]
-  //       `);
-  //     });
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children[0].children[1].type).toBe(
+        'list',
+      );
+    });
 
-  //     it('when not allowed produces paragraphs', async () => {
-  //       const richText = `
-  //         <ul>
-  //           <li>dato</li>
-  //         </ul>
-  //       `;
-  //       const result = await richTextToStructuredText(richText, {
-  //         allowedBlocks: [],
-  //       });
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'list')).toHaveLength(0);
-  //       expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-  //       expect(find(result.document, 'span').value).toBe('dato');
-  //     });
-  //   });
+    it('converts nested blockquote to text', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'blockquote',
+                    content: [
+                      {
+                        nodeType: 'paragraph',
+                        content: [
+                          {
+                            nodeType: 'text',
+                            value: 'quote',
+                            marks: [],
+                            data: {},
+                          },
+                        ],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children[0].children[0].type).toBe(
+        'paragraph',
+      );
+    });
+
+    it('converts nested heading to text', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'heading-2',
+                    content: [
+                      {
+                        nodeType: 'paragraph',
+                        content: [
+                          {
+                            nodeType: 'text',
+                            value: 'heading',
+                            marks: [],
+                            data: {},
+                          },
+                        ],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children[0].children[0].type).toBe(
+        'paragraph',
+      );
+    });
+
+    it('supports link', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'hyperlink',
+                        content: [
+                          {
+                            nodeType: 'text',
+                            value: 'link',
+                            marks: [],
+                            data: {},
+                          },
+                        ],
+                        data: { uri: 'https://foo.bar' },
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].children[0].children[0].type).toBe(
+        'paragraph',
+      );
+      expect(
+        result.document.children[0].children[0].children[0].children[0].type,
+      ).toBe('link');
+      expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "children": Array [
+                      Object {
+                        "type": "span",
+                        "value": "link",
+                      },
+                    ],
+                    "type": "link",
+                    "url": "https://foo.bar",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "listItem",
+          }
+        `);
+    });
+
+    it('when not allowed produces paragraphs', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'Foo',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+      const result = await richTextToStructuredText(richText, {
+        allowedBlocks: [],
+      });
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('paragraph');
+    });
+  });
 
   //   describe('thematicBreak', () => {
   //     it('convert hr', async () => {

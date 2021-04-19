@@ -193,7 +193,7 @@ export const list: Handler<ContentfulElementNode> = async function list(
   if (Array.isArray(children) && children.length) {
     return createNode('list', {
       children,
-      style: node.nodeType === 'ol' ? 'numbered' : 'bulleted',
+      style: node.nodeType === 'ordered-list' ? 'numbered' : 'bulleted',
     });
   }
   return undefined;
