@@ -68,18 +68,6 @@ export const span: Handler<ContentfulTextNode> = async function span(
     }
   }
 
-  const canBeCodeBlock =
-    marks.marks &&
-    marks.marks.includes('code') &&
-    allowedChildren[context.parentNodeType].includes('code') &&
-    context.allowedBlocks.includes('code');
-
-  if (canBeCodeBlock) {
-    return createNode('code', {
-      code: node.value,
-    });
-  }
-
   return createNode('span', {
     value: node.value,
     ...marks,
@@ -101,8 +89,21 @@ export const paragraph: Handler<ContentfulElementNode> = async function paragrap
   });
 
   if (Array.isArray(children) && children.length) {
+    // TODO: Code block gets created only if it's in root and is not inline
+    if (
+      children.length === 1 &&
+      children[0].marks &&
+      children[0].marks.length === 1 &&
+      children[0].marks.includes('code') &&
+      context.allowedBlocks.includes('code') &&
+      context.parentNode.nodeType === 'document'
+    ) {
+      return codeBlock(createNode, children[0]);
+    }
+
     return isAllowedChild ? createNode('paragraph', { children }) : children;
   }
+
   return undefined;
 };
 
@@ -191,6 +192,15 @@ export const list: Handler<ContentfulElementNode> = async function list(
     });
   }
   return undefined;
+};
+
+export const codeBlock: Handler<ContentfulElementNode> = async function codeBlock(
+  createNode,
+  node,
+) {
+  return createNode('code', {
+    code: node.value,
+  });
 };
 
 export const listItem: Handler<ContentfulElementNode> = async function listItem(

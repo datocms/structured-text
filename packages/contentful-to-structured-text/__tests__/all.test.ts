@@ -264,7 +264,7 @@ describe('contentful-to-structured-text', () => {
             "paragraph",
             "blockquote",
             "list",
-            "paragraph",
+            "code",
             "paragraph",
           ]
         `);
@@ -1288,6 +1288,11 @@ describe('contentful-to-structured-text', () => {
                   nodeType: 'text',
                   value: 'foo',
                   marks: [{ type: markName }],
+                  data: {},
+                },
+                {
+                  nodeType: 'text',
+                  value: '.',
                   data: {},
                 },
               ],
