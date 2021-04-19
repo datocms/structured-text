@@ -18,143 +18,152 @@ describe('contentful-to-structured-text', () => {
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
-  // it('rejects invalid rich text documents', async () => {
-  //   const richText = {
-  //     nodeType: 'foobar',
-  //     data: {},
-  //     content: [],
-  //   };
+  describe('handlers', () => {
+    test('can return an array of nodes', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'paragraph',
+            content: [{ nodeType: 'text', value: 'foo', marks: [], data: {} }],
+            data: {},
+          },
+        ],
+      };
 
-  //   const result = await richTextToStructuredText(richText);
-  //   expect(validate(result).valid).toBeFalsy();
-  //   expect(result).toMatchInlineSnapshot(`null`);
-  // });
+      const result = await richTextToStructuredText(richText, {
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          text: async (createNode, node, context) => {
+            return await Promise.all([
+              createNode('span', {
+                value: node.value,
+              }),
+              createNode('span', {
+                value: node.value,
+              }),
+            ]);
+          },
+          paragraph: async (createNode, node, context) => {
+            return await Promise.all([
+              context.defaultHandlers.paragraph(createNode, node, context),
+              context.defaultHandlers.paragraph(createNode, node, context),
+            ]);
+          },
+        },
+      });
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children.length).toBe(2);
+      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document.children[0].children.length).toBe(2);
+    });
 
-  // describe('handlers', () => {
-  //   it('can return an array of nodes', async () => {
-  //     const richText = {
-  //       nodeType: 'paragraph',
-  //       content: [{ nodeType: 'text', value: 'foo', marks: [], data: {} }],
-  //       data: {},
-  //     };
+    it('can return an array of promises', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'paragraph',
+            content: [{ nodeType: 'text', value: 'foo', marks: [], data: {} }],
+            data: {},
+          },
+        ],
+      };
 
-  //     const result = await richTextToStructuredText(richText, {
-  //       handlers: {
-  //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //         text: async (createNode, node, context) => {
-  //           return await Promise.all([
-  //             createNode('span', {
-  //               value: node.value,
-  //             }),
-  //             createNode('span', {
-  //               value: node.value,
-  //             }),
-  //           ]);
-  //         },
-  //         paragraph: async (createNode, node, context) => {
-  //           return await Promise.all([
-  //             context.defaultHandlers.p(createNode, node, context),
-  //             context.defaultHandlers.p(createNode, node, context),
-  //           ]);
-  //         },
-  //       },
-  //     });
-  //     expect(validate(result).valid).toBeTruthy();
-  //     expect(findAll(result.document, 'paragraph')).toHaveLength(2);
-  //     expect(findAll(result.document, 'span')).toHaveLength(4);
-  //   });
+      const result = await richTextToStructuredText(richText, {
+        handlers: {
+          paragraph: (createNode, node, context) => {
+            return [
+              context.defaultHandlers.paragraph(createNode, node, context),
+              context.defaultHandlers.paragraph(createNode, node, context),
+            ];
+          },
+        },
+      });
 
-  //   //   it('can return an array of promises', async () => {
-  //   //     const richText = `
-  //   //       <p>twice</p>
-  //   //     `;
-  //   //     const result = await richTextToStructuredText(richText, {
-  //   //       handlers: {
-  //   //         p: (createNode, node, context) => {
-  //   //           return [
-  //   //             context.defaultHandlers.p(createNode, node, context),
-  //   //             context.defaultHandlers.p(createNode, node, context),
-  //   //           ];
-  //   //         },
-  //   //       },
-  //   //     });
-  //   //     expect(validate(result).valid).toBeTruthy();
-  //   //     expect(findAll(result.document, 'paragraph')).toHaveLength(2);
-  //   //     expect(findAll(result.document, 'span')).toHaveLength(2);
-  //   //   });
+      expect(validate(result).valid).toBeTruthy();
+      console.log(inspect(result, { depth: Infinity }));
+      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document.children.length).toBe(2);
+    });
 
-  //   //   describe('custom (user provided)', () => {
-  //   //     it('can register custom handlers', async () => {
-  //   //       const richText = `
-  //   //         <unknown>span</unknown>
-  //   //       <p>already wrapped</p>
-  //   //       needs wrapping
-  //   //     `;
-  //   //       const result = await richTextToStructuredText(richText, {
-  //   //         handlers: {
-  //   //           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   //           unknown: (createNode, node, context) => {
-  //   //             return createNode('span', {
-  //   //               value: 'custom',
-  //   //             });
-  //   //           },
-  //   //         },
-  //   //       });
-  //   //       expect(validate(result).valid).toBeTruthy();
-  //   //       const spans = findAll(result.document, 'span');
-  //   //       expect(spans).toHaveLength(3);
-  //   //       expect(spans[0].value).toBe('custom');
-  //   //       const paragraphs = findAll(result.document, 'paragraph');
-  //   //       expect(paragraphs.map((p) => p.children[0].value))
-  //   //         .toMatchInlineSnapshot(`
-  //   //         Array [
-  //   //           "custom",
-  //   //           "already wrapped",
-  //   //           "needs wrapping",
-  //   //         ]
-  //   //       `);
-  //   //     });
+    // Not sure about this..
 
-  //   //     it('waits for async handlers to resolve', async () => {
-  //   //       const richText = `
-  //   //         <custom>span</custom>
-  //   //     `;
-  //   //       const result = await richTextToStructuredText(richText, {
-  //   //         handlers: {
-  //   //           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  //   //           custom: async (createNode, node, context) => {
-  //   //             await new Promise((resolve) => setTimeout(resolve, 200));
-  //   //             return createNode('span', {
-  //   //               value: 'custom',
-  //   //             });
-  //   //           },
-  //   //         },
-  //   //       });
-  //   //       expect(validate(result).valid).toBeTruthy();
-  //   //       expect(find(result.document, 'span').value).toBe('custom');
-  //   //     });
+    // describe('custom (user provided)', () => {
+    //   it('can register custom handlers', async () => {
+    //     const richText = `
+    //           <unknown>span</unknown>
+    //         <p>already wrapped</p>
+    //         needs wrapping
+    //       `;
+    //     const result = await richTextToStructuredText(richText, {
+    //       handlers: {
+    //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //         unknown: (createNode, node, context) => {
+    //           return createNode('span', {
+    //             value: 'custom',
+    //           });
+    //         },
+    //       },
+    //     });
+    //     expect(validate(result).valid).toBeTruthy();
+    //     const spans = findAll(result.document, 'span');
+    //     expect(spans).toHaveLength(3);
+    //     expect(spans[0].value).toBe('custom');
+    //     const paragraphs = findAll(result.document, 'paragraph');
+    //     expect(paragraphs.map((p) => p.children[0].value))
+    //       .toMatchInlineSnapshot(`
+    //           Array [
+    //             "custom",
+    //             "already wrapped",
+    //             "needs wrapping",
+    //           ]
+    //         `);
+    //   });
+    // });
 
-  //   //     it('can override default handlers', async () => {
-  //   //       const richText = `
-  //   //         <blockquote>override</blockquote>
-  //   //         <p>regular paragraph</p>
-  //   //     `;
-  //   //       const result = await richTextToStructuredText(richText, {
-  //   //         handlers: {
-  //   //           blockquote: async (createNode, node, context) => {
-  //   //             // turn a blockquote into a paragraph
-  //   //             return context.handlers.p(createNode, node, context);
-  //   //           },
-  //   //         },
-  //   //       });
-  //   //       expect(validate(result).valid).toBeTruthy();
-  //   //       expect(find(result.document, 'blockquote')).toBeFalsy();
-  //   //       const paragraphs = findAll(result.document, 'paragraph');
-  //   //       expect(paragraphs).toHaveLength(2);
-  //   //       expect(find(paragraphs[0], 'span').value).toBe('override');
-  //   //       expect(find(paragraphs[1], 'span').value).toBe('regular paragraph');
-  //   //     });
-  // });
+    // it('waits for async handlers to resolve', async () => {
+    //   const richText = `
+    //     <custom>span</custom>
+    // `;
+    //   const result = await richTextToStructuredText(richText, {
+    //     handlers: {
+    //       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    //       custom: async (createNode, node, context) => {
+    //         await new Promise((resolve) => setTimeout(resolve, 200));
+    //         return createNode('span', {
+    //           value: 'custom',
+    //         });
+    //       },
+    //     },
+    //   });
+    //   expect(validate(result).valid).toBeTruthy();
+    //   expect(find(result.document, 'span').value).toBe('custom');
+    // });
+
+    // it('can override default handlers', async () => {
+    //   const richText = `
+    //     <blockquote>override</blockquote>
+    //     <p>regular paragraph</p>
+    // `;
+    //   const result = await richTextToStructuredText(richText, {
+    //     handlers: {
+    //       blockquote: async (createNode, node, context) => {
+    //         // turn a blockquote into a paragraph
+    //         return context.handlers.p(createNode, node, context);
+    //       },
+    //     },
+    //   });
+    //   expect(validate(result).valid).toBeTruthy();
+    //   expect(find(result.document, 'blockquote')).toBeFalsy();
+    //   const paragraphs = findAll(result.document, 'paragraph');
+    //   expect(paragraphs).toHaveLength(2);
+    //   expect(find(paragraphs[0], 'span').value).toBe('override');
+    //   expect(find(paragraphs[1], 'span').value).toBe('regular paragraph');
+    // });
+  });
 
   describe('root', () => {
     it('generates valid children', async () => {
