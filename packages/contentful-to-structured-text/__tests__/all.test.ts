@@ -1090,20 +1090,29 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('thematicBreak', () => {
-  //     it('convert hr', async () => {
-  //       const richText = `
-  //         <div>
-  //           <hr>
-  //           <blockquote>1<hr></blockquote>
-  //         </div>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       const thematicBreaks = findAll(result.document, 'thematicBreak');
-  //       expect(thematicBreaks).toHaveLength(1);
-  //     });
-  //   });
+  describe('thematicBreak', () => {
+    it('convert hr', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'hr',
+            content: [],
+            data: {},
+          },
+        ],
+      };
+      const result = await richTextToStructuredText(richText);
+      console.log(inspect(result, { depth: Infinity }));
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0]).toMatchInlineSnapshot(`
+        Object {
+          "type": "thematicBreak",
+        }
+      `);
+    });
+  });
 
   //   describe('link', () => {
   //     // non credo che questo sia possibile con contentful
