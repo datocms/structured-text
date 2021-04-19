@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
-import { richTextToStructuredText } from '../src';
+import { richTextToStructuredText, datoToContentfulMarks } from '../src';
 import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
 import { inspect } from 'util';
 
@@ -156,50 +156,120 @@ describe('contentful-to-structured-text', () => {
   //   //     });
   // });
 
-  //   describe('root', () => {
-  //     it('generates valid children', async () => {
-  //       const richText = `
-  //         <h1>heading</h1>
-  //         <p>paragraph</p>
-  //         implicit paragraph
-  //         <blockquote>blockquote</blockquote>
-  //         <pre>code</pre>
-  //         <ul><li>list</li></ul>
-  //         <strong>inline wrapped</strong>
-  //         <section>
-  //           <div><div>inline nested</div></div>
-  //         </section>
-  //         <a href="#">hyperlink</a>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
+  describe('root', () => {
+    it('generates valid children', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'heading-1',
+            content: [
+              { nodeType: 'text', value: 'Heading', marks: [], data: {} },
+            ],
+            data: {},
+          },
+          {
+            nodeType: 'paragraph',
+            content: [
+              { nodeType: 'text', value: 'paragraph', marks: [], data: {} },
+            ],
+            data: {},
+          },
+          {
+            nodeType: 'blockquote',
+            content: [
+              {
+                nodeType: 'paragraph',
+                content: [
+                  { nodeType: 'text', value: 'quote', marks: [], data: {} },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'list',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+          {
+            nodeType: 'paragraph',
+            content: [
+              {
+                nodeType: 'text',
+                value: 'code',
+                marks: [{ type: 'code' }],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+          {
+            nodeType: 'paragraph',
+            content: [
+              {
+                nodeType: 'hyperlink',
+                content: [
+                  {
+                    nodeType: 'text',
+                    value: 'link',
+                    marks: [{ type: 'bold' }],
+                    data: {},
+                  },
+                ],
+                data: {
+                  url: 'https//:goo.joo',
+                },
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-  //       expect(
-  //         result.document.children.every((child) =>
-  //           allowedChildren['root'].includes(child.type),
-  //         ),
-  //       ).toBeTruthy();
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
 
-  //       // The following is grouped in a single paragraph. I think it is fine.
-  //       // <strong>inline wrapped</strong>
-  //       // <section>
-  //       //   <div><div>inline nested</div></div>
-  //       // </section>
-  //       // <a href="#">hyperlink</a>
-  //       expect(result.document.children.map((child) => child.type))
-  //         .toMatchInlineSnapshot(`
-  //         Array [
-  //           "heading",
-  //           "paragraph",
-  //           "paragraph",
-  //           "blockquote",
-  //           "code",
-  //           "list",
-  //           "paragraph",
-  //         ]
-  //       `);
-  //     });
-  //   });
+      expect(
+        result.document.children.every((child) =>
+          allowedChildren['root'].includes(child.type),
+        ),
+      ).toBeTruthy();
+
+      expect(result.document.children.map((child) => child.type))
+        .toMatchInlineSnapshot(`
+          Array [
+            "heading",
+            "paragraph",
+            "blockquote",
+            "list",
+            "paragraph",
+            "paragraph",
+          ]
+        `);
+    });
+  });
 
   describe('paragraph', () => {
     it('works', async () => {
@@ -525,10 +595,15 @@ describe('contentful-to-structured-text', () => {
       data: {},
       content: [
         {
-          nodeType: 'text',
-          value: '<import src="file.richText" />',
-          marks: [{ type: 'code' }],
-          data: {},
+          nodeType: 'paragraph',
+          content: [
+            {
+              nodeType: 'text',
+              value: '<import src="file.richText" />',
+              marks: [{ type: 'code' }],
+              data: {},
+            },
+          ],
         },
       ],
     };
@@ -545,19 +620,6 @@ describe('contentful-to-structured-text', () => {
     });
 
     it('when not allowed, produces paragraphs', async () => {
-      const richText = {
-        nodeType: 'document',
-        data: {},
-        content: [
-          {
-            nodeType: 'text',
-            value: '<import src="file.richText" />',
-            marks: [{ type: 'code' }],
-            data: {},
-          },
-        ],
-      };
-
       const result = await richTextToStructuredText(richText, {
         allowedBlocks: [],
       });
@@ -578,19 +640,6 @@ describe('contentful-to-structured-text', () => {
     });
 
     it('when code not allowed in blocks and marks, produces paragraphs', async () => {
-      const richText = {
-        nodeType: 'document',
-        data: {},
-        content: [
-          {
-            nodeType: 'text',
-            value: '<import src="file.richText" />',
-            marks: [{ type: 'code' }],
-            data: {},
-          },
-        ],
-      };
-
       const result = await richTextToStructuredText(richText, {
         allowedBlocks: [],
         allowedMarks: ['strong'],
@@ -1104,7 +1153,6 @@ describe('contentful-to-structured-text', () => {
         ],
       };
       const result = await richTextToStructuredText(richText);
-      console.log(inspect(result, { depth: Infinity }));
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children[0]).toMatchInlineSnapshot(`
         Object {
@@ -1224,89 +1272,113 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('with Marks', () => {
-  //     const marksTags = {
-  //       bold: 'strong',
-  //       italic: 'emphasis',
-  //       underline: 'underline',
-  //       code: 'code',
-  //     };
+  describe('with Marks', () => {
+    const marksTags = Object.keys(datoToContentfulMarks);
 
-  //     describe('converts tags to marks', () => {
-  //       it.each(Object.keys(marksTags))(`%p`, async (tagName) => {
-  //         const markName = marksTags[tagName];
-  //         const richText = `
-  //         <p><${tagName}>${markName}</${tagName}></p>
-  //       `;
-  //         const result = await richTextToStructuredText(richText);
-  //         expect(validate(result).valid).toBeTruthy();
-  //         const span = find(result.document, 'span');
-  //         expect(span.marks).toBeTruthy();
-  //         expect(span.marks).toContain(markName);
-  //       });
-  //     });
+    describe('converts tags to marks', () => {
+      it.each(marksTags)(`%p`, async (markName) => {
+        const richText = {
+          nodeType: 'document',
+          data: {},
+          content: [
+            {
+              nodeType: 'paragraph',
+              content: [
+                {
+                  nodeType: 'text',
+                  value: 'foo',
+                  marks: [{ type: markName }],
+                  data: {},
+                },
+              ],
+              data: {},
+            },
+          ],
+        };
 
-  //     describe('ignore mark tags when not in allowedMarks', () => {
-  //       it.each(Object.keys(marksTags))(`%p`, async (tagName) => {
-  //         const markName = marksTags[tagName];
-  //         const richText = `
-  //         <p><${tagName}>${markName}</${tagName}></p>
-  //       `;
-  //         const result = await richTextToStructuredText(richText, {
-  //           allowedMarks: [],
-  //         });
-  //         expect(validate(result).valid).toBeTruthy();
-  //         const span = find(result.document, 'span');
-  //         expect(span.marks).toBeFalsy();
-  //       });
-  //     });
+        const result = await richTextToStructuredText(richText);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].children[0].marks[0]).toBe(
+          datoToContentfulMarks[markName],
+        );
+      });
+    });
 
-  //     it('collects marks when nesting nodes', async () => {
-  //       const richText = `
-  //         <p><em>em<strong>strong-em<u>u-strong-em</u>strong-em</strong>em</em></p>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(
-  //         findAll(result.document, 'span')
-  //           .map(
-  //             (span) =>
-  //               `{ value: '${span.value}', marks: ['${span.marks.join(
-  //                 "', '",
-  //               )}'] }`,
-  //           )
-  //           .join('\n'),
-  //       ).toMatchInlineSnapshot(`
-  //         "{ value: 'em', marks: ['emphasis'] }
-  //         { value: 'strong-em', marks: ['emphasis', 'strong'] }
-  //         { value: 'u-strong-em', marks: ['emphasis', 'strong', 'underline'] }
-  //         { value: 'strong-em', marks: ['emphasis', 'strong'] }
-  //         { value: 'em', marks: ['emphasis'] }"
-  //       `);
-  //     });
+    describe('ignore mark tags when not in allowedMarks', () => {
+      it.each(marksTags)(`%p`, async (markName) => {
+        const richText = {
+          nodeType: 'document',
+          data: {},
+          content: [
+            {
+              nodeType: 'paragraph',
+              content: [
+                {
+                  nodeType: 'text',
+                  value: 'foo',
+                  marks: [{ type: markName }],
+                  data: {},
+                },
+              ],
+              data: {},
+            },
+          ],
+        };
 
-  //     describe('code', () => {
-  //       it('turns inline code tags to span with code mark', async () => {
-  //         const richText = `
-  //           <p>To make it even easier to offer responsive, progressive images on your projects, we released a package called
-  //           <a href="https://github.com/datocms/react-datocms">
-  //           <code>react-datocms</code></a> that exposes an <code>&lt;Image /&gt;</code>
-  //           component and pairs perfectly with the <code>responsiveImage</code> query.
-  //           </p>`;
-  //         const result = await richTextToStructuredText(richText);
-  //         expect(validate(result).valid).toBeTruthy();
-  //         expect(findAll(result.document, 'code')).toHaveLength(0);
-  //         const spans = findAll(result.document, 'span').filter(
-  //           (s) => Array.isArray(s.marks) && s.marks.includes('code'),
-  //         );
-  //         expect(spans).toHaveLength(3);
-  //         expect(spans.map((s) => s.value).join('\n')).toMatchInlineSnapshot(`
-  //           "react-datocms
-  //           <Image />
-  //           responsiveImage"
-  //         `);
-  //       });
-  //     });
-  //   });
-  // });
+        const result = await richTextToStructuredText(richText, {
+          allowedMarks: [],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].children[0].marks).toBeFalsy();
+      });
+    });
+
+    describe('code', () => {
+      it('turns inline code tags to span with code mark', async () => {
+        const richText = {
+          nodeType: 'document',
+          data: {},
+          content: [
+            {
+              nodeType: 'paragraph',
+              content: [
+                {
+                  nodeType: 'text',
+                  value: 'This is ',
+                  marks: [],
+                  data: {},
+                },
+                {
+                  nodeType: 'text',
+                  value: 'inline code',
+                  marks: [{ type: 'code' }],
+                  data: {},
+                },
+              ],
+              data: {},
+            },
+          ],
+        };
+
+        const result = await richTextToStructuredText(richText);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('paragraph');
+        expect(result.document.children[0].children).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "type": "span",
+              "value": "This is ",
+            },
+            Object {
+              "marks": Array [
+                "code",
+              ],
+              "type": "span",
+              "value": "inline code",
+            },
+          ]
+        `);
+      });
+    });
+  });
 });

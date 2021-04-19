@@ -15,6 +15,14 @@ import {
   LinkType,
   ListType,
 } from 'datocms-structured-text-utils';
+import { MARKS } from '@contentful/rich-text-types';
+
+export const datoToContentfulMarks = {
+  [MARKS.BOLD]: 'strong',
+  [MARKS.ITALIC]: 'emphasis',
+  [MARKS.UNDERLINE]: 'underline',
+  [MARKS.CODE]: 'code',
+};
 
 export type Options = Partial<{
   newlines: boolean;
@@ -38,13 +46,6 @@ export async function richTextToStructuredText(
     options.preprocess(tree);
   }
 
-  const contentfulAllowedMarks: Mark[] = [
-    'strong',
-    'emphasis',
-    'underline',
-    'code',
-  ];
-
   const rootNode = await visitNode(createNode, tree, {
     parentNodeType: 'root',
     parentNode: null,
@@ -55,7 +56,7 @@ export async function richTextToStructuredText(
       : ['blockquote', 'code', 'heading', 'link', 'list'],
     allowedMarks: Array.isArray(options.allowedMarks)
       ? options.allowedMarks
-      : contentfulAllowedMarks,
+      : Object.values(datoToContentfulMarks),
     global: {
       baseUrl: null,
       baseUrlFound: false,

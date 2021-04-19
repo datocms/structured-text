@@ -18,13 +18,7 @@ import { wrap } from './wrap';
 
 import visitChildren from './visit-children';
 import { MetaEntry } from '../../utils/dist/types';
-
-const datoToContentfulMarks = {
-  bold: 'strong',
-  italic: 'emphasis',
-  underline: 'underline',
-  code: 'code',
-};
+import { datoToContentfulMarks } from './index';
 
 export const root: Handler<ContentfulRootNode> = async function root(
   createNode,
