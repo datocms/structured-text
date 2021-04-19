@@ -609,52 +609,88 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('blockquote', () => {
-  //     it('creates valid blockquote node', async () => {
-  //       const richText = `
-  //         <blockquote>1</blockquote>
-  //         <blockquote><span>2</span></blockquote>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(result.document.children.map((child) => child.type))
-  //         .toMatchInlineSnapshot(`
-  //         Array [
-  //           "blockquote",
-  //           "blockquote",
-  //         ]
-  //       `);
-  //       expect(result.document.children[0]).toMatchInlineSnapshot(`
-  //         Object {
-  //           "children": Array [
-  //             Object {
-  //               "children": Array [
-  //                 Object {
-  //                   "type": "span",
-  //                   "value": "1",
-  //                 },
-  //               ],
-  //               "type": "paragraph",
-  //             },
-  //           ],
-  //           "type": "blockquote",
-  //         }
-  //       `);
-  //     });
+  describe('blockquote', () => {
+    const richText = {
+      nodeType: 'document',
+      data: {},
+      content: [
+        {
+          nodeType: 'blockquote',
+          content: [
+            {
+              nodeType: 'paragraph',
+              content: [
+                {
+                  nodeType: 'text',
+                  value: 'foo',
+                  marks: [{ type: 'code' }, { type: 'italic' }],
+                  data: {},
+                },
+                {
+                  nodeType: 'text',
+                  value: 'bar',
+                  marks: [{ type: 'code' }, { type: 'bold' }],
+                  data: {},
+                },
+              ],
+              data: {},
+            },
+          ],
+          data: {},
+        },
+      ],
+    };
 
-  //     it('when not allowed produces paragraphs', async () => {
-  //       const richText = `
-  //         <blockquote>dato</blockquote>
-  //       `;
-  //       const result = await richTextToStructuredText(richText, {
-  //         allowedBlocks: [],
-  //       });
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'blockquote')).toHaveLength(0);
-  //       expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-  //       expect(find(result.document, 'span').value).toBe('dato');
-  //     });
-  //   });
+    it('creates valid blockquote node', async () => {
+      const result = await richTextToStructuredText(richText);
+      console.log(inspect(result, { depth: Infinity }));
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children.map((child) => child.type))
+        .toMatchInlineSnapshot(`
+          Array [
+            "blockquote",
+          ]
+        `);
+      expect(result.document.children[0]).toMatchInlineSnapshot(`
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "marks": Array [
+                      "code",
+                      "emphasis",
+                    ],
+                    "type": "span",
+                    "value": "foo",
+                  },
+                  Object {
+                    "marks": Array [
+                      "code",
+                      "strong",
+                    ],
+                    "type": "span",
+                    "value": "bar",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "blockquote",
+          }
+        `);
+    });
+
+    it('when not allowed produces paragraphs', async () => {
+      const result = await richTextToStructuredText(richText, {
+        allowedBlocks: [],
+      });
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document.children[0].children[0].value).toBe('foo');
+    });
+  });
 
   //   describe('list', () => {
   //     it('creates valid list', async () => {
