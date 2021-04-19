@@ -1114,54 +1114,115 @@ describe('contentful-to-structured-text', () => {
     });
   });
 
-  //   describe('link', () => {
-  //     // non credo che questo sia possibile con contentful
-  //     it('is wrapped when top level', async () => {
-  //       const richText = `
-  //         <a href="#">1</a>
-  //       `;
-  //       const result = await richTextToStructuredText(richText);
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(result.document.children[0].type).toBe('paragraph');
-  //       expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
-  //     });
+  describe('link', () => {
+    describe('when wrapping a heading', () => {
+      it('lifts up heading to contain the link', async () => {
+        const richText = {
+          nodeType: 'document',
+          data: {},
+          content: [
+            {
+              nodeType: 'heading-1',
+              content: [
+                {
+                  nodeType: 'hyperlink',
+                  content: [
+                    {
+                      nodeType: 'text',
+                      value: 'link',
+                      marks: [],
+                      data: {},
+                    },
+                  ],
+                  data: { uri: 'https://foo.bar' },
+                },
+              ],
+              data: {},
+            },
+          ],
+        };
 
-  //     describe('when wrapping a heading', () => {
-  //       it('lifts up heading to contain the link', async () => {
-  //         const richText = `
-  //           <a href="#"><h1>1</h1>2</a>
-  //         `;
-  //         const result = await richTextToStructuredText(richText);
-  //         expect(validate(result).valid).toBeTruthy();
-  //         expect(result.document.children[0].type).toBe('heading');
-  //         expect(find(find(result.document, 'heading'), 'link')).toBeTruthy();
-  //         expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
-  //       });
+        const result = await richTextToStructuredText(richText);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].type).toBe('heading');
+        expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "link",
+                },
+              ],
+              "type": "link",
+              "url": "https://foo.bar",
+            }
+        `);
+      });
 
-  //       it('ignores heading when it is not allowed in the context (eg. list)', async () => {
-  //         const richText = `
-  //           <ul><a href="#"><h1>1</h1>2</a></ul>
-  //         `;
-  //         const result = await richTextToStructuredText(richText);
-  //         expect(validate(result).valid).toBeTruthy();
-  //         expect(findAll(result.document, 'heading')).toHaveLength(0);
-  //       });
-  //     });
-
-  //     it('when not allowed produces paragraphs', async () => {
-  //       const richText = `
-  //         <a href="#"><h1>dato</h1>2</a>
-  //       `;
-  //       const result = await richTextToStructuredText(richText, {
-  //         allowedBlocks: [],
-  //       });
-  //       expect(validate(result).valid).toBeTruthy();
-  //       expect(findAll(result.document, 'link')).toHaveLength(0);
-  //       expect(findAll(result.document, 'heading')).toHaveLength(0);
-  //       expect(findAll(result.document, 'paragraph')).toHaveLength(1);
-  //       expect(find(result.document, 'span').value).toBe('dato');
-  //     });
-  //   });
+      it('ignores heading when it is not allowed in the context (eg. list)', async () => {
+        const richText = {
+          nodeType: 'document',
+          data: {},
+          content: [
+            {
+              nodeType: 'unordered-list',
+              content: [
+                {
+                  nodeType: 'list-item',
+                  content: [
+                    {
+                      nodeType: 'heading-1',
+                      content: [
+                        {
+                          nodeType: 'hyperlink',
+                          content: [
+                            {
+                              nodeType: 'text',
+                              value: 'link',
+                              marks: [],
+                              data: {},
+                            },
+                          ],
+                          data: { uri: 'https://foo.bar' },
+                        },
+                      ],
+                      data: {},
+                    },
+                  ],
+                  data: {},
+                },
+              ],
+              data: {},
+            },
+          ],
+        };
+        const result = await richTextToStructuredText(richText);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "span",
+                          "value": "link",
+                        },
+                      ],
+                      "type": "link",
+                      "url": "https://foo.bar",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
+              ],
+              "type": "listItem",
+            }
+        `);
+      });
+    });
+  });
 
   //   describe('with Marks', () => {
   //     const marksTags = {
