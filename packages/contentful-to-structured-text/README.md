@@ -1,0 +1,161 @@
+# `datocms-contentful-to-structured-text`
+
+This package contains utilities to convert Contentful Rich Text to a DatoCMS Structured Text `dast` (DatoCMS Abstract Syntax Tree) document.
+
+Please refer to [the `dast` format docs](https://www.datocms.com/docs/structured-text/dast) to learn more about the syntax tree format and the available nodes.
+
+## Usage
+
+The main utility in this package is `richTextToStructuredText` which takes a Rich Text JSON and transforms it into a valid `dast` document.
+
+`richTextToStructuredText` returns a `Promise` that resolves with a Structured Text document.
+
+```js
+import { richTextToStructuredText } from 'datocms-contentful-to-structured-text';
+
+const richText = {
+  nodeType: 'document',
+  data: {},
+  content: [
+    {
+      nodeType: 'heading-1',
+      content: [
+        {
+          nodeType: 'text',
+          value: 'Lorem ipsum dolor sit amet',
+          marks: [],
+          data: {},
+        },
+      ],
+      data: {},
+    },
+};
+
+richTextToStructuredText(richText).then((structuredText) => {
+  console.log(structuredText);
+});
+```
+
+## Validate `dast` documents
+
+`dast` is a strict format for DatoCMS' Structured Text fields. As such the resulting document is generally a simplified, content-centric version of the input HTML.
+
+The `datocms-structured-text-utils` package provides a `validate` utility to validate a value to make sure that the resulting tree is compatible with DatoCMS' Structured Text field.
+
+```js
+import { validate } from 'datocms-structured-text-utils';
+
+// ...
+
+richTextToStructuredText(html).then((structuredText) => {
+  const { valid, message } = validate(structuredText);
+
+  if (!valid) {
+    throw new Error(message);
+  }
+});
+```
+
+We recommend to validate every `dast` to avoid errors later when creating records.
+
+## Advanced Usage
+
+### Options
+
+All the `*ToStructuredText` utils accept an optional `options` object as second argument:
+
+```js
+type Options = Partial<{
+  newlines: boolean,
+  // Override existing Contentful node handlers or add new ones.
+  handlers: Record<string, CreateNodeFunction>,
+  // Array of allowed Block nodes.
+  allowedBlocks: Array<
+    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
+  >,
+  // Array of allowed marks.
+  allowedMarks: Mark[],
+}>;
+```
+
+### Transforming Nodes
+
+The utils in this library traverse a `Contentful Rich Text` tree and transform supported nodes to `dast` nodes. The transformation is done by working on a `Contentful Rich Text` node with a handler (async) function.
+
+Handlers are associated to `Contentful Rich Text` nodes by `nodeType` and look as follow:
+
+```js
+import { visitChildren } from 'datocms-contentful-to-structured-text';
+
+// Handler for the paragraph node type.
+async function p(createDastNode, contentfulNode, context) {
+  return createDastNode('paragraph', {
+    children: await visitChildren(createDastNode, contentfulNode, context),
+  });
+}
+```
+
+Handlers can return either a promise that resolves to a `dast` node, an array of `dast` Nodes or `undefined` to skip the current node.
+
+To ensure that a valid `dast` is generated the default handlers also check that the current `contentfulNode` is a valid `dast` node for its parent and, if not, they ignore the current node and continue visiting its children.
+
+Information about the parent `dast` node name is available in `context.parentNodeType`.
+
+Please take a look at the [default handlers implementation](./handlers.ts) for examples.
+
+The default handlers are available on `context.defaultHandlers`.
+
+### Context
+
+Every handler receives a `context` object that includes the following information:
+
+```js
+export interface GlobalContext {
+  // <base> tag url. This is used for resolving relative URLs.
+  baseUrl?: string;
+}
+
+export interface Context {
+  // The current parent `dast` node type.
+  parentNodeType: NodeType;
+  // The parent `Contentful Rich Text` node.
+  parentNode: ContentfulNode;
+  // A reference to the current handlers - merged default + user handlers.
+  handlers: Record<string, Handler<unknown>>;
+  // A reference to the default handlers record (map).
+  defaultHandlers: Record<string, Handler<unknown>>;
+  // Marks for span nodes.
+  marks?: Mark[];
+  // Array of allowed Block types.
+  allowedBlocks: Array<
+    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
+  >;
+  // Array of allowed marks.
+  allowedMarks: Mark[];
+  // Properties in this object are avaliable to every handler as Context
+  // is not deeply cloned.
+  global: GlobalContext;
+}
+```
+
+### Custom Handlers
+
+It is possible to register custom handlers and override the default behavior via options:
+
+```js
+import { paragraphHandler } from './customHandlers';
+
+richTextToStructuredText(html, {
+  handlers: {
+    paragraph: paragraphHandler,
+  },
+}).then((structuredText) => {
+  console.log(structuredText);
+});
+```
+
+It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS Structured Text.
+
+## License
+
+MIT
