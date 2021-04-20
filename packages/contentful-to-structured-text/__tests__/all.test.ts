@@ -2,8 +2,7 @@
 // @ts-nocheck
 
 import { richTextToStructuredText, datoToContentfulMarks } from '../src';
-import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
-import { inspect } from 'util';
+import { allowedChildren, validate } from 'datocms-structured-text-utils';
 
 describe('contentful-to-structured-text', () => {
   it('works with empty document', async () => {
@@ -84,85 +83,90 @@ describe('contentful-to-structured-text', () => {
       });
 
       expect(validate(result).valid).toBeTruthy();
-      console.log(inspect(result, { depth: Infinity }));
       expect(result.document.children[0].type).toBe('paragraph');
       expect(result.document.children.length).toBe(2);
     });
 
-    // Not sure about this..
+    describe('custom handlers (user provided)', () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'paragraph',
+            content: [
+              {
+                nodeType: 'embedded-entry-inline',
+                content: [],
+                data: {
+                  target: {
+                    sys: {
+                      id: 'xxx',
+                      type: 'Link',
+                      linkType: 'Entry',
+                    },
+                  },
+                },
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-    // describe('custom (user provided)', () => {
-    //   it('can register custom handlers', async () => {
-    //     const richText = `
-    //           <unknown>span</unknown>
-    //         <p>already wrapped</p>
-    //         needs wrapping
-    //       `;
-    //     const result = await richTextToStructuredText(richText, {
-    //       handlers: {
-    //         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //         unknown: (createNode, node, context) => {
-    //           return createNode('span', {
-    //             value: 'custom',
-    //           });
-    //         },
-    //       },
-    //     });
-    //     expect(validate(result).valid).toBeTruthy();
-    //     const spans = findAll(result.document, 'span');
-    //     expect(spans).toHaveLength(3);
-    //     expect(spans[0].value).toBe('custom');
-    //     const paragraphs = findAll(result.document, 'paragraph');
-    //     expect(paragraphs.map((p) => p.children[0].value))
-    //       .toMatchInlineSnapshot(`
-    //           Array [
-    //             "custom",
-    //             "already wrapped",
-    //             "needs wrapping",
-    //           ]
-    //         `);
-    //   });
-    // });
+      it('can register custom handlers', async () => {
+        const result = await richTextToStructuredText(richText, {
+          handlers: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ['embedded-entry-inline']: (createNode, node, context) => {
+              return createNode('span', {
+                value: node.data.target.sys.id,
+              });
+            },
+          },
+        });
 
-    // it('waits for async handlers to resolve', async () => {
-    //   const richText = `
-    //     <custom>span</custom>
-    // `;
-    //   const result = await richTextToStructuredText(richText, {
-    //     handlers: {
-    //       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    //       custom: async (createNode, node, context) => {
-    //         await new Promise((resolve) => setTimeout(resolve, 200));
-    //         return createNode('span', {
-    //           value: 'custom',
-    //         });
-    //       },
-    //     },
-    //   });
-    //   expect(validate(result).valid).toBeTruthy();
-    //   expect(find(result.document, 'span').value).toBe('custom');
-    // });
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "xxx",
+                },
+              ],
+              "type": "paragraph",
+            }
+          `);
+      });
 
-    // it('can override default handlers', async () => {
-    //   const richText = `
-    //     <blockquote>override</blockquote>
-    //     <p>regular paragraph</p>
-    // `;
-    //   const result = await richTextToStructuredText(richText, {
-    //     handlers: {
-    //       blockquote: async (createNode, node, context) => {
-    //         // turn a blockquote into a paragraph
-    //         return context.handlers.p(createNode, node, context);
-    //       },
-    //     },
-    //   });
-    //   expect(validate(result).valid).toBeTruthy();
-    //   expect(find(result.document, 'blockquote')).toBeFalsy();
-    //   const paragraphs = findAll(result.document, 'paragraph');
-    //   expect(paragraphs).toHaveLength(2);
-    //   expect(find(paragraphs[0], 'span').value).toBe('override');
-    //   expect(find(paragraphs[1], 'span').value).toBe('regular paragraph');
-    // });
+      it('waits for async handlers to resolve', async () => {
+        const result = await richTextToStructuredText(richText, {
+          handlers: {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ['embedded-entry-inline']: async (createNode, node, context) => {
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              return createNode('span', {
+                value: node.data.target.sys.id,
+              });
+            },
+          },
+        });
+
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
+            Object {
+              "children": Array [
+                Object {
+                  "type": "span",
+                  "value": "xxx",
+                },
+              ],
+              "type": "paragraph",
+            }
+          `);
+      });
+    });
   });
 
   describe('root', () => {
@@ -1375,6 +1379,7 @@ describe('contentful-to-structured-text', () => {
         };
 
         const result = await richTextToStructuredText(richText);
+
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children[0].children).toMatchInlineSnapshot(`

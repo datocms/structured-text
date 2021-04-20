@@ -326,14 +326,6 @@ export const link: Handler<ContentfulElementNode> = async function link(
   return undefined;
 };
 
-export const newLine: Handler<ContentfulTextNode> = async function newLine(
-  createNode,
-) {
-  return createNode('span', {
-    value: '\n',
-  });
-};
-
 export const inlineCode = withMark('code');
 export const strong = withMark('strong');
 export const italic = withMark('emphasis');
@@ -417,6 +409,60 @@ export function withMark(type: Mark): Handler<ContentfulElementNode> {
   };
 }
 
+export const wrapListItems: Handler<ContentfulElementNode> = async function wrapListItems(
+  createNode,
+  node,
+  context,
+) {
+  const children = await visitChildren(createNode, node, context);
+
+  if (!Array.isArray(children)) {
+    return [];
+  }
+
+  let index = -1;
+  while (++index < children.length) {
+    if (
+      typeof children[index] !== 'undefined' &&
+      children[index].type !== 'listItem'
+    ) {
+      children[index] = {
+        type: 'listItem',
+        children: [
+          allowedChildren.listItem.includes(children[index].type)
+            ? children[index]
+            : createNode('paragraph', { children: [children[index]] }),
+        ],
+      };
+    }
+  }
+
+  return children;
+};
+
+export function resolveUrl(
+  context: Context,
+  url: string | null | undefined,
+): string {
+  if (url === null || url === undefined) {
+    return '';
+  }
+
+  if (context.global.baseUrl && typeof URL !== 'undefined') {
+    const isRelative = /^\.?\//.test(url);
+    const parsed = new URL(url, context.global.baseUrl);
+    if (isRelative) {
+      const parsedBase = new URL(context.global.baseUrl);
+      if (!parsed.pathname.startsWith(parsedBase.pathname)) {
+        parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
+      }
+    }
+    return parsed.toString();
+  }
+
+  return url;
+}
+
 export const handlers = {
   text: span,
   [BLOCKS.DOCUMENT]: root,
@@ -433,11 +479,11 @@ export const handlers = {
   [BLOCKS.QUOTE]: blockquote,
   [BLOCKS.HR]: thematicBreak,
   [INLINES.HYPERLINK]: link,
-  // [BLOCKS.EMBEDDED_ASSET]: EMBEDDED_ASSET,
+  // [INLINES.EMBEDDED_ENTRY]: embeddedEntryInline,
+  // [BLOCKS.EMBEDDED_ASSET]: embeddedAsset,
   // [BLOCKS.EMBEDDED_ENTRY]: EMBEDDED_ENTRY,
   // [INLINES.ASSET_HYPERLINK]: ASSET_HYPERLINK,
   // [INLINES.ENTRY_HYPERLINK]: ENTRY_HYPERLINK,
-  // [INLINES.EMBEDDED_ENTRY]: EMBEDDED_ENTRY,
 };
 
 // export const handlers = {
@@ -507,57 +553,3 @@ export const handlers = {
 //   embed: noop,
 //   iframe: noop,
 // };
-
-export const wrapListItems: Handler<ContentfulElementNode> = async function wrapListItems(
-  createNode,
-  node,
-  context,
-) {
-  const children = await visitChildren(createNode, node, context);
-
-  if (!Array.isArray(children)) {
-    return [];
-  }
-
-  let index = -1;
-  while (++index < children.length) {
-    if (
-      typeof children[index] !== 'undefined' &&
-      children[index].type !== 'listItem'
-    ) {
-      children[index] = {
-        type: 'listItem',
-        children: [
-          allowedChildren.listItem.includes(children[index].type)
-            ? children[index]
-            : createNode('paragraph', { children: [children[index]] }),
-        ],
-      };
-    }
-  }
-
-  return children;
-};
-
-export function resolveUrl(
-  context: Context,
-  url: string | null | undefined,
-): string {
-  if (url === null || url === undefined) {
-    return '';
-  }
-
-  if (context.global.baseUrl && typeof URL !== 'undefined') {
-    const isRelative = /^\.?\//.test(url);
-    const parsed = new URL(url, context.global.baseUrl);
-    if (isRelative) {
-      const parsedBase = new URL(context.global.baseUrl);
-      if (!parsed.pathname.startsWith(parsedBase.pathname)) {
-        parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
-      }
-    }
-    return parsed.toString();
-  }
-
-  return url;
-}
