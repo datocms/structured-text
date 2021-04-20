@@ -91,7 +91,7 @@ export const paragraph: Handler<ContentfulParagraph> = async function paragraph(
   });
 
   if (Array.isArray(children) && children.length) {
-    // TODO: Code block gets created only if it's in root and is not inline
+    // Code block gets created only if in root and not inline
     if (
       children.length === 1 &&
       children[0].marks &&
@@ -191,6 +191,7 @@ export const list: Handler<ContentfulList> = async function list(
       style: node.nodeType === 'ordered-list' ? 'numbered' : 'bulleted',
     });
   }
+
   return undefined;
 };
 
@@ -213,6 +214,7 @@ export const listItem: Handler<ContentfulListItem> = async function listItem(
       ? createNode('listItem', { children: wrap(children) })
       : children;
   }
+
   return undefined;
 };
 
@@ -331,12 +333,14 @@ export function resolveUrl(
   if (context.global.baseUrl && typeof URL !== 'undefined') {
     const isRelative = /^\.?\//.test(url);
     const parsed = new URL(url, context.global.baseUrl);
+
     if (isRelative) {
       const parsedBase = new URL(context.global.baseUrl);
       if (!parsed.pathname.startsWith(parsedBase.pathname)) {
         parsed.pathname = `${parsedBase.pathname}${parsed.pathname}`;
       }
     }
+
     return parsed.toString();
   }
 

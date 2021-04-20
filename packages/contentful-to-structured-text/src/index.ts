@@ -55,7 +55,6 @@ export async function richTextToStructuredText(
       : Object.values(datoToContentfulMarks),
     global: {
       baseUrl: null,
-      baseUrlFound: false,
       ...(options.shared || {}),
     },
   });

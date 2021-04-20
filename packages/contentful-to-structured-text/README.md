@@ -111,9 +111,6 @@ Every handler receives a `context` object that includes the following informatio
 
 ```js
 export interface GlobalContext {
-  // Whether the library has found a <base> tag or should not look further.
-  // See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-  baseUrlFound?: boolean;
   // <base> tag url. This is used for resolving relative URLs.
   baseUrl?: string;
 }
@@ -157,7 +154,7 @@ richTextToStructuredText(html, {
 });
 ```
 
-It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS' Structured Text.
+It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS Structured Text.
 
 ## License
 
