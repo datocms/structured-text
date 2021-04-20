@@ -5,13 +5,20 @@ import { richTextToStructuredText, datoToContentfulMarks } from '../src';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
 
 describe('contentful-to-structured-text', () => {
-  it('works with empty document', async () => {
+  it('works with empty rich text', async () => {
     const richText = {
       nodeType: 'document',
       data: {},
       content: [],
     };
 
+    const result = await richTextToStructuredText(richText);
+    expect(validate(result).valid).toBeTruthy();
+    expect(result).toMatchInlineSnapshot(`null`);
+  });
+
+  it('works when null value is passed', async () => {
+    const richText = null;
     const result = await richTextToStructuredText(richText);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);

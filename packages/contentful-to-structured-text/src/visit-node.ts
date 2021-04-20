@@ -1,11 +1,16 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
+
 import { Handler, ContentfulNodeWithContent, ContentfulNode } from './types';
 import visitChildren from './visit-children';
 import { helpers } from '@contentful/rich-text-types';
 
 // visitNode() is for visiting a single node
 export default (async function visitNode(createNode, node, context) {
+  if (!node) {
+    return null;
+  }
+
   const handlers = context.handlers;
   let handler;
 

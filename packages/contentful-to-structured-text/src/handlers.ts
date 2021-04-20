@@ -35,8 +35,11 @@ export const root: Handler<ContentfulRootNode> = async function root(
     parentNodeType: 'root',
   });
 
+  if (!Array.isArray(children) || children.length === 0) {
+    return null;
+  }
+
   if (
-    Array.isArray(children) &&
     children.some(
       (child: ContentfulNode) =>
         child && !allowedChildren.root.includes(child.type),
@@ -45,13 +48,7 @@ export const root: Handler<ContentfulRootNode> = async function root(
     children = wrap(children);
   }
 
-  if (!Array.isArray(children) || children.length === 0) {
-    return null;
-  }
-
-  return createNode('root', {
-    children: Array.isArray(children) ? children : [],
-  });
+  return createNode('root', { children });
 };
 
 export const span: Handler<ContentfulTextNode> = async function span(
