@@ -44,5 +44,6 @@
   },
   "devDependencies": {
     "parse5": "^6.0.1"
-  }
+  },
+  "gitHead": "1ab4dcda7379c517169ba74866aec5c1572898b9"
 }
