@@ -383,7 +383,7 @@ describe('contentful-to-structured-text', () => {
   });
 
   describe('heading', () => {
-    it('wraps children when necessary', async () => {
+    it('works', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -411,7 +411,7 @@ describe('contentful-to-structured-text', () => {
       expect(result.document.children[0].children[0].type).toBe('span');
     });
 
-    it('allows link as children', async () => {
+    it('allows links as children', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -475,7 +475,7 @@ describe('contentful-to-structured-text', () => {
       `);
     });
 
-    it('is converted to text when inside of another node (except root)', async () => {
+    it('is converted to paragraph when inside of another node (except root)', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -562,7 +562,7 @@ describe('contentful-to-structured-text', () => {
       `);
     });
 
-    it('when not allowed produces paragraphs', async () => {
+    it('when not allowed, turns into paragraphs', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -587,87 +587,133 @@ describe('contentful-to-structured-text', () => {
       });
 
       expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0].children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "marks": Array [
-                "emphasis",
-              ],
-              "type": "span",
-              "value": "This is heading",
-            },
-          ]
-        `);
       expect(result.document.children[0].type).toBe('paragraph');
     });
   });
 
   describe('code', () => {
-    const richText = {
-      nodeType: 'document',
-      data: {},
-      content: [
-        {
-          nodeType: 'paragraph',
-          content: [
-            {
-              nodeType: 'text',
-              value: '<import src="file.richText" />',
-              marks: [{ type: 'code' }],
-              data: {},
-            },
-          ],
-        },
-      ],
-    };
+    describe('when parent node is root', () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'paragraph',
+            content: [
+              {
+                nodeType: 'text',
+                value: '<import src="file.richText" />',
+                marks: [{ type: 'code' }],
+                data: {},
+              },
+            ],
+          },
+        ],
+      };
 
-    it('creates valid code node', async () => {
-      const result = await richTextToStructuredText(richText);
-      expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0]).toMatchInlineSnapshot(`
+      it('when parent node is root, creates code block', async () => {
+        const result = await richTextToStructuredText(richText);
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
           Object {
             "code": "<import src=\\"file.richText\\" />",
             "type": "code",
           }
         `);
+      });
     });
 
-    it('when not allowed, produces paragraphs', async () => {
-      const result = await richTextToStructuredText(richText, {
-        allowedBlocks: [],
-      });
+    describe('when inside of another node (except root)', () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: '<import src="file.richText" />',
+                        marks: [{ type: 'code' }],
+                        data: {},
+                      },
+                    ],
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-      expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0].type).toBe('paragraph');
-      expect(result.document.children[0].children).toMatchInlineSnapshot(`
-          Array [
+      it('is converted to paragraph', async () => {
+        const result = await richTextToStructuredText(richText);
+
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
+        Object {
+          "children": Array [
             Object {
-              "marks": Array [
-                "code",
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "marks": Array [
+                        "code",
+                      ],
+                      "type": "span",
+                      "value": "<import src=\\"file.richText\\" />",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
               ],
-              "type": "span",
-              "value": "<import src=\\"file.richText\\" />",
+              "type": "listItem",
             },
-          ]
-        `);
-    });
-
-    it('when code not allowed in blocks and marks, produces paragraphs', async () => {
-      const result = await richTextToStructuredText(richText, {
-        allowedBlocks: [],
-        allowedMarks: ['strong'],
+          ],
+          "style": "bulleted",
+          "type": "list",
+        }
+      `);
       });
 
-      expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0].type).toBe('paragraph');
-      expect(result.document.children[0].children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "type": "span",
-              "value": "<import src=\\"file.richText\\" />",
-            },
-          ]
+      it('when code mark is not allowed it generates simple paragraphs', async () => {
+        const result = await richTextToStructuredText(richText, {
+          allowedMarks: [],
+        });
+
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children[0]).toMatchInlineSnapshot(`
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "children": Array [
+                      Object {
+                        "type": "span",
+                        "value": "<import src=\\"file.richText\\" />",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "listItem",
+              },
+            ],
+            "style": "bulleted",
+            "type": "list",
+          }
         `);
+      });
     });
   });
 
@@ -754,7 +800,7 @@ describe('contentful-to-structured-text', () => {
   });
 
   describe('list', () => {
-    it('creates valid list', async () => {
+    it('creates valid unordered list', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -853,7 +899,7 @@ describe('contentful-to-structured-text', () => {
           `);
     });
 
-    it('creates a numbered list from OL elements', async () => {
+    it('creates a numbered list from ordered-list', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -888,6 +934,7 @@ describe('contentful-to-structured-text', () => {
       const result = await richTextToStructuredText(richText);
 
       expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('list');
       expect(result.document.children[0].style).toBe('numbered');
     });
 
@@ -1083,12 +1130,7 @@ describe('contentful-to-structured-text', () => {
       };
       const result = await richTextToStructuredText(richText);
       expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0].children[0].children[0].type).toBe(
-        'paragraph',
-      );
-      expect(
-        result.document.children[0].children[0].children[0].children[0].type,
-      ).toBe('link');
+      expect(result.document.children[0].type).toBe('list');
       expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
           Object {
             "children": Array [
@@ -1113,7 +1155,7 @@ describe('contentful-to-structured-text', () => {
         `);
     });
 
-    it('when not allowed produces paragraphs', async () => {
+    it('when not allowed, turns list items into paragraphs', async () => {
       const richText = {
         nodeType: 'document',
         data: {},
@@ -1139,6 +1181,24 @@ describe('contentful-to-structured-text', () => {
                 ],
                 data: {},
               },
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'Bar',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
             ],
             data: {},
           },
@@ -1148,7 +1208,31 @@ describe('contentful-to-structured-text', () => {
         allowedBlocks: [],
       });
       expect(validate(result).valid).toBeTruthy();
-      expect(result.document.children[0].type).toBe('paragraph');
+      expect(result.document).toMatchInlineSnapshot(`
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "type": "span",
+                    "value": "Foo",
+                  },
+                ],
+                "type": "paragraph",
+              },
+              Object {
+                "children": Array [
+                  Object {
+                    "type": "span",
+                    "value": "Bar",
+                  },
+                ],
+                "type": "paragraph",
+              },
+            ],
+            "type": "root",
+          }
+        `);
     });
   });
 
@@ -1165,6 +1249,7 @@ describe('contentful-to-structured-text', () => {
           },
         ],
       };
+
       const result = await richTextToStructuredText(richText);
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children[0]).toMatchInlineSnapshot(`
@@ -1176,37 +1261,36 @@ describe('contentful-to-structured-text', () => {
   });
 
   describe('link', () => {
-    describe('when wrapping a heading', () => {
-      it('lifts up heading to contain the link', async () => {
-        const richText = {
-          nodeType: 'document',
-          data: {},
-          content: [
-            {
-              nodeType: 'heading-1',
-              content: [
-                {
-                  nodeType: 'hyperlink',
-                  content: [
-                    {
-                      nodeType: 'text',
-                      value: 'link',
-                      marks: [],
-                      data: {},
-                    },
-                  ],
-                  data: { uri: 'https://foo.bar' },
-                },
-              ],
-              data: {},
-            },
-          ],
-        };
+    it('works in heading', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'heading-1',
+            content: [
+              {
+                nodeType: 'hyperlink',
+                content: [
+                  {
+                    nodeType: 'text',
+                    value: 'link',
+                    marks: [],
+                    data: {},
+                  },
+                ],
+                data: { uri: 'https://foo.bar' },
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
 
-        const result = await richTextToStructuredText(richText);
-        expect(validate(result).valid).toBeTruthy();
-        expect(result.document.children[0].type).toBe('heading');
-        expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children[0].type).toBe('heading');
+      expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
             Object {
               "children": Array [
                 Object {
@@ -1218,78 +1302,14 @@ describe('contentful-to-structured-text', () => {
               "url": "https://foo.bar",
             }
         `);
-      });
-
-      it('ignores heading when it is not allowed in the context (eg. list)', async () => {
-        const richText = {
-          nodeType: 'document',
-          data: {},
-          content: [
-            {
-              nodeType: 'unordered-list',
-              content: [
-                {
-                  nodeType: 'list-item',
-                  content: [
-                    {
-                      nodeType: 'heading-1',
-                      content: [
-                        {
-                          nodeType: 'hyperlink',
-                          content: [
-                            {
-                              nodeType: 'text',
-                              value: 'link',
-                              marks: [],
-                              data: {},
-                            },
-                          ],
-                          data: { uri: 'https://foo.bar' },
-                        },
-                      ],
-                      data: {},
-                    },
-                  ],
-                  data: {},
-                },
-              ],
-              data: {},
-            },
-          ],
-        };
-        const result = await richTextToStructuredText(richText);
-        expect(validate(result).valid).toBeTruthy();
-        expect(result.document.children[0].children[0]).toMatchInlineSnapshot(`
-            Object {
-              "children": Array [
-                Object {
-                  "children": Array [
-                    Object {
-                      "children": Array [
-                        Object {
-                          "type": "span",
-                          "value": "link",
-                        },
-                      ],
-                      "type": "link",
-                      "url": "https://foo.bar",
-                    },
-                  ],
-                  "type": "paragraph",
-                },
-              ],
-              "type": "listItem",
-            }
-        `);
-      });
     });
   });
 
   describe('with Marks', () => {
-    const marksTags = Object.keys(datoToContentfulMarks);
+    const contentfulMarks = Object.keys(datoToContentfulMarks);
 
     describe('converts tags to marks', () => {
-      it.each(marksTags)(`%p`, async (markName) => {
+      it.each(contentfulMarks)(`%p`, async (markName) => {
         const richText = {
           nodeType: 'document',
           data: {},
@@ -1323,7 +1343,7 @@ describe('contentful-to-structured-text', () => {
     });
 
     describe('ignore mark tags when not in allowedMarks', () => {
-      it.each(marksTags)(`%p`, async (markName) => {
+      it.each(contentfulMarks)(`%p`, async (markName) => {
         const richText = {
           nodeType: 'document',
           data: {},
