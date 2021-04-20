@@ -15,9 +15,9 @@ import {
   LinkType,
   ListType,
 } from 'datocms-structured-text-utils';
-import { MARKS } from '@contentful/rich-text-types';
+import { MARKS, Mark as ContentfulMark } from '@contentful/rich-text-types';
 
-export const datoToContentfulMarks = {
+export const datoToContentfulMarks: Record<ContentfulMark, Mark> = {
   [MARKS.BOLD]: 'strong',
   [MARKS.ITALIC]: 'emphasis',
   [MARKS.UNDERLINE]: 'underline',
@@ -41,10 +41,6 @@ export async function richTextToStructuredText(
     props.type = type;
     return props;
   };
-
-  if (typeof options.preprocess === 'function') {
-    options.preprocess(tree);
-  }
 
   const rootNode = await visitNode(createNode, tree, {
     parentNodeType: 'root',

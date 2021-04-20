@@ -7,12 +7,17 @@ import {
 import { BLOCKS, INLINES } from '@contentful/rich-text-types';
 import {
   Handler,
-  Mark,
   Context,
   ContentfulNode,
   ContentfulTextNode,
-  ContentfulElementNode,
   ContentfulRootNode,
+  ContentfulParagraph,
+  ContentfulHeading,
+  ContentfulQuote,
+  ContentfulHr,
+  ContentfulList,
+  ContentfulListItem,
+  ContentfulHyperLink,
 } from './types';
 import { wrap } from './wrap';
 
@@ -74,7 +79,7 @@ export const span: Handler<ContentfulTextNode> = async function span(
   });
 };
 
-export const paragraph: Handler<ContentfulElementNode> = async function paragraph(
+export const paragraph: Handler<ContentfulParagraph> = async function paragraph(
   createNode,
   node,
   context,
@@ -107,7 +112,7 @@ export const paragraph: Handler<ContentfulElementNode> = async function paragrap
   return undefined;
 };
 
-export const thematicBreak: Handler<ContentfulElementNode> = async function thematicBreak(
+export const thematicBreak: Handler<ContentfulHr> = async function thematicBreak(
   createNode,
   node,
   context,
@@ -119,7 +124,7 @@ export const thematicBreak: Handler<ContentfulElementNode> = async function them
   return isAllowedChild ? createNode('thematicBreak', {}) : undefined;
 };
 
-export const heading: Handler<ContentfulElementNode> = async function heading(
+export const heading: Handler<ContentfulHeading> = async function heading(
   createNode,
   node,
   context,
@@ -131,7 +136,6 @@ export const heading: Handler<ContentfulElementNode> = async function heading(
   const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: isAllowedChild ? 'heading' : context.parentNodeType,
-    wrapText: isAllowedChild ? false : context.wrapText,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -145,7 +149,7 @@ export const heading: Handler<ContentfulElementNode> = async function heading(
   return undefined;
 };
 
-export const blockquote: Handler<ContentfulElementNode> = async function blockquote(
+export const blockquote: Handler<ContentfulQuote> = async function blockquote(
   createNode,
   node,
   context,
@@ -167,7 +171,7 @@ export const blockquote: Handler<ContentfulElementNode> = async function blockqu
   return undefined;
 };
 
-export const list: Handler<ContentfulElementNode> = async function list(
+export const list: Handler<ContentfulList> = async function list(
   createNode,
   node,
   context,
@@ -194,16 +198,7 @@ export const list: Handler<ContentfulElementNode> = async function list(
   return undefined;
 };
 
-export const codeBlock: Handler<ContentfulElementNode> = async function codeBlock(
-  createNode,
-  node,
-) {
-  return createNode('code', {
-    code: node.value,
-  });
-};
-
-export const listItem: Handler<ContentfulElementNode> = async function listItem(
+export const listItem: Handler<ContentfulListItem> = async function listItem(
   createNode,
   node,
   context,
@@ -225,7 +220,16 @@ export const listItem: Handler<ContentfulElementNode> = async function listItem(
   return undefined;
 };
 
-export const link: Handler<ContentfulElementNode> = async function link(
+export const codeBlock: Handler<ContentfulParagraph> = async function codeBlock(
+  createNode,
+  node,
+) {
+  return createNode('code', {
+    code: node.value,
+  });
+};
+
+export const link: Handler<ContentfulHyperLink> = async function link(
   createNode,
   node,
   context,
@@ -247,46 +251,6 @@ export const link: Handler<ContentfulElementNode> = async function link(
     // can still be valid `dast` nodes in the following contexts if wrapped.
     const allowedChildrenWrapped = ['root', 'list', 'listItem'];
     isAllowedChild = allowedChildrenWrapped.includes(context.parentNodeType);
-  }
-
-  // When a link wraps headings we try to preserve the heading by inverting the parent-child relationship.
-  // Essentially we tweak the nodes so that the heading wraps the link.
-  //
-  // @TODO this is only checking for headings that are direct descendants of links.
-  // Decide if it is worth looking deeper.
-  const wrapsHeadings = node.content.some(
-    (child) => child.type === 'element' && child.nodeType.startsWith('h'),
-  );
-  if (wrapsHeadings) {
-    let i = 0;
-    const splitChildren: ContentfulElementNode[] = [];
-    node.content.forEach((child) => {
-      if (child.type === 'element' && child.nodeType.startsWith('h')) {
-        if (splitChildren.length > 0) {
-          i++;
-        }
-        splitChildren.push({
-          ...child,
-          children: [
-            {
-              ...node,
-              children: child.content,
-            },
-          ],
-        });
-        i++;
-      } else if (splitChildren[i]) {
-        splitChildren[i].content.push(child);
-      } else {
-        splitChildren[i] = {
-          ...node,
-          children: [child],
-        };
-      }
-    });
-
-    node.content = splitChildren;
-    isAllowedChild = false;
   }
 
   const children = await visitChildren(createNode, node, {
@@ -326,90 +290,10 @@ export const link: Handler<ContentfulElementNode> = async function link(
   return undefined;
 };
 
-export const inlineCode = withMark('code');
-export const strong = withMark('strong');
-export const italic = withMark('emphasis');
-export const underline = withMark('underline');
-export const strikethrough = withMark('strikethrough');
-export const highlight = withMark('highlight');
-
-export const extractInlineStyles: Handler<ContentfulElementNode> = async function extractInlineStyles(
-  createNode,
-  node,
-  context,
-) {
-  let marks = { marks: Array.isArray(context.marks) ? context.marks : [] };
-  if (node.properties && typeof node.properties.style === 'string') {
-    const newMarks = [];
-    node.properties.style.split(';').forEach((declaration) => {
-      const [firstChunk, ...otherChunks] = declaration.split(':');
-      const prop = firstChunk.trim();
-      const value = otherChunks.join(':').trim();
-      switch (prop) {
-        case 'font-weight':
-          if (value === 'bold' || Number(value) > 400) {
-            newMarks.push('strong');
-          }
-          break;
-        case 'font-style':
-          if (value === 'italic') {
-            newMarks.push('emphasis');
-          }
-          break;
-        case 'text-decoration':
-          if (value === 'underline') {
-            newMarks.push('underline');
-          }
-          break;
-        default:
-          break;
-      }
-    });
-    if (newMarks.length > 0) {
-      marks.marks = marks.marks.concat(
-        newMarks.filter(
-          (mark) =>
-            !marks.marks.includes(mark) && context.allowedMarks.includes(mark),
-        ),
-      );
-    }
-  }
-  if (marks.marks.length === 0) {
-    marks = {};
-  }
-  return visitChildren(createNode, node, {
-    ...context,
-    ...marks,
-  });
-};
-
 // eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
 export async function noop() {}
 
-export function withMark(type: Mark): Handler<ContentfulElementNode> {
-  return function markHandler(createNode, node, context) {
-    if (!context.allowedMarks.includes(type)) {
-      return visitChildren(createNode, node, context);
-    }
-
-    let marks = { marks: [type] };
-
-    if (Array.isArray(context.marks)) {
-      marks = {
-        marks: context.marks.includes(type)
-          ? context.marks
-          : context.marks.concat([type]),
-      };
-    }
-
-    return visitChildren(createNode, node, {
-      ...context,
-      ...marks,
-    });
-  };
-}
-
-export const wrapListItems: Handler<ContentfulElementNode> = async function wrapListItems(
+export const wrapListItems: Handler<ContentfulListItem> = async function wrapListItems(
   createNode,
   node,
   context,
@@ -479,77 +363,9 @@ export const handlers = {
   [BLOCKS.QUOTE]: blockquote,
   [BLOCKS.HR]: thematicBreak,
   [INLINES.HYPERLINK]: link,
-  // [INLINES.EMBEDDED_ENTRY]: embeddedEntryInline,
-  // [BLOCKS.EMBEDDED_ASSET]: embeddedAsset,
-  // [BLOCKS.EMBEDDED_ENTRY]: EMBEDDED_ENTRY,
-  // [INLINES.ASSET_HYPERLINK]: ASSET_HYPERLINK,
-  // [INLINES.ENTRY_HYPERLINK]: ENTRY_HYPERLINK,
+  [INLINES.EMBEDDED_ENTRY]: noop,
+  [BLOCKS.EMBEDDED_ASSET]: noop,
+  [BLOCKS.EMBEDDED_ENTRY]: noop,
+  [INLINES.ASSET_HYPERLINK]: noop,
+  [INLINES.ENTRY_HYPERLINK]: noop,
 };
-
-// export const handlers = {
-//   root: root,
-
-//   p: paragraph,
-//   summary: paragraph,
-
-//   h1: heading,
-//   h2: heading,
-//   h3: heading,
-//   h4: heading,
-//   h5: heading,
-//   h6: heading,
-
-//   ul: list,
-//   ol: list,
-//   dir: list,
-
-//   dt: listItem,
-//   dd: listItem,
-//   li: listItem,
-
-//   listing: code,
-//   plaintext: code,
-//   pre: code,
-//   xmp: code,
-
-//   blockquote: blockquote,
-
-//   a: link,
-
-//   code: code,
-//   kbd: code,
-//   samp: code,
-//   tt: code,
-//   var: code,
-
-//   strong: strong,
-//   b: strong,
-
-//   em: italic,
-//   i: italic,
-
-//   u: underline,
-
-//   strike: strikethrough,
-//   s: strikethrough,
-
-//   mark: highlight,
-
-//   base: base,
-
-//   span: extractInlineStyles,
-//   text: span,
-//   br: newLine,
-
-//   hr: thematicBreak,
-
-//   head: head,
-//   comment: noop,
-//   script: noop,
-//   style: noop,
-//   title: noop,
-//   video: noop,
-//   audio: noop,
-//   embed: noop,
-//   iframe: noop,
-// };

@@ -1,20 +1,36 @@
 import { Node, Root, NodeType, Mark } from 'datocms-structured-text-utils';
+
 import {
   Block as ContentfulBlock,
   Inline as ContentfulInline,
-  Document as ContentfulDocument,
-  Text as ContentfulText,
-  Mark as ContentfulMark,
+  Paragraph as ContentfulParagraph,
+  Text as ContentfulTextNode,
   TopLevelBlock as ContentfulRootNode,
+  Quote as ContentfulQuote,
+  Hr as ContentfulHr,
+  OrderedList as ContentfulOrderedList,
+  UnorderedList as ContentfulUnorderedList,
+  ListItem as ContentfulListItem,
+  Hyperlink as ContentfulHyperLink,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Heading5,
+  Heading6,
 } from '@contentful/rich-text-types';
 
 export { Node, Root, NodeType, Mark };
+
 export {
   ContentfulInline,
-  ContentfulDocument,
-  ContentfulText,
-  ContentfulMark,
+  ContentfulTextNode,
   ContentfulRootNode,
+  ContentfulParagraph,
+  ContentfulQuote,
+  ContentfulHr,
+  ContentfulListItem,
+  ContentfulHyperLink,
 };
 
 export type CreateNodeFunction = (
@@ -64,22 +80,20 @@ export type Handler<ContentfulNodeType> = (
   | Promise<Node | Array<Node> | void>
   | Array<Promise<Node | Array<Node> | void>>;
 
-// export interface HastProperties {
-//   className?: string[];
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   [key: string]: any;
-// }
-
-// export interface RichTextElementNode {
-//   type: 'element';
-//   tagName: string;
-//   properties?: HastProperties;
-//   children?: ContentfulNode[];
-// }
-
 export type ContentfulNode =
-  | ContentfulText
-  | ContentfulElementNode
-  | ContentfulRootNode;
+  | ContentfulRootNode
+  | ContentfulTextNode
+  | ContentfulBlock
+  | ContentfulInline;
 
-export type ContentfulElementNode = ContentfulBlock | ContentfulInline;
+export type ContentfulHeading =
+  | Heading1
+  | Heading2
+  | Heading3
+  | Heading4
+  | Heading5
+  | Heading6;
+
+export type ContentfulNodeWithContent = ContentfulBlock | ContentfulInline;
+
+export type ContentfulList = ContentfulOrderedList | ContentfulUnorderedList;

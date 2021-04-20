@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { Handler, ContentfulElementNode, ContentfulNode } from './types';
+import { Handler, ContentfulNodeWithContent, ContentfulNode } from './types';
 import visitChildren from './visit-children';
 import { helpers } from '@contentful/rich-text-types';
 
@@ -28,7 +28,7 @@ export default (async function visitNode(createNode, node, context) {
 
 // This is a default handler for unknown nodes.
 // It skips the current node and processes its children.
-const unknownHandler: Handler<ContentfulElementNode> = async function unknownHandler(
+const unknownHandler: Handler<ContentfulNodeWithContent> = async function unknownHandler(
   createNode,
   node,
   context,

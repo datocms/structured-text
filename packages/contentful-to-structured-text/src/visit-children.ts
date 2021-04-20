@@ -1,4 +1,9 @@
-import { Handler, Node, ContentfulNode, ContentfulElementNode } from './types';
+import {
+  Handler,
+  Node,
+  ContentfulNode,
+  ContentfulNodeWithContent,
+} from './types';
 import visitNode from './visit-node';
 
 // visitChildren() is for visiting all the children of a node
@@ -34,4 +39,4 @@ export default (async function visitChildren(createNode, parentNode, context) {
   }
 
   return values;
-} as Handler<ContentfulElementNode>);
+} as Handler<ContentfulNodeWithContent>);
