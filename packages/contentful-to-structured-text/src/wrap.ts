@@ -6,24 +6,15 @@ import { Node } from './types';
 
 // Utility to convert a string into a function which checks a given node’s type
 // for said string.
-const isPhrasing = (node) => {
+const isPhrasing = (node: Node) => {
   return node.type === 'span' || node.type === 'link';
 };
 
+// Wraps consecutive spans and links into a single paragraph
 export function wrap(nodes: Node[]): Node[] {
   return runs(nodes, onphrasing);
 
-  function onphrasing(nodes) {
-    const head = nodes[0];
-
-    if (
-      nodes.length === 1 &&
-      head.type === 'span' &&
-      (head.value === ' ' || head.value === '\n')
-    ) {
-      return [];
-    }
-
+  function onphrasing(nodes: Node[]) {
     return { type: 'paragraph', children: nodes };
   }
 }

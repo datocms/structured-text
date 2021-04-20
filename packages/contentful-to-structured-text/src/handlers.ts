@@ -164,10 +164,9 @@ export const blockquote: Handler<ContentfulQuote> = async function blockquote(
   });
 
   if (Array.isArray(children) && children.length) {
-    return isAllowedChild
-      ? createNode('blockquote', { children: wrap(children) })
-      : children;
+    return isAllowedChild ? createNode('blockquote', { children }) : children;
   }
+
   return undefined;
 };
 

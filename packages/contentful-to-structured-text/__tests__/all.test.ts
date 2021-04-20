@@ -659,30 +659,30 @@ describe('contentful-to-structured-text', () => {
 
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0]).toMatchInlineSnapshot(`
-        Object {
-          "children": Array [
-            Object {
-              "children": Array [
-                Object {
-                  "children": Array [
-                    Object {
-                      "marks": Array [
-                        "code",
-                      ],
-                      "type": "span",
-                      "value": "<import src=\\"file.richText\\" />",
-                    },
-                  ],
-                  "type": "paragraph",
-                },
-              ],
-              "type": "listItem",
-            },
-          ],
-          "style": "bulleted",
-          "type": "list",
-        }
-      `);
+                  Object {
+                    "children": Array [
+                      Object {
+                        "children": Array [
+                          Object {
+                            "children": Array [
+                              Object {
+                                "marks": Array [
+                                  "code",
+                                ],
+                                "type": "span",
+                                "value": "<import src=\\"file.richText\\" />",
+                              },
+                            ],
+                            "type": "paragraph",
+                          },
+                        ],
+                        "type": "listItem",
+                      },
+                    ],
+                    "style": "bulleted",
+                    "type": "list",
+                  }
+              `);
       });
 
       it('when code mark is not allowed it generates simple paragraphs', async () => {
@@ -830,7 +830,7 @@ describe('contentful-to-structured-text', () => {
                 nodeType: 'list-item',
                 content: [
                   {
-                    nodeType: 'heading-1',
+                    nodeType: 'paragraph',
                     content: [
                       {
                         nodeType: 'text',
@@ -1418,6 +1418,187 @@ describe('contentful-to-structured-text', () => {
           ]
         `);
       });
+    });
+  });
+
+  describe('wrap', () => {
+    it('wraps all in paragraph', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'heading-1',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'span',
+                        marks: [],
+                        data: {},
+                      },
+                      {
+                        nodeType: 'text',
+                        value: ', other span',
+                        marks: [],
+                        data: {},
+                      },
+                      {
+                        nodeType: 'hyperlink',
+                        content: [
+                          {
+                            nodeType: 'text',
+                            value: 'link',
+                            marks: [],
+                            data: {},
+                          },
+                        ],
+                        data: { uri: 'https://fooo.com' },
+                      },
+                      {
+                        nodeType: 'blockquote',
+                        content: [
+                          {
+                            nodeType: 'paragraph',
+                            content: [
+                              {
+                                nodeType: 'text',
+                                value: 'quote',
+                                marks: [],
+                                data: {},
+                              },
+                            ],
+                            data: {},
+                          },
+                        ],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "children": Array [
+                      Object {
+                        "type": "span",
+                        "value": "span",
+                      },
+                      Object {
+                        "type": "span",
+                        "value": ", other span",
+                      },
+                      Object {
+                        "children": Array [
+                          Object {
+                            "type": "span",
+                            "value": "link",
+                          },
+                        ],
+                        "type": "link",
+                        "url": "https://fooo.com",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                  Object {
+                    "children": Array [
+                      Object {
+                        "type": "span",
+                        "value": "quote",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "listItem",
+              },
+            ],
+            "style": "bulleted",
+            "type": "list",
+          },
+        ]
+      `);
+    });
+
+    it('always returns something, even with empty text', async () => {
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'heading-1',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: ' ',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      const result = await richTextToStructuredText(richText);
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document.children).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "children": Array [
+                      Object {
+                        "type": "span",
+                        "value": " ",
+                      },
+                    ],
+                    "type": "paragraph",
+                  },
+                ],
+                "type": "listItem",
+              },
+            ],
+            "style": "bulleted",
+            "type": "list",
+          },
+        ]
+      `);
     });
   });
 });
