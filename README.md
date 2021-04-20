@@ -22,6 +22,8 @@ Monorepo with Typescript libraries for handling and rendering [DatoCMS Structure
   - Vue component that you can use to render Structured Text documents.
 - [`datocms-structured-text-to-dom-nodes`](https://github.com/datocms/structured-text/tree/master/packages/to-dom-nodes)
   - DOM nodes renderer for the DatoCMS Structured Text field type. To be used inside the browser, as it expects to find `document.createElement`.
+- [`datocms-contentful-to-structured-text`](https://github.com/datocms/structured-text/tree/master/packages/contentful-to-structured-text)
+  - Convert Contentful Rich Text to a valid Structured Text document.
 
 ## About Structured Text
 
