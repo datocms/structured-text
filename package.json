@@ -28,6 +28,5 @@
   },
   "license": "MIT",
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/datocms/structured-text",
-  "dependencies": {}
+  "homepage": "https://github.com/datocms/structured-text"
 }
