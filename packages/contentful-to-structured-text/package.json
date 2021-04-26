@@ -12,7 +12,10 @@
   "author": "Irene Oppo <i.oppo@datocms.com>",
   "homepage": "https://github.com/datocms/structured-text/tree/master/packages/contentful-to-structured-text#readme",
   "license": "MIT",
-  "main": "dist/lib/index.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
+  "sideEffects": false,
   "directories": {
     "lib": "dist",
     "test": "__tests__"
@@ -25,7 +28,7 @@
     "url": "git+https://github.com/datocms/structured-text.git"
   },
   "scripts": {
-    "build": "tsc --module commonjs",
+    "build": "tsc && tsc --project ./tsconfig.esnext.json",
     "prebuild": "rimraf dist"
   },
   "dependencies": {

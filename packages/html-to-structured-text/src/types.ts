@@ -1,6 +1,6 @@
 import { Node, Root, NodeType, Mark } from 'datocms-structured-text-utils';
 
-export { Node, Root, NodeType, Mark };
+export type { Node, Root, NodeType, Mark };
 
 export type CreateNodeFunction = (
   type: NodeType,

@@ -20,9 +20,9 @@ import {
   StructuredText as StructuredTextGraphQlResponse,
 } from 'datocms-structured-text-utils';
 
-export {
-  renderRule,
-  RenderError,
+export { renderRule, RenderError };
+
+export type {
   StructuredTextDocument,
   StructuredTextGraphQlResponse,
   StructuredTextGraphQlResponseRecord,

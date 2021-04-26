@@ -20,9 +20,9 @@ import {
   Heading6,
 } from '@contentful/rich-text-types';
 
-export { Node, Root, NodeType, Mark };
+export type { Node, Root, NodeType, Mark };
 
-export {
+export type {
   ContentfulInline,
   ContentfulTextNode,
   ContentfulRootNode,

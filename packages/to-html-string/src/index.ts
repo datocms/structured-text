@@ -21,12 +21,12 @@ import {
 } from 'datocms-structured-text-utils';
 import vhtml from 'vhtml';
 
-export {
-  renderRule,
-  RenderError,
+export { renderRule, RenderError };
+
+export type {
+  StructuredTextDocument,
   StructuredTextGraphQlResponse,
   StructuredTextGraphQlResponseRecord,
-  StructuredTextDocument,
 };
 
 type AdapterReturn = string | null;

@@ -21,12 +21,12 @@ import {
 } from 'datocms-structured-text-utils';
 import hyperscript from 'hyperscript';
 
-export {
-  renderRule,
-  RenderError,
+export { renderRule, RenderError };
+
+export type {
+  StructuredTextDocument,
   StructuredTextGraphQlResponse,
   StructuredTextGraphQlResponseRecord,
-  StructuredTextDocument,
 };
 
 type AdapterReturn = Element[] | Element | string | null;
