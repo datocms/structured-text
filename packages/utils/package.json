@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-utils",
-  "version": "1.1.0-alpha.0",
+  "version": "1.1.0-alpha.1",
   "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields",
   "keywords": [
     "datocms",
@@ -36,5 +36,6 @@
   },
   "devDependencies": {
     "@types/lodash.flatten": "^4.4.6"
-  }
+  },
+  "gitHead": "c7afc1966e7e95101c4d945f9612e490ba9e393b"
 }
