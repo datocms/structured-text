@@ -1,6 +1,6 @@
 import { Node, Record, Document, StructuredText } from './types';
 import { hasChildren, isDocument, isStructuredText } from './guards';
-import flatten from 'lodash.flatten';
+import { flatten } from 'array-flatten';
 
 export class RenderError extends Error {
   node: Node;

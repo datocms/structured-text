@@ -32,10 +32,7 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "lodash.flatten": "^4.4.0"
-  },
-  "devDependencies": {
-    "@types/lodash.flatten": "^4.4.6"
+    "array-flatten": "^3.0.0"
   },
   "gitHead": "c7afc1966e7e95101c4d945f9612e490ba9e393b"
 }
