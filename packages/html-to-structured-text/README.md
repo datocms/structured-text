@@ -153,7 +153,7 @@ export interface Context {
   >;
   // Array of allowed marks.
   allowedMarks: Mark[];
-  // Properties in this object are avaliable to every handler as Context
+  // Properties in this object are available to every handler as Context
   // is not deeply cloned.
   global: GlobalContext;
 }
@@ -227,6 +227,7 @@ const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
     const liftedImages = new WeakSet();
     const body = find(tree, (node) => node.tagName === 'body');
+
     visit(body, (node, index, parents) => {
       if (
         !node ||
@@ -237,6 +238,7 @@ const dast = await htmlToStructuredText(html, {
         return;
       }
       // remove image
+
       const imgParent = parents[parents.length - 1];
       imgParent.children.splice(index, 1);
 
@@ -260,11 +262,15 @@ const dast = await htmlToStructuredText(html, {
         splitChildrenIndex = parentsParent.children.indexOf(parent);
         // splitChildrenIndex = 0
 
+        let nodeInserted = false;
+
         // If we reached the 'div' add the image's node
         if (i === 1) {
           splitChildrenIndex += 1;
           parentsParent.children.splice(splitChildrenIndex, 0, node);
           liftedImages.add(node);
+
+          nodeInserted = true;
         }
 
         splitChildrenIndex += 1;
@@ -276,11 +282,13 @@ const dast = await htmlToStructuredText(html, {
             children: childrenAfterSplitPoint,
           });
         }
-
         // Remove the parent if empty
         if (parent.children.length === 0) {
           splitChildrenIndex -= 1;
-          parentsParent.children.splice(splitChildrenIndex, 1);
+          parentsParent.children.splice(
+            nodeInserted ? splitChildrenIndex - 1 : splitChildrenIndex,
+            1,
+          );
         }
       }
     });

@@ -1241,6 +1241,201 @@ describe('contentful-to-structured-text', () => {
           }
         `);
     });
+
+    it('split nodes with images', async () => {
+      function liftAssets(richText) {
+        const visit = (node, cb, index = 0, parents = []) => {
+          if (node.content && node.content.length > 0) {
+            node.content.forEach((child, index) => {
+              visit(child, cb, index, [...parents, node]);
+            });
+          }
+
+          cb(node, index, parents);
+        };
+
+        const liftedImages = new WeakSet();
+
+        visit(richText, (node, index, parents) => {
+          if (
+            !node ||
+            node.nodeType !== 'embedded-asset-block' ||
+            liftedImages.has(node) ||
+            parents.length === 1 // is a top level asset
+          ) {
+            return;
+          }
+
+          const imgParent = parents[parents.length - 1];
+
+          imgParent.content.splice(index, 1);
+
+          let i = parents.length;
+          let splitChildrenIndex = index;
+          const contentAfterSplitPoint = [];
+
+          while (--i > 0) {
+            const parent = parents[i];
+            const parentsParent = parents[i - 1];
+
+            contentAfterSplitPoint = parent.content.splice(splitChildrenIndex);
+
+            splitChildrenIndex = parentsParent.content.indexOf(parent);
+
+            let nodeInserted = false;
+
+            if (i === 1) {
+              splitChildrenIndex += 1;
+              parentsParent.content.splice(splitChildrenIndex, 0, node);
+              liftedImages.add(node);
+
+              nodeInserted = true;
+            }
+
+            splitChildrenIndex += 1;
+
+            if (contentAfterSplitPoint.length > 0) {
+              parentsParent.content.splice(splitChildrenIndex, 0, {
+                ...parent,
+                content: contentAfterSplitPoint,
+              });
+            }
+            // Remove the parent if empty
+            if (parent.content.length === 0) {
+              splitChildrenIndex -= 1;
+              parentsParent.content.splice(
+                nodeInserted ? splitChildrenIndex - 1 : splitChildrenIndex,
+                1,
+              );
+            }
+          }
+        });
+      }
+
+      const handlers = {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        'embedded-asset-block': async (createNode, node, context) => {
+          const item = '123';
+          return createNode('block', {
+            item,
+          });
+        },
+      };
+
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'text',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                  {
+                    content: [],
+                    data: {
+                      target: {
+                        sys: {
+                          id: 'zzz',
+                          linkType: 'Asset',
+                          type: 'Link',
+                        },
+                      },
+                    },
+                    nodeType: 'embedded-asset-block',
+                  },
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'text',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      // Preprocess tree to lift asset links to root
+      liftAssets(richText);
+
+      const result = await richTextToStructuredText(richText, { handlers });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document).toMatchInlineSnapshot(`
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "span",
+                          "value": "text",
+                        },
+                      ],
+                      "type": "paragraph",
+                    },
+                  ],
+                  "type": "listItem",
+                },
+              ],
+              "style": "bulleted",
+              "type": "list",
+            },
+            Object {
+              "item": "123",
+              "type": "block",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "span",
+                          "value": "text",
+                        },
+                      ],
+                      "type": "paragraph",
+                    },
+                  ],
+                  "type": "listItem",
+                },
+              ],
+              "style": "bulleted",
+              "type": "list",
+            },
+          ],
+          "type": "root",
+        }
+      `);
+    });
   });
 
   describe('thematicBreak', () => {
