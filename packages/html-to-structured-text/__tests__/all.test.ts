@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
+
 import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
-import { findAll, find, visit } from 'unist-utils-core';
+import { findAll, find } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
+import liftImages from './liftImages';
 
 function htmlToStructuredText(html: string, options: Options = {}) {
   return parse5ToStructuredText(
@@ -1230,67 +1232,7 @@ describe('htmlToStructuredText', () => {
       `;
 
       const result = await htmlToStructuredText(html, {
-        preprocess: (tree) => {
-          const liftedImages = new Set();
-          const body = find(tree, (node) => node.tagName === 'body');
-          visit(body, (node, index, parents) => {
-            if (
-              !node ||
-              node.tagName !== 'img' ||
-              liftedImages.has(node) ||
-              parents.length === 1 // is a top level img
-            ) {
-              return;
-            }
-            // remove image
-            const imgParent = parents[parents.length - 1];
-            imgParent.children.splice(index, 1);
-
-            let i = parents.length;
-            let splitChildrenIndex = index;
-            let childrenAfterSplitPoint = [];
-
-            while (--i > 0) {
-              // Example: i == 2
-              // [ 'body', 'div', 'h1' ]
-              const /* h1 */ parent = parents[i];
-              const /* div */ parentsParent = parents[i - 1];
-
-              // Delete the siblings after the image and save them in a variable
-              childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
-                splitChildrenIndex,
-              );
-              // parent.children is now == [ 'h1.1' ]
-
-              // parentsParent.children = [ 'h1' ]
-              splitChildrenIndex = parentsParent.children.indexOf(parent);
-              // splitChildrenIndex = 0
-
-              // If we reached the 'div' add the image's node
-              if (i === 1) {
-                splitChildrenIndex += 1;
-                parentsParent.children.splice(splitChildrenIndex, 0, node);
-                liftedImages.add(node);
-              }
-
-              splitChildrenIndex += 1;
-              // Create a new branch with childrenAfterSplitPoint if we have any i.e.
-              // <h1>h1.2</h1>
-              if (childrenAfterSplitPoint.length > 0) {
-                parentsParent.children.splice(splitChildrenIndex, 0, {
-                  ...parent,
-                  children: childrenAfterSplitPoint,
-                });
-              }
-
-              // Remove the parent if empty
-              if (parent.children.length === 0) {
-                splitChildrenIndex -= 1;
-                parentsParent.children.splice(splitChildrenIndex, 1);
-              }
-            }
-          });
-        },
+        preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           img: async (createNode, node, context) => {
@@ -1372,6 +1314,117 @@ describe('htmlToStructuredText', () => {
             Array [
               Array [
                 "span",
+              ],
+            ],
+          ],
+        ]
+      `);
+    });
+
+    it('split nodes when only one list-item', async () => {
+      const html = `
+        <ul>
+          <li><div><img src="./ul1-img.png" alt>item 2</div></li>
+        </ul>
+      `;
+
+      const result = await htmlToStructuredText(html, {
+        preprocess: liftImages,
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'list')).toHaveLength(1);
+      expect(findAll(result.document, 'listItem')).toHaveLength(1);
+      expect(findAll(result.document, 'block')).toHaveLength(1);
+      expect(
+        result.document.children.map((child) => {
+          if (child.children) {
+            return [child.type, [child.children.map((c) => c.type)]];
+          }
+          return child.type;
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+              ],
+            ],
+          ],
+        ]
+      `);
+    });
+
+    it('split nodes when have more than 1 image and nested', async () => {
+      const html = `
+        <ul>
+          <li>
+            <div>
+              <ul>
+                <li><img src="./ul1-img.png" alt>item 2</li>
+              </ul>
+            </div>
+          </li>
+          <li><img src="./ul3-img.png"><img src="./ul4-img.png" alt>item 2</li>
+        </ul>
+      `;
+
+      const result = await htmlToStructuredText(html, {
+        preprocess: liftImages,
+        handlers: {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          img: async (createNode, node, context) => {
+            // In a real scenario you would upload the image to Dato and get back an id.
+            const item = '123';
+            return createNode('block', {
+              item,
+            });
+          },
+        },
+      });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(findAll(result.document, 'list')).toHaveLength(3);
+      expect(findAll(result.document, 'listItem')).toHaveLength(3);
+      expect(findAll(result.document, 'block')).toHaveLength(3);
+      expect(
+        result.document.children.map((child) => {
+          if (child.children) {
+            return [child.type, [child.children.map((c) => c.type)]];
+          }
+          return child.type;
+        }),
+      ).toMatchInlineSnapshot(`
+        Array [
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          "block",
+          Array [
+            "list",
+            Array [
+              Array [
+                "listItem",
               ],
             ],
           ],
