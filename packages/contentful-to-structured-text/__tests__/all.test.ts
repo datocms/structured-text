@@ -3,6 +3,7 @@
 
 import { richTextToStructuredText, datoToContentfulMarks } from '../src';
 import { allowedChildren, validate } from 'datocms-structured-text-utils';
+import liftAssets from './liftAssets';
 
 describe('contentful-to-structured-text', () => {
   it('works with empty rich text', async () => {
@@ -1240,6 +1241,131 @@ describe('contentful-to-structured-text', () => {
             "type": "root",
           }
         `);
+    });
+
+    it('split nodes with images', async () => {
+      const handlers = {
+        'embedded-asset-block': async (createNode, node, context) => {
+          const item = '123';
+          return createNode('block', {
+            item,
+          });
+        },
+      };
+
+      const richText = {
+        nodeType: 'document',
+        data: {},
+        content: [
+          {
+            nodeType: 'unordered-list',
+            content: [
+              {
+                nodeType: 'list-item',
+                content: [
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'text',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                  {
+                    content: [],
+                    data: {
+                      target: {
+                        sys: {
+                          id: 'zzz',
+                          linkType: 'Asset',
+                          type: 'Link',
+                        },
+                      },
+                    },
+                    nodeType: 'embedded-asset-block',
+                  },
+                  {
+                    nodeType: 'paragraph',
+                    content: [
+                      {
+                        nodeType: 'text',
+                        value: 'text',
+                        marks: [],
+                        data: {},
+                      },
+                    ],
+                    data: {},
+                  },
+                ],
+                data: {},
+              },
+            ],
+            data: {},
+          },
+        ],
+      };
+
+      // Preprocess tree to lift asset links to root
+      liftAssets(richText);
+
+      const result = await richTextToStructuredText(richText, { handlers });
+
+      expect(validate(result).valid).toBeTruthy();
+      expect(result.document).toMatchInlineSnapshot(`
+        Object {
+          "children": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "span",
+                          "value": "text",
+                        },
+                      ],
+                      "type": "paragraph",
+                    },
+                  ],
+                  "type": "listItem",
+                },
+              ],
+              "style": "bulleted",
+              "type": "list",
+            },
+            Object {
+              "item": "123",
+              "type": "block",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "children": Array [
+                        Object {
+                          "type": "span",
+                          "value": "text",
+                        },
+                      ],
+                      "type": "paragraph",
+                    },
+                  ],
+                  "type": "listItem",
+                },
+              ],
+              "style": "bulleted",
+              "type": "list",
+            },
+          ],
+          "type": "root",
+        }
+      `);
     });
   });
 
