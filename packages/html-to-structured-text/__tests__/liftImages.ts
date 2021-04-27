@@ -5,7 +5,7 @@
 import { find, visit } from 'unist-utils-core';
 
 export default function liftImages(tree) {
-  const liftedImages = new Set();
+  const liftedImages = new WeakSet();
   const body = find(tree, (node) => node.tagName === 'body');
 
   visit(body, (node, index, parents) => {
