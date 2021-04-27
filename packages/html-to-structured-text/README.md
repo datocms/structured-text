@@ -153,7 +153,7 @@ export interface Context {
   >;
   // Array of allowed marks.
   allowedMarks: Mark[];
-  // Properties in this object are avaliable to every handler as Context
+  // Properties in this object are available to every handler as Context
   // is not deeply cloned.
   global: GlobalContext;
 }
