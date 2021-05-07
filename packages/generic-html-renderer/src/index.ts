@@ -146,11 +146,11 @@ export function render<
           ? lines.slice(1).reduce(
               (acc, line, index) => {
                 return acc.concat([
-                  renderNode('br', { key: `br-${index}` }),
-                  renderText(line, `line-${index}`),
+                  renderNode('br', { key: `${key}-br-${index}` }),
+                  renderText(line, `${key}-line-${index}`),
                 ]);
               },
-              [renderText(lines[0], 'line-first')],
+              [renderText(lines[0], `${key}-line-first`)],
             )
           : renderText(node.value, key);
 

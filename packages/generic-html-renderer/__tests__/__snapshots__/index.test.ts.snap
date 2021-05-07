@@ -10,7 +10,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "This is a ",
           },
           Object {
@@ -20,7 +20,7 @@ Object {
             "children": Array [
               Array [
                 Object {
-                  "key": "line-first",
+                  "key": "t-1-line-first",
                   "text": "title",
                 },
               ],
@@ -28,7 +28,7 @@ Object {
             "tagName": "mark",
           },
           Object {
-            "key": "line-first",
+            "key": "t-2-line-first",
             "text": ".",
           },
         ],
@@ -42,7 +42,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "And it's fucking perfect.",
           },
         ],
@@ -56,7 +56,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Seriously, what the fuck else do you want?",
           },
         ],
@@ -70,18 +70,18 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "You probably build websites and think your 💩  is special.",
           },
           Object {
             "attrs": Object {
-              "key": "br-0",
+              "key": "t-0-br-0",
             },
             "children": Array [],
             "tagName": "br",
           },
           Object {
-            "key": "line-0",
+            "key": "t-0-line-0",
             "text": "You think your 13 megabyte parallax-ative home page is going to get you",
           },
           Object {
@@ -91,7 +91,7 @@ Object {
             "children": Array [
               Array [
                 Object {
-                  "key": "line-first",
+                  "key": "t-1-line-first",
                   "text": " some fucking Awwward banner y",
                 },
               ],
@@ -99,7 +99,7 @@ Object {
             "tagName": "strong",
           },
           Object {
-            "key": "line-first",
+            "key": "t-2-line-first",
             "text": "ou can glue to the top corner of your site. You think your 40-pound jQuery file and 83 polyfills give IE7 a boner because it finally has box-shadow. Wrong, motherfucker. Let me describe your perfect-ass website:",
           },
         ],
@@ -125,7 +125,7 @@ Object {
                   "children": Array [
                     Array [
                       Object {
-                        "key": "line-first",
+                        "key": "t-0-line-first",
                         "text": "Shit's lightweight and loads fast",
                       },
                     ],
@@ -151,7 +151,7 @@ Object {
                               "children": Array [
                                 Array [
                                   Object {
-                                    "key": "line-first",
+                                    "key": "t-0-line-first",
                                     "text": "Looks the same in all your shitty browsers",
                                   },
                                 ],
@@ -175,7 +175,7 @@ Object {
                               "children": Array [
                                 Array [
                                   Object {
-                                    "key": "line-first",
+                                    "key": "t-0-line-first",
                                     "text": "Fits on all your shitty screens",
                                   },
                                 ],
@@ -201,7 +201,7 @@ Object {
                                           "children": Array [
                                             Array [
                                               Object {
-                                                "key": "line-first",
+                                                "key": "t-0-line-first",
                                                 "text": "The motherfucker's accessible to every asshole that visits your site",
                                               },
                                             ],
@@ -241,7 +241,7 @@ Object {
                   "children": Array [
                     Array [
                       Object {
-                        "key": "line-first",
+                        "key": "t-0-line-first",
                         "text": "Shit's legible and gets your fucking point across (if you had one instead of just 5mb pics of hipsters drinking coffee)",
                       },
                     ],
@@ -263,7 +263,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Well guess what, motherfucker:",
           },
         ],
@@ -277,7 +277,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "You. Are. Over-designing. Look at this shit. It's a motherfucking website. Why the fuck do you need to animate a fucking trendy-ass banner flag when I hover over that useless piece of shit? You spent hours on it and added 80 kilobytes to your fucking site, and some motherfucker jabbing at it on their iPad with fat sausage fingers will never see that shit. Not to mention blind people will never see that shit, but they don't see any of your shitty shit.",
           },
         ],
@@ -291,7 +291,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "You never knew it, but this is your perfect website. Here's why.",
           },
         ],
@@ -305,7 +305,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "It's fucking lightweight",
           },
         ],
@@ -319,7 +319,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "This entire page weighs less than the gradient-meshed facebook logo on your fucking Wordpress site. Did you seriously load 100kb of jQuery UI just so you could animate the fucking background color of a div? You loaded all 7 fontfaces of a shitty webfont just so you could say \\"Hi.\\" at 100px height at the beginning of your site? ",
           },
         ],
@@ -333,7 +333,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "You piece of shit.",
           },
         ],
@@ -381,7 +381,7 @@ Object {
                         "children": Array [
                           Array [
                             Object {
-                              "key": "line-first",
+                              "key": "t-0-line-first",
                               "text": "Foobar",
                             },
                           ],
@@ -409,7 +409,7 @@ Object {
                   "children": Array [
                     Array [
                       Object {
-                        "key": "line-first",
+                        "key": "t-0-line-first",
                         "text": "",
                       },
                     ],
@@ -439,7 +439,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "It's responsive",
           },
         ],
@@ -453,7 +453,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "You dumbass. You thought you needed media queries to be responsive, but no. Responsive means that it responds to whatever motherfucking screensize it's viewed on. This site doesn't care if you're on an iMac or a motherfucking Tamagotchi.",
           },
         ],
@@ -467,7 +467,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "It fucking works",
           },
         ],
@@ -481,7 +481,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Look at this shit. You can read it ... that is, if you can read, motherfucker. It makes sense. It has motherfucking hierarchy. It's using HTML5 tags so you and your bitch-ass browser know what the fuck's in this fucking site. That's semantics, motherfucker.",
           },
         ],
@@ -495,7 +495,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "It has content on the fucking screen. Your site has three bylines and link to your dribbble account, but you spread it over 7 full screens and make me click some bobbing button to show me how cool the jQuery ScrollTo plugin is.",
           },
         ],
@@ -509,7 +509,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Cross-browser compatibility? Load this motherfucker in IE6. I fucking dare you.",
           },
         ],
@@ -523,7 +523,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "This is a website. ",
           },
           Object {
@@ -533,7 +533,7 @@ Object {
             "children": Array [
               Array [
                 Object {
-                  "key": "line-first",
+                  "key": "t-1-line-first",
                   "text": "Look at it.",
                 },
               ],
@@ -541,7 +541,7 @@ Object {
             "tagName": "mark",
           },
           Object {
-            "key": "line-first",
+            "key": "t-2-line-first",
             "text": " You've never seen one before.",
           },
         ],
@@ -555,7 +555,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Like the man who's never grown out his beard has no idea what his true natural state is, you have no fucking idea what a website is. All you have ever seen are shitty skeuomorphic bastardizations of what should be text communicating a fucking message. This is a real, naked website. Look at it. It's fucking beautiful.",
           },
         ],
@@ -569,7 +569,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Yes, this is fucking satire, you fuck",
           },
         ],
@@ -583,7 +583,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "I'm not actually saying your shitty site should look like this. What I'm saying is that all the problems we have with websites are ones we create ourselves. Websites aren't broken by default, they are functional, high-performing, and accessible. You break them. You son-of-a-bitch.",
           },
         ],
@@ -603,7 +603,7 @@ Object {
             "children": Array [
               Array [
                 Object {
-                  "key": "line-first",
+                  "key": "t-0-line-first",
                   "text": "\\"Good design is as little design as possible.\\" ",
                 },
               ],
@@ -630,7 +630,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "Epilogue",
           },
         ],
@@ -644,7 +644,7 @@ Object {
       "children": Array [
         Array [
           Object {
-            "key": "line-first",
+            "key": "t-0-line-first",
             "text": "From the philosophies expressed (poorly) above, ",
           },
           Object {
@@ -657,7 +657,7 @@ Object {
             "children": Array [
               Array [
                 Object {
-                  "key": "line-first",
+                  "key": "t-0-line-first",
                   "text": "txti",
                 },
               ],
@@ -665,8 +665,34 @@ Object {
             "tagName": "a",
           },
           Object {
-            "key": "line-first",
+            "key": "t-2-line-first",
             "text": " was created. You should try it today to make your own motherfucking websites.",
+          },
+        ],
+      ],
+      "tagName": "p",
+    },
+  ],
+  "key": "t-0",
+}
+`;
+
+exports[`render unique keys 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "attrs": Object {
+        "key": "t-0",
+      },
+      "children": Array [
+        Array [
+          Object {
+            "key": "t-0-line-first",
+            "text": "text two\\\\n",
+          },
+          Object {
+            "key": "t-1-line-first",
+            "text": "text two\\\\n",
           },
         ],
       ],
