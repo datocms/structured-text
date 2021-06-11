@@ -4,6 +4,12 @@
 
 Monorepo with Typescript libraries for handling and rendering [DatoCMS Structured Text documents](https://www.datocms.com/docs/structured-text/dast).
 
+<br /><br />
+<a href="https://www.datocms.com/">
+  <img src="https://www.datocms.com/images/full_logo.svg" height="60">
+</a>
+<br /><br />
+
 ## Packages
 
 ### Official
