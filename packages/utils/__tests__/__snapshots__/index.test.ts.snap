@@ -9,14 +9,19 @@ Object {
         Object {
           "children": Array [
             Object {
-              "marks": Array [
-                "strikethrough",
+              "children": Array [
+                Object {
+                  "marks": Array [
+                    "strikethrough",
+                  ],
+                  "type": "span",
+                  "value": "Foobar",
+                },
               ],
-              "type": "span",
-              "value": "Foobar",
+              "type": "paragraph",
             },
           ],
-          "type": "paragraph",
+          "type": "root",
         },
       ],
       "children": Array [
@@ -35,11 +40,21 @@ Object {
               "type": "paragraph",
             },
             Object {
-              "marks": Array [
-                "strikethrough",
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "marks": Array [
+                        "strikethrough",
+                      ],
+                      "type": "span",
+                      "value": "Foobar",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
               ],
-              "type": "span",
-              "value": "Foobar",
+              "type": "root",
             },
           ],
           "children": undefined,

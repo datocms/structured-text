@@ -71,12 +71,12 @@ export function transformNode<
   const children = hasChildren(node)
     ? (flatten(
         (node.children as Node[])
-          .map((node, index) =>
+          .map((innerNode, index) =>
             transformNode(
               adapter,
-              node,
+              innerNode,
               `t-${index}`,
-              [...ancestors, node],
+              [node, ...ancestors],
               renderRules,
             ),
           )
