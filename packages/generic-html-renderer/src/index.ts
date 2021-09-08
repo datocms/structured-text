@@ -102,13 +102,11 @@ export function render<
     renderRule(
       isBlockquote,
       ({ adapter: { renderNode }, key, node, children }) => {
-        const childrenWithAttribution = node.attribution
-          ? [
-              ...(children || []),
-              renderNode(`footer`, { key: 'footer' }, node.attribution),
-            ]
-          : children;
-        return renderNode('blockquote', { key }, childrenWithAttribution);
+        const childrenWithBlockquote = [renderNode('blockquote', { key: 'blockquote' }, children)];
+        if (node.attribution) {
+          childrenWithBlockquote.push(renderNode('p', { key: 'attribution' }, node.attribution));
+        }
+        return renderNode('p', { key }, childrenWithBlockquote);
       },
     ),
     renderRule(isCode, ({ adapter: { renderNode, renderText }, key, node }) => {
