@@ -21,7 +21,7 @@ import {
   isLink,
   isText,
   isThematicBreak,
-} from './commands';
+} from './guards';
 import { Block, BlockquoteSource, Node, nonTextNodeDefs } from './types';
 
 type FieldBlockWithFullItem = {
