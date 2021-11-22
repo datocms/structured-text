@@ -1,0 +1,42 @@
+{
+  "name": "datocms-structured-text-slate-utils",
+  "version": "1.2.0",
+  "description": "A set of helpers to translate DatoCMS Structured Text fields into Slate structures",
+  "keywords": [
+    "datocms",
+    "structured-text"
+  ],
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/datocms-structured-text-slate-utils#readme",
+  "license": "MIT",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
+  "sideEffects": false,
+  "directories": {
+    "lib": "dist",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datocms/structured-text.git"
+  },
+  "scripts": {
+    "build": "tsc && tsc --project ./tsconfig.esnext.json",
+    "prebuild": "rimraf dist"
+  },
+  "bugs": {
+    "url": "https://github.com/datocms/structured-text/issues"
+  },
+  "dependencies": {
+    "datocms-structured-text-utils": "1.2.0",
+    "lodash-es": "^4.17.21",
+    "slate": "0.60.1"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.5"
+  }
+}
