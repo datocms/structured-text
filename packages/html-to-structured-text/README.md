@@ -213,7 +213,7 @@ In `dast` images can be presented as `Block` nodes but these are not allowed ins
 The same approach can be used to split other types of branches and lift up nodes to become root nodes.
 
 ```js
-import { findAll } from 'unist-utils-core';
+import { visit } from 'unist-utils-core';
 
 const html = `
   <ul>
@@ -311,6 +311,8 @@ const dast = await htmlToStructuredText(html, {
   <summary>Lift up an image node</summary>
 
 ```js
+import { visit, CONTINUE } from 'unist-utils-core';
+
 const html = `
   <ul>
     <li>item 1</li>
@@ -318,15 +320,15 @@ const html = `
     <li>item 3</li>
   </ul>
 `;
+
 const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
-    findAll(tree, (node, index, parent) => {
-      if (node.tagName === 'img') {
-        // Add the image to the root's children.
+    visit(tree, (node, index, parents) => {
+      if (node.tagName === 'img' && parents.length > 1) {
+        const parent = parents[parents.length - 1];
         tree.children.push(node);
-        // remove the image from the parent's children array.
         parent.children.splice(index, 1);
-        return;
+        return [CONTINUE, index];
       }
     });
   },
@@ -334,9 +336,7 @@ const dast = await htmlToStructuredText(html, {
     img: async (createNode, node, context) => {
       // In a real scenario you would upload the image to Dato and get back an id.
       const item = '123';
-      return createNode('block', {
-        item,
-      });
+      return createNode('block', { item });
     },
   },
 });

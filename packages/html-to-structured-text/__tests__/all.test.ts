@@ -4,7 +4,7 @@
 import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
-import { findAll, find, visit } from 'unist-utils-core';
+import { findAll, find, visit, CONTINUE } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
 
 function htmlToStructuredText(html: string, options: Options = {}) {
@@ -1511,13 +1511,12 @@ describe('htmlToStructuredText', () => {
       `;
       const result = await htmlToStructuredText(html, {
         preprocess: (tree) => {
-          findAll(tree, (node, index, parent) => {
-            if (node.tagName === 'img') {
-              // Add the image to the root's children.
+          visit(tree, (node, index, parents) => {
+            if (node.tagName === 'img' && parents.length > 1) {
+              const parent = parents[parents.length - 1];
               tree.children.push(node);
-              // remove the image from the parent's children array.
               parent.children.splice(index, 1);
-              return;
+              return [CONTINUE, index];
             }
           });
         },
