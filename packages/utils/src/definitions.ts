@@ -1,4 +1,4 @@
-import { Mark, NodeType } from './types';
+import { DefaultMark, Mark, NodeType } from './types';
 
 export const blockquoteNodeType = 'blockquote' as const;
 export const blockNodeType = 'block' as const;
@@ -81,7 +81,7 @@ export const allowedAttributes: AllowedAttributes = {
   [thematicBreakNodeType]: [],
 };
 
-export const allowedMarks: Mark[] = [
+export const defaultMarks: DefaultMark[] = [
   'strong',
   'code',
   'emphasis',

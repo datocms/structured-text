@@ -256,14 +256,16 @@ export type Block = {
 
 export type SpanType = 'span';
 
-/** Supported marks for `span` nodes */
-export type Mark =
+export type DefaultMark =
   | 'strong'
   | 'code'
   | 'emphasis'
   | 'underline'
   | 'strikethrough'
   | 'highlight';
+
+/** Supported marks for `span` nodes */
+export type Mark = DefaultMark | string;
 
 /**
  * A `span` node represents a text node. It might optionally contain decorators called `marks`. It is worth
@@ -281,7 +283,7 @@ export type Span = {
   type: SpanType;
   /**
    * Array of decorators for the current chunk of text.
-   * Valid marks are: `strong`, `code`, `emphasis`, `underline`, `strikethrough` and `highlight`.
+   * Default marks: `strong`, `code`, `emphasis`, `underline`, `strikethrough` and `highlight`. Additional custom marks can be defined via plugin.
    */
   marks?: Mark[];
   value: string;

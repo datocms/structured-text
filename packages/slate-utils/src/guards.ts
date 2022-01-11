@@ -29,8 +29,9 @@ import {
   thematicBreakDef,
 } from './types';
 
-export const isNonTextNode = (node: SlateNode): node is NonTextNode =>
-  'type' in node;
+export const isNonTextNode = (node: SlateNode): node is NonTextNode => {
+  return 'type' in node;
+};
 
 export const isText = (node: SlateNode): node is Text =>
   !isNonTextNode(node) && 'text' in node;

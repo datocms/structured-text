@@ -5,6 +5,7 @@ import {
   BlockType,
   Code as FieldCode,
   CodeType,
+  DefaultMark,
   Heading as FieldHeading,
   HeadingType,
   InlineItem as FieldInlineItem,
@@ -17,7 +18,6 @@ import {
   ListItem as FieldListItem,
   ListItemType,
   ListType,
-  Mark,
   Paragraph as FieldParagraph,
   ParagraphType,
   Root,
@@ -27,7 +27,7 @@ import {
 } from 'datocms-structured-text-utils';
 
 type TextMarks = {
-  [key in Mark]?: boolean;
+  [key in `customMark_${string}` | DefaultMark]?: boolean;
 };
 
 export type Text = {
