@@ -1,6 +1,6 @@
 import {
   allowedAttributes,
-  allowedMarks,
+  defaultMarks,
   BlockType,
   Blockquote as FieldBlockquote,
   Code as FieldCode,
@@ -9,6 +9,7 @@ import {
   ItemLink as FieldItemLink,
   Mark,
   Span as FieldSpan,
+  DefaultMark,
 } from 'datocms-structured-text-utils';
 import pick from 'lodash-es/pick';
 import {
@@ -39,9 +40,13 @@ function innerSerialize(
     if (isText(node)) {
       const marks: Mark[] = [];
 
-      allowedMarks.forEach((mark) => {
-        if (node[mark]) {
-          marks.push(mark);
+      Object.keys(node).forEach((key) => {
+        if (defaultMarks.includes(key as DefaultMark)) {
+          marks.push(key);
+        }
+
+        if (key.startsWith('customMark_')) {
+          marks.push(key.replace(/^customMark_/, ''));
         }
       });
 

@@ -1,4 +1,4 @@
-import { Mark, NodeType } from './types';
+import { DefaultMark, NodeType } from './types';
 
 export const blockquoteNodeType = 'blockquote' as const;
 export const blockNodeType = 'block' as const;
@@ -69,19 +69,19 @@ export const allowedAttributes: AllowedAttributes = {
   [blockquoteNodeType]: ['children', 'attribution'],
   [blockNodeType]: ['item'],
   [codeNodeType]: ['language', 'highlight', 'code'],
-  [headingNodeType]: ['level', 'children'],
+  [headingNodeType]: ['level', 'children', 'style'],
   [inlineItemNodeType]: ['item'],
   [itemLinkNodeType]: ['item', 'children', 'meta'],
   [linkNodeType]: ['url', 'children', 'meta'],
   [listItemNodeType]: ['children'],
   [listNodeType]: ['style', 'children'],
-  [paragraphNodeType]: ['children'],
+  [paragraphNodeType]: ['children', 'style'],
   [rootNodeType]: ['children'],
   [spanNodeType]: ['value', 'marks'],
   [thematicBreakNodeType]: [],
 };
 
-export const allowedMarks: Mark[] = [
+export const defaultMarks: DefaultMark[] = [
   'strong',
   'code',
   'emphasis',

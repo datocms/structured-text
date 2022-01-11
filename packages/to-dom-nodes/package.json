@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-to-dom-nodes",
-  "version": "1.2.0",
+  "version": "1.2.3-alpha.3",
   "description": "Convert DatoCMS Structured Text field to HTMLElement DOM nodes",
   "keywords": [
     "datocms",
@@ -32,8 +32,8 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-generic-html-renderer": "^1.2.0",
-    "datocms-structured-text-utils": "^1.2.0",
+    "datocms-structured-text-generic-html-renderer": "^1.2.3-alpha.3",
+    "datocms-structured-text-utils": "^1.2.3-alpha.3",
     "hyperscript": "^2.0.2"
   },
   "devDependencies": {
