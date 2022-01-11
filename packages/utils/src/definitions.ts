@@ -1,4 +1,4 @@
-import { DefaultMark, Mark, NodeType } from './types';
+import { DefaultMark, NodeType } from './types';
 
 export const blockquoteNodeType = 'blockquote' as const;
 export const blockNodeType = 'block' as const;
