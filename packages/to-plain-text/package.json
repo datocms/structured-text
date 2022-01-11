@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-to-plain-text",
-  "version": "1.2.0",
+  "version": "1.2.3-alpha.0",
   "description": "Convert DatoCMS Structured Text field to plain text",
   "keywords": [
     "datocms",
@@ -32,8 +32,8 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-generic-html-renderer": "^1.2.0",
-    "datocms-structured-text-utils": "^1.2.0"
+    "datocms-structured-text-generic-html-renderer": "^1.2.3-alpha.0",
+    "datocms-structured-text-utils": "^1.2.3-alpha.0"
   },
   "gitHead": "b8d7dd8ac9d522ad1960688fc0bc249c38b704b1"
 }
