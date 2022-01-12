@@ -66,19 +66,19 @@ export const inlineNodeTypes = [
 export type AllowedAttributes = Record<NodeType, string[]>;
 
 export const allowedAttributes: AllowedAttributes = {
-  [blockquoteNodeType]: ['children', 'attribution'],
+  [blockquoteNodeType]: ['children', 'attribution', 'customStyle'],
   [blockNodeType]: ['item'],
-  [codeNodeType]: ['language', 'highlight', 'code'],
-  [headingNodeType]: ['level', 'children'],
+  [codeNodeType]: ['language', 'highlight', 'code', 'customStyle'],
+  [headingNodeType]: ['level', 'children', 'customStyle'],
   [inlineItemNodeType]: ['item'],
   [itemLinkNodeType]: ['item', 'children', 'meta'],
   [linkNodeType]: ['url', 'children', 'meta'],
   [listItemNodeType]: ['children'],
   [listNodeType]: ['style', 'children'],
-  [paragraphNodeType]: ['children'],
+  [paragraphNodeType]: ['children', 'customStyle'],
   [rootNodeType]: ['children'],
   [spanNodeType]: ['value', 'marks'],
-  [thematicBreakNodeType]: [],
+  [thematicBreakNodeType]: ['customStyle'],
 };
 
 export const defaultMarks: DefaultMark[] = [

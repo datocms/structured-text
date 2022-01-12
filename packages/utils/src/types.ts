@@ -11,6 +11,20 @@ export type BlockNode =
   | Code
   | ThematicBreak;
 
+export type BlockNodeWithCustomStyle =
+  | Paragraph
+  | Heading
+  | Blockquote
+  | Code
+  | ThematicBreak;
+
+export type BlockNodeTypeWithCustomStyle =
+  | ParagraphType
+  | HeadingType
+  | BlockquoteType
+  | CodeType
+  | ThematicBreakType;
+
 export type InlineNode = Span | Link | ItemLink | InlineItem;
 
 export type NodeWithMeta = Link | ItemLink;
@@ -73,6 +87,8 @@ export type ParagraphType = 'paragraph';
  */
 export type Paragraph = {
   type: ParagraphType;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  customStyle?: string;
   children: Array<InlineNode>;
 };
 
@@ -98,6 +114,8 @@ export type HeadingType = 'heading';
 export type Heading = {
   type: HeadingType;
   level: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  customStyle?: string;
   children: Array<InlineNode>;
 };
 
@@ -177,6 +195,8 @@ export type ThematicBreakType = 'thematicBreak';
  */
 export type ThematicBreak = {
   type: ThematicBreakType;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  customStyle?: string;
 };
 
 export type CodeType = 'code';
@@ -201,6 +221,8 @@ export type Code = {
   highlight?: Array<number>;
   /** The marked up computer code */
   code: string;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  customStyle?: string;
 };
 
 export type BlockquoteType = 'blockquote';
@@ -229,6 +251,8 @@ export type Blockquote = {
   type: BlockquoteType;
   /** Attribution for the quote (ie `"Mark Smith"`) */
   attribution?: string;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  customStyle?: string;
   children: Array<Paragraph>;
 };
 
