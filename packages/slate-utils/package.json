@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-slate-utils",
-  "version": "1.2.3-alpha.0",
+  "version": "1.2.3-alpha.1",
   "description": "A set of helpers to translate DatoCMS Structured Text fields into Slate structures",
   "keywords": [
     "datocms",
@@ -32,7 +32,7 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-utils": "^1.2.3-alpha.0",
+    "datocms-structured-text-utils": "^1.2.3-alpha.1",
     "lodash-es": "^4.17.21",
     "slate": "0.60.1"
   },
