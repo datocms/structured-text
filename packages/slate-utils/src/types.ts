@@ -266,13 +266,7 @@ export const voidNodes = [blockDef, inlineItemDef, thematicBreakDef];
 
 export type Node = NonTextNode | Text;
 
-export type BlockNodeWithCustomStyle =
-  | Paragraph
-  | Heading
-  | Blockquote
-  | Code
-  | ThematicBreak;
-
+export type BlockNodeWithCustomStyle = Paragraph | Heading;
 declare module 'slate' {
   export interface CustomTypes {
     Element: NonTextNode;
