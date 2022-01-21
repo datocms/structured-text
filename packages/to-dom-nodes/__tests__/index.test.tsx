@@ -5,7 +5,7 @@ import {
   StructuredTextGraphQlResponse,
   StructuredTextDocument,
   RenderError,
-  renderRule,
+  renderNodeRule,
 } from '../src';
 import { isBlock, isHeading, Node, Block } from 'datocms-structured-text-utils';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -81,7 +81,7 @@ describe('render', () => {
               return text.replace(/This/, 'That');
             },
             customRules: [
-              renderRule(
+              renderNodeRule(
                 isHeading,
                 ({ adapter: { renderNode }, node, children, key }) => {
                   return renderNode(`h${node.level + 1}`, { key }, children);
@@ -274,7 +274,7 @@ describe('render', () => {
             >,
             {
               customRules: [
-                renderRule(
+                renderNodeRule(
                   (node: Node | GroupNode): node is Node =>
                     node.type === 'group',
                   ({ adapter: { renderNode }, children, key }) => {

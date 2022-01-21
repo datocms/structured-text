@@ -27,7 +27,7 @@ import {
   Span,
 } from 'datocms-structured-text-utils';
 
-export { renderRule, RenderError };
+export { renderRule as renderNodeRule, RenderError };
 
 export function markToTagName(mark: Mark): string {
   switch (mark) {
@@ -93,7 +93,7 @@ export type RenderMarkRule<
   apply: (ctx: RenderMarkContext<H, T, F>) => RenderResult<H, T, F>;
 };
 
-export function markRule<
+export function renderMarkRule<
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn
@@ -165,19 +165,30 @@ export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
   return attributes;
 };
 
+export type RenderOptions<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+> = {
+  adapter: Adapter<H, T, F>;
+  customNodeRules?: RenderRule<H, T, F>[];
+  metaTransformer?: TransformMetaFn;
+  customMarkRules?: RenderMarkRule<H, T, F>[];
+};
+
 export function render<
   R extends Record,
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn
 >(
-  adapter: Adapter<H, T, F>,
   structuredTextOrNode: StructuredText<R> | Document | Node | null | undefined,
-  customRules: RenderRule<H, T, F>[],
-  metaTransformer: TransformMetaFn = defaultMetaTransformer,
+  options: RenderOptions<H, T, F>,
 ): RenderResult<H, T, F> {
-  return genericRender(adapter, structuredTextOrNode, [
-    ...customRules,
+  const metaTransformer = options.metaTransformer || defaultMetaTransformer;
+
+  return genericRender(options.adapter, structuredTextOrNode, [
+    ...(options.customNodeRules || []),
     renderRule(isRoot, ({ adapter: { renderFragment }, key, children }) => {
       return renderFragment(children, key);
     }),
@@ -231,6 +242,6 @@ export function render<
         return renderNode(`h${node.level}`, { key }, children);
       },
     ),
-    spanNodeRenderRule({ customMarkRules: [] }),
+    spanNodeRenderRule({ customMarkRules: options.customMarkRules || [] }),
   ]);
 }

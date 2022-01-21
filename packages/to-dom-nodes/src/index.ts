@@ -1,7 +1,9 @@
 import {
   defaultMetaTransformer,
   render as genericHtmlRender,
-  renderRule,
+  RenderMarkRule,
+  renderNodeRule,
+  renderMarkRule,
   TransformedMeta,
   TransformMetaFn,
 } from 'datocms-structured-text-generic-html-renderer';
@@ -21,7 +23,10 @@ import {
 } from 'datocms-structured-text-utils';
 import hyperscript from 'hyperscript';
 
-export { renderRule, RenderError };
+export { renderNodeRule, renderMarkRule, RenderError };
+
+// deprecated export
+export { renderNodeRule as renderRule };
 
 export type {
   StructuredTextDocument,
@@ -75,8 +80,10 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
 };
 
 export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
-  /** A set of additional rules to convert the document to HTML **/
-  customRules?: RenderRule<H, T, F>[];
+  /** A set of additional rules to convert the nodes to HTML **/
+  customNodeRules?: RenderRule<H, T, F>[];
+  /** A set of additional rules to convert marks to HTML **/
+  customMarkRules?: RenderMarkRule<H, T, F>[];
   /** Function that converts 'link' and 'itemLink' `meta` into HTML attributes */
   metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into an HTML string **/
@@ -91,6 +98,8 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   renderNode?: H;
   /** Function to use to generate a React.Fragment **/
   renderFragment?: F;
+  /** @deprecated use `customNodeRules` instead **/
+  customRules?: RenderRule<H, T, F>[];
 };
 
 export function render<R extends StructuredTextGraphQlResponseRecord>(
@@ -107,18 +116,19 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   const renderInlineRecord = settings?.renderInlineRecord;
   const renderLinkToRecord = settings?.renderLinkToRecord;
   const renderBlock = settings?.renderBlock;
-  const customRules = settings?.customRules || [];
+  const customRules = settings?.customNodeRules || settings?.customRules || [];
 
-  const result = genericHtmlRender(
-    {
+  const result = genericHtmlRender(structuredTextOrNode, {
+    adapter: {
       renderText: settings?.renderText || defaultAdapter.renderText,
       renderNode: settings?.renderNode || defaultAdapter.renderNode,
       renderFragment: settings?.renderFragment || defaultAdapter.renderFragment,
     },
-    structuredTextOrNode,
-    [
+    metaTransformer: settings?.metaTransformer,
+    customMarkRules: settings?.customMarkRules,
+    customNodeRules: [
       ...customRules,
-      renderRule(isInlineItem, ({ node, adapter }) => {
+      renderNodeRule(isInlineItem, ({ node, adapter }) => {
         if (!renderInlineRecord) {
           throw new RenderError(
             `The Structured Text document contains an 'inlineItem' node, but no 'renderInlineRecord' option is specified!`,
@@ -149,7 +159,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
 
         return renderInlineRecord({ record: item, adapter });
       }),
-      renderRule(isItemLink, ({ node, children, adapter }) => {
+      renderNodeRule(isItemLink, ({ node, children, adapter }) => {
         if (!renderLinkToRecord) {
           throw new RenderError(
             `The Structured Text document contains an 'itemLink' node, but no 'renderLinkToRecord' option is specified!`,
@@ -191,7 +201,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
             : null,
         });
       }),
-      renderRule(isBlock, ({ node, adapter }) => {
+      renderNodeRule(isBlock, ({ node, adapter }) => {
         if (!renderBlock) {
           throw new RenderError(
             `The Structured Text document contains a 'block' node, but no 'renderBlock' option is specified!`,
@@ -223,8 +233,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         return renderBlock({ record: item, adapter });
       }),
     ],
-    settings?.metaTransformer,
-  );
+  });
 
   return result as ReturnType<F> | null;
 }

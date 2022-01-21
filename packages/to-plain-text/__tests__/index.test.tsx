@@ -3,7 +3,7 @@ import {
   StructuredTextGraphQlResponse,
   StructuredTextDocument,
   RenderError,
-  renderRule,
+  renderNodeRule,
 } from '../src';
 import { isHeading } from 'datocms-structured-text-utils';
 
@@ -77,7 +77,7 @@ describe('render', () => {
               return text.replace(/This/, 'That');
             },
             customRules: [
-              renderRule(
+              renderNodeRule(
                 isHeading,
                 ({ node, children, adapter: { renderFragment } }) => {
                   return renderFragment([

@@ -1,9 +1,11 @@
 import {
   defaultMetaTransformer,
   render as genericHtmlRender,
-  renderRule,
+  renderNodeRule,
+  renderMarkRule,
   TransformedMeta,
   TransformMetaFn,
+  RenderMarkRule,
 } from 'datocms-structured-text-generic-html-renderer';
 import {
   Adapter,
@@ -20,7 +22,10 @@ import {
   StructuredText as StructuredTextGraphQlResponse,
 } from 'datocms-structured-text-utils';
 
-export { renderRule, RenderError };
+export { renderNodeRule, renderMarkRule, RenderError };
+
+// deprecated export
+export { renderNodeRule as renderRule };
 
 export type {
   StructuredTextDocument,
@@ -88,7 +93,9 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
 
 export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   /** A set of additional rules to convert the document to a string **/
-  customRules?: RenderRule<H, T, F>[];
+  customNodeRules?: RenderRule<H, T, F>[];
+  /** A set of additional rules to convert marks to HTML **/
+  customMarkRules?: RenderMarkRule<H, T, F>[];
   /** Function that converts 'link' and 'itemLink' `meta` into HTML attributes */
   metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into a string **/
@@ -107,6 +114,8 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   renderNode?: H;
   /** Function to use to generate a React.Fragment **/
   renderFragment?: F;
+  /** @deprecated use `customNodeRules` instead **/
+  customRules?: RenderRule<H, T, F>[];
 };
 
 export function render<R extends StructuredTextGraphQlResponseRecord>(
@@ -123,22 +132,23 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   const renderInlineRecord = settings?.renderInlineRecord;
   const renderLinkToRecord = settings?.renderLinkToRecord;
   const renderBlock = settings?.renderBlock;
-  const customRules = settings?.customRules || [];
+  const customRules = settings?.customNodeRules || settings?.customRules || [];
   const renderFragment =
     settings?.renderFragment || defaultAdapter.renderFragment;
   const renderText = settings?.renderText || defaultAdapter.renderText;
   const renderNode = settings?.renderNode || defaultAdapter.renderNode;
 
-  const result = genericHtmlRender(
-    {
+  const result = genericHtmlRender(structuredTextOrNode, {
+    adapter: {
       renderText,
       renderNode,
       renderFragment,
     },
-    structuredTextOrNode,
-    [
+    metaTransformer: settings?.metaTransformer,
+    customMarkRules: settings?.customMarkRules,
+    customNodeRules: [
       ...customRules,
-      renderRule(isInlineItem, ({ node, adapter }) => {
+      renderNodeRule(isInlineItem, ({ node, adapter }) => {
         if (
           !renderInlineRecord ||
           !isStructuredText(structuredTextOrNode) ||
@@ -160,7 +170,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
 
         return renderInlineRecord({ record: item, adapter });
       }),
-      renderRule(isItemLink, ({ node, adapter, children }) => {
+      renderNodeRule(isItemLink, ({ node, adapter, children }) => {
         if (
           !renderLinkToRecord ||
           !isStructuredText(structuredTextOrNode) ||
@@ -193,7 +203,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
             : null,
         });
       }),
-      renderRule(isBlock, ({ node, adapter }) => {
+      renderNodeRule(isBlock, ({ node, adapter }) => {
         if (
           !renderBlock ||
           !isStructuredText(structuredTextOrNode) ||
@@ -216,8 +226,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         return renderBlock({ record: item, adapter });
       }),
     ],
-    settings?.metaTransformer,
-  );
+  });
 
   return result || null;
 }

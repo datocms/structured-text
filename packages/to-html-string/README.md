@@ -66,7 +66,7 @@ render({
 You can pass custom renderers for nodes and text as optional parameters like so:
 
 ```javascript
-import { render, renderRule } from 'datocms-structured-text-to-html-string';
+import { render, renderNodeRule } from 'datocms-structured-text-to-html-string';
 import { isHeading } from 'datocms-structured-text-utils';
 
 const structuredText = {
@@ -87,13 +87,18 @@ const structuredText = {
 
 const options = {
   renderText: (text) => text.replace(/Hello/, 'Howdy'),
-  customRules: [
-    renderRule(
+  customNodeRules: [
+    renderNodeRule(
       isHeading,
       ({ adapter: { renderNode }, node, children, key }) => {
         return renderNode(`h${node.level + 1}`, { key }, children);
       },
     ),
+  ],
+  customMarkRules: [
+    renderMarkRule('strong', ({ adapter: { renderNode }, children, key }) => {
+      return renderNode('bold', { key }, children);
+    }),
   ],
 };
 

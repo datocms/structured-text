@@ -1,5 +1,51 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`render custom span renderer 1`] = `
+Object {
+  "children": Array [
+    Object {
+      "attrs": Object {
+        "key": "t-0",
+      },
+      "children": Array [
+        Array [
+          Object {
+            "attrs": Object {
+              "key": "t-0",
+            },
+            "children": Array [
+              Object {
+                "children": Array [
+                  Object {
+                    "key": "t-0-line-first",
+                    "text": "text",
+                  },
+                  Object {
+                    "attrs": Object {
+                      "key": "t-0-br-0",
+                    },
+                    "children": Array [],
+                    "tagName": "br",
+                  },
+                  Object {
+                    "key": "t-0-line-0",
+                    "text": "two",
+                  },
+                ],
+                "key": "t-0",
+              },
+            ],
+            "tagName": "something-different",
+          },
+        ],
+      ],
+      "tagName": "p",
+    },
+  ],
+  "key": "t-0",
+}
+`;
+
 exports[`render transforms a structured text GraphQL response into HTML using an adapter 1`] = `
 Object {
   "children": Array [

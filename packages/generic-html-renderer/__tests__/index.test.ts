@@ -4,7 +4,7 @@ import {
   isInlineItem,
 } from 'datocms-structured-text-utils';
 import { isItemLink } from '../../utils/src';
-import { render, renderRule } from '../src';
+import { render, renderNodeRule, renderMarkRule } from '../src';
 
 type ImageRecord = {
   id: string;
@@ -66,7 +66,7 @@ const dummyAdapter = {
 const renderRulesForValue = (
   value: StructuredText<ImageRecord | BlogPostRecord>,
 ) => [
-  renderRule(
+  renderNodeRule(
     isInlineItem,
     ({ node, adapter: { renderNode, renderText }, key }) => {
       const record = value.links?.find((record) => record.id === node.item);
@@ -85,21 +85,24 @@ const renderRulesForValue = (
       }
     },
   ),
-  renderRule(isItemLink, ({ node, adapter: { renderNode }, key, children }) => {
-    const record = value.links?.find((record) => record.id === node.item);
+  renderNodeRule(
+    isItemLink,
+    ({ node, adapter: { renderNode }, key, children }) => {
+      const record = value.links?.find((record) => record.id === node.item);
 
-    if (!record) {
-      return null;
-    }
-
-    switch (record.__typename) {
-      case 'BlogPostRecord':
-        return renderNode('a', { key, href: `/blog/${record.id}` }, children);
-      default:
+      if (!record) {
         return null;
-    }
-  }),
-  renderRule(isBlock, ({ node, adapter: { renderNode }, key }) => {
+      }
+
+      switch (record.__typename) {
+        case 'BlogPostRecord':
+          return renderNode('a', { key, href: `/blog/${record.id}` }, children);
+        default:
+          return null;
+      }
+    },
+  ),
+  renderNodeRule(isBlock, ({ node, adapter: { renderNode }, key }) => {
     const record = value.blocks?.find((record) => record.id === node.item);
 
     if (!record) {
@@ -568,7 +571,10 @@ describe('render', () => {
     };
 
     expect(
-      render(dummyAdapter, value, renderRulesForValue(value)),
+      render(value, {
+        adapter: dummyAdapter,
+        customNodeRules: renderRulesForValue(value),
+      }),
     ).toMatchSnapshot();
   });
 
@@ -592,7 +598,42 @@ describe('render', () => {
     };
 
     expect(
-      render(dummyAdapter, value, renderRulesForValue(value)),
+      render(value, {
+        adapter: dummyAdapter,
+        customNodeRules: renderRulesForValue(value),
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it('custom span renderer', () => {
+    const value: StructuredText<ImageRecord | BlogPostRecord> = {
+      value: {
+        schema: 'dast',
+        document: {
+          type: 'root',
+          children: [
+            {
+              type: 'paragraph',
+              children: [
+                { type: 'span', marks: ['emphasis'], value: 'text\ntwo' },
+              ],
+            },
+          ],
+        },
+      },
+    };
+
+    expect(
+      render(value, {
+        adapter: dummyAdapter,
+        customMarkRules: [
+          renderMarkRule(
+            'emphasis',
+            ({ adapter: { renderNode }, key, children }) =>
+              renderNode('something-different', { key }, children),
+          ),
+        ],
+      }),
     ).toMatchSnapshot();
   });
 });
