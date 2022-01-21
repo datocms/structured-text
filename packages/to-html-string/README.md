@@ -97,7 +97,7 @@ const options = {
   ],
   customMarkRules: [
     renderMarkRule('strong', ({ adapter: { renderNode }, children, key }) => {
-      return renderNode('bold', { key }, children);
+      return renderNode('b', { key }, children);
     }),
   ],
 };
