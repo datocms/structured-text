@@ -1,8 +1,7 @@
-import { Node, Mark, Document } from './types';
+import { Node, Document } from './types';
 
 import {
   allowedAttributes,
-  allowedMarks,
   allowedChildren,
   inlineNodeTypes,
 } from './definitions';
@@ -92,21 +91,6 @@ export function validate(
           message: `"${
             node.type
           }"'s marks is not an Array:\n\n ${JSON.stringify(node, null, 2)}`,
-        };
-      }
-      const invalidMark = node.marks.find(
-        (mark: Mark) => !allowedMarks.includes(mark),
-      );
-      if (invalidMark) {
-        return {
-          valid: false,
-          message: `"${
-            node.type
-          }" has an invalid mark "${invalidMark}":\n\n ${JSON.stringify(
-            node,
-            null,
-            2,
-          )}`,
         };
       }
     }

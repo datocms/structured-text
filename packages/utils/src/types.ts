@@ -11,6 +11,10 @@ export type BlockNode =
   | Code
   | ThematicBreak;
 
+export type BlockNodeWithCustomStyle = Paragraph | Heading;
+
+export type BlockNodeTypeWithCustomStyle = ParagraphType | HeadingType;
+
 export type InlineNode = Span | Link | ItemLink | InlineItem;
 
 export type NodeWithMeta = Link | ItemLink;
@@ -73,6 +77,8 @@ export type ParagraphType = 'paragraph';
  */
 export type Paragraph = {
   type: ParagraphType;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  style?: string;
   children: Array<InlineNode>;
 };
 
@@ -98,6 +104,8 @@ export type HeadingType = 'heading';
 export type Heading = {
   type: HeadingType;
   level: 1 | 2 | 3 | 4 | 5 | 6;
+  /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
+  style?: string;
   children: Array<InlineNode>;
 };
 
@@ -256,14 +264,16 @@ export type Block = {
 
 export type SpanType = 'span';
 
-/** Supported marks for `span` nodes */
-export type Mark =
+export type DefaultMark =
   | 'strong'
   | 'code'
   | 'emphasis'
   | 'underline'
   | 'strikethrough'
   | 'highlight';
+
+/** Supported marks for `span` nodes */
+export type Mark = DefaultMark | string;
 
 /**
  * A `span` node represents a text node. It might optionally contain decorators called `marks`. It is worth
@@ -281,7 +291,7 @@ export type Span = {
   type: SpanType;
   /**
    * Array of decorators for the current chunk of text.
-   * Valid marks are: `strong`, `code`, `emphasis`, `underline`, `strikethrough` and `highlight`.
+   * Default marks: `strong`, `code`, `emphasis`, `underline`, `strikethrough` and `highlight`. Additional custom marks can be defined via plugin.
    */
   marks?: Mark[];
   value: string;

@@ -22,6 +22,7 @@
     "test": "npm run lint && jest",
     "build": "lerna run build",
     "publish": "npm run build && npm run test && lerna publish",
+    "publish-next": "npm run build && npm run test && lerna publish --dist-tag next",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write \"**/*.{ts,tsx,json}\"",
     "prepare": "husky install"

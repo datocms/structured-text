@@ -13,7 +13,7 @@ import parse5DocumentToHast from 'hast-util-from-parse5';
 import documentToHast from 'hast-util-from-dom';
 import {
   Document,
-  allowedMarks,
+  defaultMarks,
   Mark,
   BlockquoteType,
   CodeType,
@@ -80,7 +80,7 @@ export async function hastToStructuredText(
       : ['blockquote', 'code', 'heading', 'link', 'list'],
     allowedMarks: Array.isArray(options.allowedMarks)
       ? options.allowedMarks
-      : allowedMarks,
+      : defaultMarks,
     global: {
       baseUrl: null,
       baseUrlFound: false,
