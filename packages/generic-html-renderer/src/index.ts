@@ -23,6 +23,8 @@ import {
   isThematicBreak,
   NodeWithMeta,
   MetaEntry,
+  RenderContext,
+  Span,
 } from 'datocms-structured-text-utils';
 
 export { renderRule, RenderError };
@@ -40,6 +42,35 @@ export function markToTagName(mark: Mark): string {
     default:
       return mark;
   }
+}
+
+export function renderSpanValue<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+>({
+  node,
+  key,
+  adapter: { renderNode, renderText, renderFragment },
+}: RenderContext<H, T, F, Span>): RenderResult<H, T, F> {
+  const lines = node.value.split(/\n/);
+
+  if (lines.length === 0) {
+    return renderText(node.value, key);
+  }
+
+  return renderFragment(
+    lines.slice(1).reduce(
+      (acc, line, index) => {
+        return acc.concat([
+          renderNode('br', { key: `${key}-br-${index}` }),
+          renderText(line, `${key}-line-${index}`),
+        ]);
+      },
+      [renderText(lines[0], `${key}-line-first`)],
+    ),
+    key,
+  );
 }
 
 export type TransformMetaContext = {
@@ -136,27 +167,17 @@ export function render<
         return renderNode(`h${node.level}`, { key }, children);
       },
     ),
-    renderRule(isSpan, ({ adapter: { renderNode, renderText }, key, node }) => {
-      const marks = node.marks || [];
+    renderRule(isSpan, (context) => {
+      const {
+        adapter: { renderNode },
+        key,
+        node,
+      } = context;
 
-      const lines = node.value.split(/\n/);
-
-      const textWithNewlinesConvertedToBr =
-        lines.length > 0
-          ? lines.slice(1).reduce(
-              (acc, line, index) => {
-                return acc.concat([
-                  renderNode('br', { key: `${key}-br-${index}` }),
-                  renderText(line, `${key}-line-${index}`),
-                ]);
-              },
-              [renderText(lines[0], `${key}-line-first`)],
-            )
-          : renderText(node.value, key);
-
-      return marks.reduce<RenderResult<H, T, F>>((children, mark) => {
-        return renderNode(markToTagName(mark), { key }, children);
-      }, textWithNewlinesConvertedToBr);
+      return (node.marks || []).reduce(
+        (children, mark) => renderNode(markToTagName(mark), { key }, children),
+        renderSpanValue(context),
+      );
     }),
   ]);
 }
