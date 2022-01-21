@@ -73,6 +73,70 @@ export function renderSpanValue<
   );
 }
 
+type RenderMarkContext<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+> = {
+  mark: string;
+  adapter: Adapter<H, T, F>;
+  key: string;
+  children: Exclude<RenderResult<H, T, F>, null | undefined>[] | undefined;
+};
+
+export type RenderMarkRule<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+> = {
+  appliable: (mark: string) => boolean;
+  apply: (ctx: RenderMarkContext<H, T, F>) => RenderResult<H, T, F>;
+};
+
+export function markRule<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+>(
+  guard: string | ((mark: string) => boolean),
+  transform: (ctx: RenderMarkContext<H, T, F>) => RenderResult<H, T, F>,
+): RenderMarkRule<H, T, F> {
+  return {
+    appliable: typeof guard === 'string' ? (mark) => mark === guard : guard,
+    apply: transform,
+  };
+}
+
+export function spanNodeRenderRule<
+  H extends TrasformFn,
+  T extends TrasformFn,
+  F extends TrasformFn
+>({
+  customMarkRules,
+}: {
+  customMarkRules: RenderMarkRule<H, T, F>[];
+}): RenderRule<H, T, F> {
+  return renderRule(isSpan, (context) => {
+    const { adapter, key, node } = context;
+
+    return (node.marks || []).reduce((children, mark) => {
+      if (!children) {
+        return undefined;
+      }
+
+      const matchingCustomRule = customMarkRules.find((rule) =>
+        rule.appliable(mark),
+      );
+
+      if (matchingCustomRule) {
+        return matchingCustomRule.apply({ adapter, key, mark, children });
+      }
+
+      return adapter.renderNode(markToTagName(mark), { key }, children);
+    }, renderSpanValue(context));
+  });
+}
+
 export type TransformMetaContext = {
   node: NodeWithMeta;
   meta: Array<MetaEntry>;
@@ -167,17 +231,6 @@ export function render<
         return renderNode(`h${node.level}`, { key }, children);
       },
     ),
-    renderRule(isSpan, (context) => {
-      const {
-        adapter: { renderNode },
-        key,
-        node,
-      } = context;
-
-      return (node.marks || []).reduce(
-        (children, mark) => renderNode(markToTagName(mark), { key }, children),
-        renderSpanValue(context),
-      );
-    }),
+    spanNodeRenderRule({ customMarkRules: [] }),
   ]);
 }
