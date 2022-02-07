@@ -112,10 +112,16 @@ export function render<
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn,
-  R extends Record
+  R1 extends Record,
+  R2 extends Record = R1
 >(
   adapter: Adapter<H, T, F>,
-  structuredTextOrNode: StructuredText<R> | Document | Node | null | undefined,
+  structuredTextOrNode:
+    | StructuredText<R1, R2>
+    | Document
+    | Node
+    | null
+    | undefined,
   renderRules: RenderRule<H, T, F>[],
 ): RenderResult<H, T, F> {
   if (!structuredTextOrNode) {
@@ -124,7 +130,7 @@ export function render<
 
   const result = transformNode(
     adapter,
-    isStructuredText<R>(structuredTextOrNode)
+    isStructuredText<R1, R2>(structuredTextOrNode)
       ? structuredTextOrNode.value.document
       : isDocument(structuredTextOrNode)
       ? structuredTextOrNode.document
