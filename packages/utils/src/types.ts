@@ -440,13 +440,13 @@ export type NodeType =
  * and embedded within the flow of the text.
  */
 
-export type StructuredText<R extends Record = Record> = {
+export type StructuredText<R1 extends Record = Record, R2 extends Record = R1> = {
   /** A DatoCMS compatible document */
   value: Document;
   /** Blocks associated with the Structured Text */
-  blocks?: R[];
+  blocks?: R1[];
   /** Links associated with the Structured Text */
-  links?: R[];
+  links?: R2[];
 };
 
 export type Record = {
