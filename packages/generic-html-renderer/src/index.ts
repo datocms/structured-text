@@ -177,12 +177,18 @@ export type RenderOptions<
 };
 
 export function render<
-  R extends Record,
+  R1 extends Record,
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
+  R2 extends Record = R1
 >(
-  structuredTextOrNode: StructuredText<R> | Document | Node | null | undefined,
+  structuredTextOrNode:
+    | StructuredText<R1, R2>
+    | Document
+    | Node
+    | null
+    | undefined,
   options: RenderOptions<H, T, F>,
 ): RenderResult<H, T, F> {
   const metaTransformer = options.metaTransformer || defaultMetaTransformer;
