@@ -98,10 +98,10 @@ export function isThematicBreak(node: Node): node is ThematicBreak {
   return node.type === thematicBreakNodeType;
 }
 
-export function isStructuredText<R extends Record>(
+export function isStructuredText<R1 extends Record, R2 extends Record = R1>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   obj: any,
-): obj is StructuredText<R> {
+): obj is StructuredText<R1, R2> {
   return obj && 'value' in obj && isDocument(obj.value);
 }
 
