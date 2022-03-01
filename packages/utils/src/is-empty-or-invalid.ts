@@ -5,13 +5,13 @@ export default function isEmptyOrInvalid(structuredText: any): boolean {
     return true;
   }
 
-  const validation = validate(structuredText)
+  const validation = validate(structuredText.value)
   if (!validation.valid) {
     console.error(validation.message);
     return true;
   }
 
-  if (structuredText.value.document.children[0].children.value === "") {
+  if (structuredText.value.document.children[0].children[0].value === '') {
     return true;
   }
 
