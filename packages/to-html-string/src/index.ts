@@ -37,7 +37,7 @@ export type {
 type AdapterReturn = string | null;
 
 const vhtmlAdapter = (
-  tagName: string,
+  tagName: string | null,
   attrs?: Record<string, string> | null,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ...children: any[]
@@ -46,12 +46,13 @@ const vhtmlAdapter = (
     delete attrs.key;
   }
 
-  return vhtml(tagName, attrs, ...children);
+  return vhtml(tagName as string, attrs, ...children);
 };
 
 export const defaultAdapter = {
   renderNode: vhtmlAdapter,
-  renderFragment: (children: AdapterReturn[]): string => children.join(''),
+  renderFragment: (children: AdapterReturn[]): AdapterReturn =>
+    vhtmlAdapter(null, null, children),
   renderText: (text: string): AdapterReturn => text,
 };
 
