@@ -111,3 +111,33 @@ export function isDocument(
 ): obj is Document {
   return obj && 'schema' in obj && 'document' in obj;
 }
+
+export function isEmptyDocument(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  obj: any,
+): boolean {
+  if (!obj) {
+    return true;
+  }
+
+  const document = isStructuredText(obj)
+    ? obj.value
+    : isDocument(obj)
+    ? obj
+    : null;
+
+  if (!document) {
+    throw new Error(
+      'Passed object is neither null, a Structured Text value or a DAST document',
+    );
+  }
+
+  return (
+    document.schema === 'dast' &&
+    document.document.children.length === 1 &&
+    document.document.children[0].type === 'paragraph' &&
+    document.document.children[0].children.length === 1 &&
+    document.document.children[0].children[0].type === 'span' &&
+    document.document.children[0].children[0].value === ''
+  );
+}
