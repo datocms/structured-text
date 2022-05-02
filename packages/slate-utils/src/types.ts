@@ -1,4 +1,4 @@
-import { BaseRange } from 'slate';
+import { BaseEditor, BaseRange } from 'slate';
 
 import {
   Block as FieldBlock,
@@ -27,6 +27,7 @@ import {
   ThematicBreak as FieldThematicBreak,
   ThematicBreakType,
 } from 'datocms-structured-text-utils';
+import { ReactEditor } from 'slate-react';
 
 type TextMarks = {
   [key in `customMark_${string}` | DefaultMark]?: boolean;
@@ -269,8 +270,10 @@ export const voidNodes = [blockDef, inlineItemDef, thematicBreakDef];
 export type Node = NonTextNode | Text;
 
 export type BlockNodeWithCustomStyle = Paragraph | Heading;
+
 declare module 'slate' {
   export interface CustomTypes {
+    Editor: BaseEditor & ReactEditor;
     Element: NonTextNode;
     Text: Text;
     Range: BaseRange & { emoji?: string; codeToken?: string };
