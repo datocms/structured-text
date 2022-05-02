@@ -1,3 +1,5 @@
+import { BaseRange } from 'slate';
+
 import {
   Block as FieldBlock,
   Blockquote as FieldBlockquote,
@@ -271,7 +273,7 @@ declare module 'slate' {
   export interface CustomTypes {
     Element: NonTextNode;
     Text: Text;
-    Range: { emoji?: string; codeToken?: string };
+    Range: BaseRange & { emoji?: string; codeToken?: string };
   }
 }
 
