@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-to-dom-nodes",
-  "version": "2.0.4",
+  "version": "2.1.3",
   "description": "Convert DatoCMS Structured Text field to HTMLElement DOM nodes",
   "keywords": [
     "datocms",
