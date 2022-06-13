@@ -369,3 +369,5 @@ export const handlers = {
   [INLINES.ASSET_HYPERLINK]: noop,
   [INLINES.ENTRY_HYPERLINK]: noop,
 };
+
+export type { Handler };

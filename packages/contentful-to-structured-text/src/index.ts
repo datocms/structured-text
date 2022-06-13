@@ -2,10 +2,14 @@
 // @ts-nocheck
 
 // @ts-ignore
-import { CreateNodeFunction, ContentfulRootNode } from './types';
+import {
+  CreateNodeFunction,
+  ContentfulRootNode,
+  Context as StructuredTextContext,
+} from './types';
 import visitNode from './visit-node';
 import visitChildren from './visit-children';
-import { handlers } from './handlers';
+import { handlers, Handler } from './handlers';
 import {
   Document,
   Mark,
@@ -70,3 +74,6 @@ export async function richTextToStructuredText(
 }
 
 export { visitNode, visitChildren };
+
+export * as ContentfulRichTextTypes from '@contentful/rich-text-types';
+export type { CreateNodeFunction, Handler, StructuredTextContext };
