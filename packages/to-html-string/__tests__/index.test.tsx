@@ -1,5 +1,3 @@
-/** @jsx h */
-
 import {
   render,
   StructuredTextGraphQlResponse,
@@ -194,21 +192,16 @@ describe('render', () => {
                   return null;
               }
             },
-            renderBlock: ({ record }) => {
+            renderBlock: ({ record, adapter }) => {
               switch (record.__typename) {
                 case 'QuoteRecord':
-                  // return adapter.renderNode(
-                  //   'figure',
-                  //   null,
-                  //   adapter.renderNode('blockquote', null, record.quote),
-                  //   adapter.renderNode('figcaption', null, record.author),
-                  // );
-                  return (
-                    <figure>
-                      <blockquote>{record.quote}</blockquote>
-                      <figcaption>{record.author}</figcaption>
-                    </figure>
+                  return adapter.renderNode(
+                    'figure',
+                    null,
+                    adapter.renderNode('blockquote', null, record.quote),
+                    adapter.renderNode('figcaption', null, record.author),
                   );
+
                 default:
                   return null;
               }
