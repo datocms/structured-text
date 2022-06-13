@@ -1,6 +1,6 @@
 {
   "name": "datocms-contentful-to-structured-text",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Convert Contentful Rich Text to a valid DatoCMS Structured Text `dast` document",
   "keywords": [
     "contentful",
