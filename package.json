@@ -20,7 +20,7 @@
   },
   "scripts": {
     "test": "npm run lint && jest",
-    "build": "lerna run build",
+    "build": "lerna bootstrap && lerna run build",
     "publish": "npm run build && npm run test && lerna publish",
     "publish-next": "npm run build && npm run test && lerna publish --dist-tag next",
     "lint": "eslint . --ext .ts,.tsx",
