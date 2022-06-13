@@ -106,7 +106,7 @@ The default handlers are available on `context.defaultHandlers`.
 
 ### Context
 
-Every handler receives a `context` object that includes the following information:
+Every handler receives a `context` object containing the following information:
 
 ```js
 export interface GlobalContext {
