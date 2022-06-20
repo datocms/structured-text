@@ -1,42 +1,27 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-
-import { Handler, ContentfulNodeWithContent, ContentfulNode } from './types';
-import visitChildren from './visit-children';
 import { helpers } from '@contentful/rich-text-types';
+import { Node } from 'datocms-structured-text-utils';
+import { ContentfulNode, Context } from './types';
+import visitChildren from './visit-children';
 
-// visitNode() is for visiting a single node
-export default (async function visitNode(createNode, node, context) {
+const visitNode = async (
+  node: ContentfulNode | null,
+  context: Context,
+): Promise<Node | Array<Node> | void> => {
   if (!node) {
-    return null;
+    return;
   }
 
-  const handlers = context.handlers;
-  let handler;
+  const matchingHandler = context.handlers.find((h) => h.guard(node));
 
-  if (node.nodeType === 'document') {
-    handler = handlers.document;
-  } else if (helpers.isText(node)) {
-    handler = handlers.text;
-  } else {
-    handler = handlers[node.nodeType]
-      ? handlers[node.nodeType]
-      : unknownHandler;
+  if (matchingHandler) {
+    return await matchingHandler.handle(node, context);
   }
 
-  if (typeof handler !== 'function') {
+  if (helpers.isText(node)) {
     return undefined;
   }
 
-  return await handler(createNode, node, context);
-} as Handler<ContentfulNode>);
-
-// This is a default handler for unknown nodes.
-// It skips the current node and processes its children.
-const unknownHandler: Handler<ContentfulNodeWithContent> = async function unknownHandler(
-  createNode,
-  node,
-  context,
-) {
-  return visitChildren(createNode, node, context);
+  return await visitChildren(node, context);
 };
+
+export default visitNode;

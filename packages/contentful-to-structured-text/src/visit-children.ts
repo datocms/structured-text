@@ -1,42 +1,28 @@
-import {
-  Handler,
-  Node,
-  ContentfulNode,
-  ContentfulNodeWithContent,
-} from './types';
+import { Node, ContentfulNode, Context, ContentfulTextNode } from './types';
 import visitNode from './visit-node';
 
-// visitChildren() is for visiting all the children of a node
-export default (async function visitChildren(createNode, parentNode, context) {
+const visitChildren = async (
+  parentNode: Exclude<ContentfulNode, ContentfulTextNode>,
+  context: Context,
+): Promise<Node | Array<Node> | void> => {
   const nodes: ContentfulNode[] = Array.isArray(parentNode.content)
     ? parentNode.content
     : [];
-  let values: Node[] = [];
-  let index = -1;
-  let result;
 
-  while (++index < nodes.length) {
-    result = (await visitNode(createNode, nodes[index], {
+  let values: Node[] = [];
+
+  for (const node of nodes) {
+    const result = await visitNode(node, {
       ...context,
       parentNode,
-    })) as Node | Array<Node | Promise<Node>> | void;
+    });
 
     if (result) {
-      if (Array.isArray(result)) {
-        result = (await Promise.all(
-          result.map(
-            (nodeOrPromise: Node | Promise<Node>): Promise<Node> => {
-              if (nodeOrPromise instanceof Promise) {
-                return nodeOrPromise;
-              }
-              return Promise.resolve(nodeOrPromise);
-            },
-          ),
-        )) as Array<Node>;
-      }
-      values = values.concat(result);
+      values = [...values, ...(Array.isArray(result) ? result : [result])];
     }
   }
 
   return values;
-} as Handler<ContentfulNodeWithContent>);
+};
+
+export default visitChildren;

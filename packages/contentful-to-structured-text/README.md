@@ -109,11 +109,6 @@ The default handlers are available on `context.defaultHandlers`.
 Every handler receives a `context` object containing the following information:
 
 ```js
-export interface GlobalContext {
-  // <base> tag url. This is used for resolving relative URLs.
-  baseUrl?: string;
-}
-
 export interface Context {
   // The current parent `dast` node type.
   parentNodeType: NodeType;
@@ -131,9 +126,6 @@ export interface Context {
   >;
   // Array of allowed marks.
   allowedMarks: Mark[];
-  // Properties in this object are available to every handler as Context
-  // is not deeply cloned.
-  global: GlobalContext;
 }
 ```
 

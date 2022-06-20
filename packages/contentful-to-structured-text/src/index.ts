@@ -1,12 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 
-// @ts-ignore
-import {
-  CreateNodeFunction,
-  ContentfulRootNode,
-  Context as StructuredTextContext,
-} from './types';
+import { ContentfulDocument, Context as StructuredTextContext } from './types';
 import visitNode from './visit-node';
 import visitChildren from './visit-children';
 import { handlers, Handler } from './handlers';
@@ -18,10 +12,14 @@ import {
   HeadingType,
   LinkType,
   ListType,
+  Root,
 } from 'datocms-structured-text-utils';
-import { MARKS, Mark as ContentfulMark } from '@contentful/rich-text-types';
+import { MARKS } from '@contentful/rich-text-types';
 
-export const datoToContentfulMarks: Record<ContentfulMark, Mark> = {
+export { makeHandler } from './handlers';
+export { liftAssets } from './helpers/lift-assets';
+
+export const contentfulToDatoMark: Record<string, Mark> = {
   [MARKS.BOLD]: 'strong',
   [MARKS.ITALIC]: 'emphasis',
   [MARKS.UNDERLINE]: 'underline',
@@ -30,7 +28,7 @@ export const datoToContentfulMarks: Record<ContentfulMark, Mark> = {
 
 export type Options = Partial<{
   newlines: boolean;
-  handlers: Record<string, CreateNodeFunction>;
+  handlers: Handler[];
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType
   >;
@@ -38,35 +36,30 @@ export type Options = Partial<{
 }>;
 
 export async function richTextToStructuredText(
-  tree: ContentfulRootNode,
+  tree: ContentfulDocument | null,
   options: Options = {},
 ): Promise<Document | null> {
-  const createNode: CreateNodeFunction = (type, props) => {
-    props.type = type;
-    return props;
-  };
+  if (!tree) {
+    return null;
+  }
 
-  const rootNode = await visitNode(createNode, tree, {
+  const rootNode = await visitNode(tree, {
     parentNodeType: 'root',
     parentNode: null,
     defaultHandlers: handlers,
-    handlers: Object.assign({}, handlers, options.handlers || {}),
+    handlers: [...(options.handlers || []), ...handlers],
     allowedBlocks: Array.isArray(options.allowedBlocks)
       ? options.allowedBlocks
       : ['blockquote', 'code', 'heading', 'link', 'list'],
     allowedMarks: Array.isArray(options.allowedMarks)
       ? options.allowedMarks
-      : Object.values(datoToContentfulMarks),
-    global: {
-      baseUrl: null,
-      ...(options.shared || {}),
-    },
+      : Object.values(contentfulToDatoMark),
   });
 
   if (rootNode) {
     return {
       schema: 'dast',
-      document: rootNode,
+      document: rootNode as Root,
     };
   }
 
@@ -76,4 +69,4 @@ export async function richTextToStructuredText(
 export { visitNode, visitChildren };
 
 export * as ContentfulRichTextTypes from '@contentful/rich-text-types';
-export type { CreateNodeFunction, Handler, StructuredTextContext };
+export type { Handler, StructuredTextContext };

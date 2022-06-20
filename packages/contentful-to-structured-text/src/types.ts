@@ -5,6 +5,7 @@ import {
   Inline as ContentfulInline,
   Paragraph as ContentfulParagraph,
   Text as ContentfulTextNode,
+  Document as ContentfulDocument,
   TopLevelBlock as ContentfulRootNode,
   Quote as ContentfulQuote,
   Hr as ContentfulHr,
@@ -26,6 +27,7 @@ export type {
   ContentfulInline,
   ContentfulTextNode,
   ContentfulRootNode,
+  ContentfulDocument,
   ContentfulParagraph,
   ContentfulQuote,
   ContentfulHr,
@@ -33,42 +35,30 @@ export type {
   ContentfulHyperLink,
 };
 
-export type CreateNodeFunction = (
-  type: NodeType,
-  props: Omit<Node, 'type'>,
-) => Node;
-
-export interface GlobalContext {
-  /** This is used for resolving relative URLs. */
-  baseUrl?: string;
-}
-
 export interface Context {
   /** The parent `dast` node type. */
   parentNodeType: NodeType;
   /** The parent Contentful node. */
-  parentNode: ContentfulNode;
+  parentNode: ContentfulNode | null;
   /** A reference to the current handlers - merged default + user handlers. */
-  handlers: Record<string, Handler<unknown>>;
+  handlers: Handler[];
   /** A reference to the default handlers record (map). */
-  defaultHandlers: Record<string, Handler<unknown>>;
+  defaultHandlers: Handler[];
   /** Marks for span nodes. */
-  marks?: Mark[];
-  /** Properties in this object are avaliable to every handler as Context
-   * is not deeply cloned.
-   */
-  global: GlobalContext;
+  allowedMarks: Mark[];
+  /**  */
+  allowedBlocks: NodeType[];
+}
+export interface Handler {
+  guard: (node: ContentfulNode) => boolean;
+  handle: (
+    node: ContentfulNode,
+    context: Context,
+  ) => Promise<Node | Array<Node> | void>;
 }
 
-export type Handler<ContentfulNodeType> = (
-  createNodeFunction: CreateNodeFunction,
-  node: ContentfulNodeType,
-  context: Context,
-) =>
-  | Promise<Node | Array<Node> | void>
-  | Array<Promise<Node | Array<Node> | void>>;
-
 export type ContentfulNode =
+  | ContentfulDocument
   | ContentfulRootNode
   | ContentfulTextNode
   | ContentfulBlock
