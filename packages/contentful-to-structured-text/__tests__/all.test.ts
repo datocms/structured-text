@@ -1522,7 +1522,7 @@ describe('contentful-to-structured-text', () => {
 
         const result = await richTextToStructuredText(richText);
         expect(validate(result).valid).toBeTruthy();
-        const firstChild = result?.document.children[0] as any;
+        const firstChild = result?.document.children[0] as DatoParagraph;
         expect(firstChild.children[0].marks[0]).toBe(
           contentfulToDatoMark[markName],
         );
