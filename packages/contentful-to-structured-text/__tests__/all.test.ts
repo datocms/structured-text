@@ -1523,9 +1523,13 @@ describe('contentful-to-structured-text', () => {
         const result = await richTextToStructuredText(richText);
         expect(validate(result).valid).toBeTruthy();
         const firstChild = result?.document.children[0] as DatoParagraph;
-        expect(firstChild.children[0].marks[0]).toBe(
-          contentfulToDatoMark[markName],
-        );
+        const firstSpan = firstChild.children[0] as Span;
+
+        if (!firstSpan?.marks) {
+          throw new Error('This should not happen');
+        }
+
+        expect(firstSpan?.marks[0]).toBe(contentfulToDatoMark[markName]);
       });
     });
 
