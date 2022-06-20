@@ -131,7 +131,31 @@ export interface Context {
 
 ### Custom Handlers
 
-It is possible to register custom handlers and override the default behaviour via options:
+It is possible to register custom handlers and override the default behaviour via options, using the `makeHandler` function.
+
+For example, to create a custom handler for the Contentful `text` element, specify a guard clause to specify the correct type
+
+```ts
+  import { makeHandler } from 'datocms-contentful-to-structured-text';
+
+  const customTextHandler = makeHandler(
+    (node): node is Text => n.nodeType === "text",
+    async (node) => {
+      // This custom handler will generate two spans for every text node, instead of one.
+      return [
+        { type: 'span', value: node.value },
+        { type: 'span', value: node.value },
+      ];
+    }),
+
+  richTextToStructuredText(richText, {
+    handlers: [
+      customTextHandler,
+    ],
+  }).then((structuredText) => {
+    console.log(structuredText);
+  });
+```
 
 ```js
 import { paragraphHandler } from './customHandlers';
@@ -161,6 +185,8 @@ To improve the final result, you might want to modify the Rich Text tree before 
 In `dast`, images can only be presented as `Block` nodes, but blocks are not allowed inside of `ListItem` nodes (unordered-list/ordered-list). In this example we will split the original `unordered-list` in one list, the lifted up image block and another list.
 
 ```js
+import { liftAssets } from 'datocms-contentful-to-structured-text';
+
 const richTextWithAssets = {
   nodeType: 'document',
   data: {},
@@ -217,9 +243,23 @@ const richTextWithAssets = {
   ],
 };
 
-// This function transforms the richText tree and moves the embedded-asset-block to root,
-// splitting the list in two parts.
+liftAssets(richTextWithAssets);
 
+const handlers = {
+  'embedded-asset-block': async (createNode, node, context) => {
+    const item = '123';
+    return createNode('block', {
+      item,
+    });
+  },
+};
+
+const dast = await richTextToStructuredText(richTextWithAssets, { handlers });
+```
+
+The liftAssets function transforms the richText tree and moves the embedded-asset-block to root,splitting the list in two parts.
+
+```js
 function liftAssets(richText) {
   const visit = (node, cb, index = 0, parents = []) => {
     if (node.content && node.content.length > 0) {
@@ -288,19 +328,6 @@ function liftAssets(richText) {
     }
   });
 }
-
-liftAssets(richTextWithAssets);
-
-const handlers = {
-  'embedded-asset-block': async (createNode, node, context) => {
-    const item = '123';
-    return createNode('block', {
-      item,
-    });
-  },
-};
-
-const dast = await richTextToStructuredText(richTextWithAssets, { handlers });
 ```
 
 </details>
