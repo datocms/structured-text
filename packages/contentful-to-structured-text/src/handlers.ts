@@ -5,7 +5,6 @@ import {
   Blockquote,
   Heading,
   inlineNodeTypes,
-  isListItem,
   Link,
   List,
   ListItem,
@@ -28,8 +27,8 @@ import {
   Context,
   ContentfulNode,
 } from './types';
-import { wrap } from './wrap';
-import visitChildren from './visit-children';
+import { wrapInParagraph, wrapListItems } from './helpers/wrap';
+import visitChildren from './helpers/visit-children';
 import { contentfulToDatoMark } from '.';
 
 export function makeHandler<T extends ContentfulNode>(
@@ -57,7 +56,7 @@ export const handlers: Array<Handler> = [
           (child) => child && !allowedChildren.root.includes(child.type),
         )
       ) {
-        children = wrap(children);
+        children = wrapInParagraph(children);
       }
 
       return {
@@ -225,18 +224,23 @@ export const handlers: Array<Handler> = [
         allowedChildren[context.parentNodeType].includes('listItem') &&
         context.allowedBlocks.includes('list');
 
+      if (!isAllowedAsChild) {
+        return await visitChildren(node, {
+          ...context,
+          parentNodeType: context.parentNodeType,
+        });
+      }
+
       const children = await visitChildren(node, {
         ...context,
-        parentNodeType: isAllowedAsChild ? 'listItem' : context.parentNodeType,
+        parentNodeType: 'listItem',
       });
 
       if (Array.isArray(children) && children.length) {
-        return isAllowedAsChild
-          ? {
-              type: 'listItem',
-              children: wrap(children) as ListItem['children'],
-            }
-          : children;
+        return {
+          type: 'listItem',
+          children: wrapInParagraph(children) as ListItem['children'],
+        };
       }
 
       return undefined;
@@ -290,32 +294,5 @@ export const handlers: Array<Handler> = [
     },
   ),
 ];
-
-async function wrapListItems(
-  node: ContentfulList,
-  context: Context,
-): Promise<Node[]> {
-  const children = await visitChildren(node, context);
-
-  if (!Array.isArray(children)) {
-    return [];
-  }
-
-  return children.map((child) =>
-    isListItem(child)
-      ? child
-      : {
-          type: 'listItem',
-          children: [
-            allowedChildren.listItem.includes(child.type)
-              ? (child as Paragraph | List)
-              : {
-                  type: 'paragraph',
-                  children: [child] as Paragraph['children'],
-                },
-          ],
-        },
-  );
-}
 
 export type { Handler };

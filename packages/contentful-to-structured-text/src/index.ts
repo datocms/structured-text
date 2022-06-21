@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { ContentfulDocument, Context as StructuredTextContext } from './types';
-import visitNode from './visit-node';
-import visitChildren from './visit-children';
+import visitNode from './helpers/visit-node';
+import visitChildren from './helpers/visit-children';
 import { handlers, Handler } from './handlers';
 import {
   Document,
@@ -18,6 +18,7 @@ import { MARKS } from '@contentful/rich-text-types';
 
 export { makeHandler } from './handlers';
 export { liftAssets } from './helpers/lift-assets';
+export { wrapInParagraph } from './helpers/wrap';
 
 export const contentfulToDatoMark: Record<string, Mark> = {
   [MARKS.BOLD]: 'strong',

@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { Link, Paragraph, Span } from 'datocms-structured-text-utils';
-import { Node } from './types';
+import {
+  allowedChildren,
+  isListItem,
+  Link,
+  List,
+  Paragraph,
+  Span,
+} from 'datocms-structured-text-utils';
+import { ContentfulList, Context, Node } from '../types';
+import visitChildren from './visit-children';
 
 // Utility to convert a string into a function which checks a given node’s type
 // for said string.
@@ -10,11 +18,38 @@ const isPhrasing = (node: Node): node is Span | Link => {
 };
 
 // Wraps consecutive spans and links into a single paragraph
-export function wrap(nodes: Node[]): Node[] {
+export function wrapInParagraph(nodes: Node[]): Node[] {
   return runs(nodes, (children) => ({
     type: 'paragraph',
     children,
   }));
+}
+// Wraps consecutive spans and links into a single paragraph
+export async function wrapListItems(
+  node: ContentfulList,
+  context: Context,
+): Promise<Node[]> {
+  const children = await visitChildren(node, context);
+
+  if (!Array.isArray(children)) {
+    return [];
+  }
+
+  return children.map((child) =>
+    isListItem(child)
+      ? child
+      : {
+          type: 'listItem',
+          children: [
+            allowedChildren.listItem.includes(child.type)
+              ? (child as Paragraph | List)
+              : {
+                  type: 'paragraph',
+                  children: [child] as Paragraph['children'],
+                },
+          ],
+        },
+  );
 }
 
 // Wrap all runs of dast phrasing content in `paragraph` nodes.

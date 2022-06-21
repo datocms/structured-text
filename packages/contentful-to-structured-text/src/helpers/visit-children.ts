@@ -1,4 +1,4 @@
-import { Node, ContentfulNode, Context, ContentfulTextNode } from './types';
+import { Node, ContentfulNode, Context, ContentfulTextNode } from '../types';
 import visitNode from './visit-node';
 
 const visitChildren = async (

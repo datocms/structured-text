@@ -1,6 +1,6 @@
 import { helpers } from '@contentful/rich-text-types';
 import { Node } from 'datocms-structured-text-utils';
-import { ContentfulNode, Context } from './types';
+import { ContentfulNode, Context } from '../types';
 import visitChildren from './visit-children';
 
 const visitNode = async (
