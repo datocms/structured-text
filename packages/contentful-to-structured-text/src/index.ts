@@ -18,7 +18,10 @@ import { MARKS } from '@contentful/rich-text-types';
 
 export { makeHandler } from './handlers';
 export { liftAssets } from './helpers/lift-assets';
-export { wrapInParagraph } from './helpers/wrap';
+export {
+  wrapLinksAndSpansInSingleParagraph,
+  wrapInParagraph,
+} from './helpers/wrap';
 
 export const contentfulToDatoMark: Record<string, Mark> = {
   [MARKS.BOLD]: 'strong',

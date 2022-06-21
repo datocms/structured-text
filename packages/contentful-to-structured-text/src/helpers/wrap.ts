@@ -2,6 +2,7 @@
 
 import {
   allowedChildren,
+  InlineNode,
   isListItem,
   Link,
   List,
@@ -17,13 +18,38 @@ const isPhrasing = (node: Node): node is Span | Link => {
   return node.type === 'span' || node.type === 'link';
 };
 
+// Wrap in `paragraph` node.
+export const wrapInParagraph = (children: InlineNode[]): Node => ({
+  type: 'paragraph',
+  children,
+});
+
 // Wraps consecutive spans and links into a single paragraph
-export function wrapInParagraph(nodes: Node[]): Node[] {
-  return runs(nodes, (children) => ({
-    type: 'paragraph',
-    children,
-  }));
+export function wrapLinksAndSpansInSingleParagraph(nodes: Node[]): Node[] {
+  let result: Node[] = [];
+  let queue;
+
+  for (const node of nodes) {
+    if (isPhrasing(node)) {
+      if (!queue) queue = [];
+      queue.push(node);
+    } else {
+      if (queue) {
+        result = [...result, wrapInParagraph(queue)];
+        queue = undefined;
+      }
+
+      result = [...result, node];
+    }
+  }
+
+  if (queue) {
+    result = [...result, wrapInParagraph(queue)];
+  }
+
+  return result;
 }
+
 // Wraps consecutive spans and links into a single paragraph
 export async function wrapListItems(
   node: ContentfulList,
@@ -50,37 +76,4 @@ export async function wrapListItems(
           ],
         },
   );
-}
-
-// Wrap all runs of dast phrasing content in `paragraph` nodes.
-function runs(
-  nodes: Node[],
-  onPhrasing: (x: Paragraph['children']) => Paragraph,
-): Node[] {
-  let result: Node[] = [];
-  let index = -1;
-  let node;
-  let queue;
-
-  while (++index < nodes.length) {
-    node = nodes[index];
-
-    if (isPhrasing(node)) {
-      if (!queue) queue = [];
-      queue.push(node);
-    } else {
-      if (queue) {
-        result = result.concat(onPhrasing(queue));
-        queue = undefined;
-      }
-
-      result = result.concat(node);
-    }
-  }
-
-  if (queue) {
-    result = result.concat(onPhrasing(queue));
-  }
-
-  return result;
 }

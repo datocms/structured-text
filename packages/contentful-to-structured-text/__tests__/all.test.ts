@@ -41,8 +41,51 @@ describe('contentful-to-structured-text', () => {
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
+  describe('default handlers', () => {
+    describe('document', () => {
+      test('wraps not allowed children in paragraph', async () => {
+        const richText: Document = {
+          nodeType: BLOCKS.DOCUMENT,
+          data: {},
+          content: [
+            {
+              //  @ts-expect-error this tests the default handler behavior
+              nodeType: 'text',
+              value: 'paragraph',
+              marks: [],
+              data: {},
+            },
+          ],
+        };
+
+        const result = await richTextToStructuredText(richText);
+
+        expect(validate(result).valid).toBeTruthy();
+        expect(result).toMatchInlineSnapshot(`
+          Object {
+            "document": Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "type": "span",
+                      "value": "paragraph",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
+              ],
+              "type": "root",
+            },
+            "schema": "dast",
+          }
+        `);
+      });
+    });
+  });
+
   describe('custom handlers (user provided)', () => {
-    test('can return an array of nodes', async () => {
+    test('work', async () => {
       const richText: Document = {
         nodeType: BLOCKS.DOCUMENT,
         data: {},

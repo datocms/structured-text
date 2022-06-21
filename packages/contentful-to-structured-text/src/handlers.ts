@@ -27,7 +27,10 @@ import {
   Context,
   ContentfulNode,
 } from './types';
-import { wrapInParagraph, wrapListItems } from './helpers/wrap';
+import {
+  wrapLinksAndSpansInSingleParagraph,
+  wrapListItems,
+} from './helpers/wrap';
 import visitChildren from './helpers/visit-children';
 import { contentfulToDatoMark } from '.';
 
@@ -56,7 +59,7 @@ export const handlers: Array<Handler> = [
           (child) => child && !allowedChildren.root.includes(child.type),
         )
       ) {
-        children = wrapInParagraph(children);
+        children = wrapLinksAndSpansInSingleParagraph(children);
       }
 
       return {
@@ -239,7 +242,9 @@ export const handlers: Array<Handler> = [
       if (Array.isArray(children) && children.length) {
         return {
           type: 'listItem',
-          children: wrapInParagraph(children) as ListItem['children'],
+          children: wrapLinksAndSpansInSingleParagraph(
+            children,
+          ) as ListItem['children'],
         };
       }
 
