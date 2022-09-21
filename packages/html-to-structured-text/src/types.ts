@@ -23,9 +23,9 @@ export interface Context {
   /** The parent `hast` node. */
   parentNode: HastNode;
   /** A reference to the current handlers - merged default + user handlers. */
-  handlers: Record<string, Handler<unknown>>;
+  handlers: Record<string, Handler>;
   /** A reference to the default handlers record (map). */
-  defaultHandlers: Record<string, Handler<unknown>>;
+  defaultHandlers: Record<string, Handler>;
   /** true if the content can include newlines, and false if not (such as in headings). */
   wrapText: boolean;
   /** Marks for span nodes. */
@@ -43,9 +43,9 @@ export interface Context {
   global: GlobalContext;
 }
 
-export type Handler<HastNodeType> = (
+export type Handler<Node extends HastNode = HastNode> = (
   createNodeFunction: CreateNodeFunction,
-  node: HastNodeType,
+  node: Node,
   context: Context,
 ) =>
   | Promise<Node | Array<Node> | void>

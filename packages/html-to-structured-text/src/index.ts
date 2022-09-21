@@ -4,7 +4,7 @@
 // @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
-import { CreateNodeFunction, HastRootNode } from './types';
+import { CreateNodeFunction, Handler, HastRootNode } from './types';
 import visitNode from './visit-node';
 import visitChildren from './visit-children';
 import { handlers } from './handlers';
@@ -24,7 +24,7 @@ import {
 
 export type Options = Partial<{
   newlines: boolean;
-  handlers: Record<string, CreateNodeFunction>;
+  handlers: Record<string, Handler>;
   preprocess: (hast: HastRootNode) => void;
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType

@@ -1,8 +1,18 @@
-import { Handler, Node, HastNode, HastElementNode } from './types';
+import {
+  Node,
+  HastNode,
+  HastElementNode,
+  CreateNodeFunction,
+  Context,
+} from './types';
 import visitNode from './visit-node';
 
 // visitChildren() is for visiting all the children of a node
-export default (async function visitChildren(createNode, parentNode, context) {
+export default async function visitChildren(
+  createNode: CreateNodeFunction,
+  parentNode: HastElementNode,
+  context: Context,
+): Promise<Node | Array<Node> | void> {
   const nodes: HastNode[] = Array.isArray(parentNode.children)
     ? parentNode.children
     : [];
@@ -34,4 +44,4 @@ export default (async function visitChildren(createNode, parentNode, context) {
   }
 
   return values;
-} as Handler<HastElementNode>);
+}
