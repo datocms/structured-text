@@ -99,3 +99,5 @@ export async function hastToStructuredText(
 }
 
 export { visitNode, visitChildren };
+
+export * from './types';
