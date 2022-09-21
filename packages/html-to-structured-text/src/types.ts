@@ -43,9 +43,9 @@ export interface Context {
   global: GlobalContext;
 }
 
-export type Handler<Node extends HastNode = HastNode> = (
+export type Handler<HN extends HastNode = HastNode> = (
   createNodeFunction: CreateNodeFunction,
-  node: Node,
+  node: HN,
   context: Context,
 ) =>
   | Promise<Node | Array<Node> | void>
