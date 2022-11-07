@@ -20,6 +20,7 @@ import {
   HeadingType,
   LinkType,
   ListType,
+  Heading,
 } from 'datocms-structured-text-utils';
 
 export type Options = Partial<{
@@ -29,6 +30,7 @@ export type Options = Partial<{
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType
   >;
+  allowedHeadingLevels: Heading['level'][];
   allowedMarks: Mark[];
 }>;
 
@@ -81,6 +83,9 @@ export async function hastToStructuredText(
     allowedMarks: Array.isArray(options.allowedMarks)
       ? options.allowedMarks
       : defaultMarks,
+    allowedHeadingLevels: Array.isArray(options.allowedHeadingLevels)
+      ? options.allowedHeadingLevels
+      : [1, 2, 3, 4, 5, 6],
     global: {
       baseUrl: null,
       baseUrlFound: false,

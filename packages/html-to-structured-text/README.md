@@ -77,16 +77,18 @@ All the `*ToStructuredText` utils accept an optional `options` object as second 
 ```js
 type Options = Partial<{
   newlines: boolean,
-  // Override existing `hast` node handlers or add new ones.
+  // Override existing `hast` node handlers or add new ones
   handlers: Record<string, CreateNodeFunction>,
-  // Allows to tweak the `hast` tree before transforming it to a `dast` document.
+  // Allows to tweak the `hast` tree before transforming it to a `dast` document
   preprocess: (hast: HastRootNode) => HastRootNode,
-  // Array of allowed Block nodes.
+  // Array of allowed block nodes
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType,
   >,
-  // Array of allowed marks.
+  // Array of allowed marks
   allowedMarks: Mark[],
+  // Array of allowed heading levels for 'heading' nodes
+  allowedHeadingLevels: Array<1 | 2 | 3 | 4 | 5 | 6>,
 }>;
 ```
 

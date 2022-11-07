@@ -87,9 +87,12 @@ export const heading: Handler<HastElementNode> = async function heading(
   node,
   context,
 ) {
+  const level = Number(node.tagName.charAt(1)) || 1;
+
   const isAllowedChild =
     allowedChildren[context.parentNodeType].includes('heading') &&
-    context.allowedBlocks.includes('heading');
+    context.allowedBlocks.includes('heading') &&
+    context.allowedHeadingLevels.includes(level);
 
   const children = await visitChildren(createNode, node, {
     ...context,
@@ -100,7 +103,7 @@ export const heading: Handler<HastElementNode> = async function heading(
   if (Array.isArray(children) && children.length) {
     return isAllowedChild
       ? createNode('heading', {
-          level: Number(node.tagName.charAt(1)) || 1,
+          level,
           children,
         })
       : children;

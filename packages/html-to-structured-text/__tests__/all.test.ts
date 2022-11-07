@@ -541,6 +541,25 @@ describe('htmlToStructuredText', () => {
         expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
 
+      it('ignores non-allowed heading numbers', async () => {
+        const html = `
+          <h1>needs wrapping</h1>
+          <p>hello</p>
+        `;
+        const result = await htmlToStructuredText(html, {
+          allowedHeadingLevels: [2],
+        });
+        expect(validate(result).valid).toBeTruthy();
+        expect(result.document.children.map((child) => child.type))
+          .toMatchInlineSnapshot(`
+          Array [
+            "paragraph",
+            "paragraph",
+          ]
+        `);
+        expect(findAll(result.document, 'heading')).toHaveLength(0);
+      });
+
       it('ignores invalid children', async () => {
         const html = `
           <h1><p>p not allowed inside h1</p></h1>
