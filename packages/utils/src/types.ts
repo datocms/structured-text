@@ -312,7 +312,7 @@ export type LinkType = 'link';
  * ```json
  * {
  *   "type": "link",
- *   "url": "https://www.datocms.com/"
+ *   "url": "https://www.datocms.com/",
  *   "meta": [
  *     { "id": "rel", "value": "nofollow" },
  *     { "id": "target", "value": "_blank" }
