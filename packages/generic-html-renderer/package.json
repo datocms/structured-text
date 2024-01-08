@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-generic-html-renderer",
-  "version": "2.0.4",
+  "version": "2.1.12",
   "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields",
   "keywords": [
     "datocms",
@@ -33,7 +33,7 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-utils": "^2.0.4"
+    "datocms-structured-text-utils": "^2.1.12"
   },
   "gitHead": "e2342d17a94ecb8d41538daef11face03d21d871"
 }
