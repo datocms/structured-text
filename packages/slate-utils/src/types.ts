@@ -1,10 +1,8 @@
-import { BaseEditor, BaseRange } from 'slate';
-
 import {
   Block as FieldBlock,
+  BlockType,
   Blockquote as FieldBlockquote,
   BlockquoteType,
-  BlockType,
   Code as FieldCode,
   CodeType,
   DefaultMark,
@@ -27,6 +25,7 @@ import {
   ThematicBreak as FieldThematicBreak,
   ThematicBreakType,
 } from 'datocms-structured-text-utils';
+import { BaseEditor, BaseRange } from 'slate';
 import { ReactEditor } from 'slate-react';
 
 type TextMarks = {
@@ -176,12 +175,12 @@ export const thematicBreakDef: Definition = {
 
 export const linkDef: Definition = {
   type: 'link',
-  accepts: 'inlineNodesAndText',
+  accepts: 'text',
 };
 
 export const itemLinkDef: Definition = {
   type: 'itemLink',
-  accepts: 'inlineNodesAndText',
+  accepts: 'text',
 };
 
 export const inlineItemDef: Definition = {
