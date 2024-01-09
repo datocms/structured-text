@@ -1,8 +1,8 @@
 import {
   Block as FieldBlock,
-  BlockType,
   Blockquote as FieldBlockquote,
   BlockquoteType,
+  BlockType,
   Code as FieldCode,
   CodeType,
   DefaultMark,
@@ -155,17 +155,17 @@ type ReplaceSlateWithFieldTypes<T> = ReplaceType<
 
 export type Definition = {
   type: NodeType;
-  accepts: 'text' | 'inlineNodesAndText' | NodeType[];
+  accepts: Array<NodeType | 'textWithMarks' | 'text'>;
 };
 
 export const paragraphDef: Definition = {
   type: 'paragraph',
-  accepts: 'inlineNodesAndText',
+  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
 };
 
 export const headingDef: Definition = {
   type: 'heading',
-  accepts: 'inlineNodesAndText',
+  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
 };
 
 export const thematicBreakDef: Definition = {
@@ -175,12 +175,12 @@ export const thematicBreakDef: Definition = {
 
 export const linkDef: Definition = {
   type: 'link',
-  accepts: 'text',
+  accepts: ['textWithMarks', 'text'],
 };
 
 export const itemLinkDef: Definition = {
   type: 'itemLink',
-  accepts: 'text',
+  accepts: ['textWithMarks', 'text'],
 };
 
 export const inlineItemDef: Definition = {
@@ -210,12 +210,12 @@ export const blockquoteDef: Definition = {
 
 export const blockquoteSourceDef: Definition = {
   type: 'blockquoteSource',
-  accepts: 'text',
+  accepts: ['text'],
 };
 
 export const codeDef: Definition = {
   type: 'code',
-  accepts: 'text',
+  accepts: ['text'],
 };
 
 type BlockquoteSourceType = 'blockquoteSource';
