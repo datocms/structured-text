@@ -1,6 +1,6 @@
 {
   "name": "datocms-contentful-to-structured-text",
-  "version": "2.1.12",
+  "version": "3.0.0",
   "description": "Convert Contentful Rich Text to a valid DatoCMS Structured Text `dast` document",
   "keywords": [
     "contentful",
@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@contentful/rich-text-types": "^14.1.2",
-    "datocms-structured-text-utils": "^2.1.12"
+    "datocms-structured-text-utils": "^3.0.0"
   },
   "bugs": {
     "url": "https://github.com/datocms/structured-text/issues"
