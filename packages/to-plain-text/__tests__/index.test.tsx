@@ -81,7 +81,7 @@ describe('render', () => {
                 isHeading,
                 ({ node, children, adapter: { renderFragment } }) => {
                   return renderFragment([
-                    `Heading ${node.level}:`,
+                    `Heading ${node.level}: `,
                     ...(children || []),
                   ]);
                 },
@@ -146,7 +146,7 @@ describe('render', () => {
               children: [
                 {
                   type: 'span',
-                  value: 'This is a',
+                  value: 'This is a ',
                 },
                 {
                   type: 'span',
@@ -154,13 +154,61 @@ describe('render', () => {
                   value: 'title',
                 },
                 {
+                  type: 'span',
+                  value: '. ',
+                },
+                {
                   type: 'inlineItem',
                   item: '123',
                 },
                 {
+                  type: 'span',
+                  value: '. Find out more ',
+                },
+                {
                   type: 'itemLink',
                   item: '123',
-                  children: [{ type: 'span', value: 'here!' }],
+                  children: [{ type: 'span', value: 'here' }],
+                },
+                {
+                  type: 'span',
+                  value: '!',
+                },
+              ],
+            },
+            {
+              type: 'paragraph',
+              children: [
+                {
+                  type: 'span',
+                  value: 'This is a ',
+                },
+                {
+                  type: 'span',
+                  marks: ['highlight'],
+                  value: 'paragraph',
+                },
+                {
+                  type: 'span',
+                  value: '. ',
+                },
+                {
+                  type: 'span',
+                  value: 'This is a ',
+                },
+                {
+                  type: 'link',
+                  url: '/',
+                  children: [
+                    {
+                      type: 'span',
+                      value: 'link',
+                    },
+                  ],
+                },
+                {
+                  type: 'span',
+                  value: '. ',
                 },
               ],
             },
@@ -196,7 +244,7 @@ describe('render', () => {
             renderInlineRecord: ({ record }) => {
               switch (record.__typename) {
                 case 'DocPageRecord':
-                  return record.title;
+                  return `"${record.title}"`;
                 default:
                   return null;
               }

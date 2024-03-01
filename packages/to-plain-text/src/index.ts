@@ -1,21 +1,21 @@
 import {
   defaultMetaTransformer,
   render as genericHtmlRender,
-  renderNodeRule,
+  RenderMarkRule,
   renderMarkRule,
+  renderNodeRule,
   TransformedMeta,
   TransformMetaFn,
-  RenderMarkRule,
 } from 'datocms-structured-text-generic-html-renderer';
 import {
   Adapter,
+  Document as StructuredTextDocument,
   isBlock,
   isInlineItem,
   isItemLink,
   isStructuredText,
   Node,
   Record as StructuredTextGraphQlResponseRecord,
-  Document as StructuredTextDocument,
   RenderError,
   RenderResult,
   RenderRule,
@@ -23,10 +23,8 @@ import {
 } from 'datocms-structured-text-utils';
 
 export { renderNodeRule, renderMarkRule, RenderError };
-
 // deprecated export
 export { renderNodeRule as renderRule };
-
 export type {
   StructuredTextDocument,
   StructuredTextGraphQlResponse,
@@ -46,14 +44,13 @@ const renderFragment = (
         Array.isArray(child) ? [...acc, ...child] : [...acc, child],
       [],
     )
-    .filter<string>((x): x is string => !!x)
-    .map((x) => x.trim());
+    .filter<string>((x): x is string => !!x);
 
   if (!sanitizedChildren || sanitizedChildren.length === 0) {
     return '';
   }
 
-  return sanitizedChildren.join(' ');
+  return sanitizedChildren.join('');
 };
 
 export const defaultAdapter = {
@@ -62,7 +59,13 @@ export const defaultAdapter = {
     attrs: Record<string, string>,
     ...children: Array<undefined | string | string[]>
   ): string => {
-    return renderFragment(children);
+    // inline nodes
+    if (['a', 'em', 'u', 'del', 'mark', 'code'].includes(tagName)) {
+      return renderFragment(children);
+    }
+
+    // block nodes
+    return `${renderFragment(children)}\n`;
   },
   renderFragment,
   renderText: (text: string): string => text,
@@ -228,5 +231,5 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
     ],
   });
 
-  return result || null;
+  return result ? result.trim() : null;
 }
