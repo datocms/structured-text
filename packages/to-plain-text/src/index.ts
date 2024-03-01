@@ -60,7 +60,7 @@ export const defaultAdapter = {
     ...children: Array<undefined | string | string[]>
   ): string => {
     // inline nodes
-    if (['a', 'em', 'u', 'del', 'mark', 'code'].includes(tagName)) {
+    if (['a', 'em', 'u', 'del', 'mark', 'code', 'strong'].includes(tagName)) {
       return renderFragment(children);
     }
 
