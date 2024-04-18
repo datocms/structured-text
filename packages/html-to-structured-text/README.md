@@ -115,7 +115,7 @@ To ensure that a valid `dast` is generated the default handlers also check that 
 
 Information about the parent `dast` node name is available in `context.parentNodeType`.
 
-Please take a look at the [default handlers implementation](./handlers.ts) for examples.
+Please take a look at the [default handlers implementation](./src/handlers.ts) for examples.
 
 The default handlers are available on `context.defaultHandlers`.
 
