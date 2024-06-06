@@ -15,13 +15,14 @@ import {
   WithChildrenNode,
   InlineNode,
   NodeType,
-  Record,
+  Record as DatoCmsRecord,
   StructuredText,
   ThematicBreak,
   Document,
 } from './types';
 
 import {
+  allowedNodeTypes,
   headingNodeType,
   spanNodeType,
   rootNodeType,
@@ -98,33 +99,50 @@ export function isThematicBreak(node: Node): node is ThematicBreak {
   return node.type === thematicBreakNodeType;
 }
 
-export function isStructuredText<R1 extends Record, R2 extends Record = R1>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  obj: any,
-): obj is StructuredText<R1, R2> {
-  return obj && 'value' in obj && isDocument(obj.value);
+function isObject(obj: unknown): obj is Record<string, unknown> {
+  return Boolean(typeof obj === 'object' && obj);
 }
 
-export function isDocument(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  obj: any,
-): obj is Document {
-  return obj && 'schema' in obj && 'document' in obj;
+export function isNodeType(value: string): value is NodeType {
+  return allowedNodeTypes.includes(value as NodeType);
 }
 
-export function isEmptyDocument(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  obj: any,
-): boolean {
+export function isNode(obj: unknown): obj is Node {
+  return Boolean(
+    isObject(obj) &&
+      'type' in obj &&
+      typeof obj.type === 'string' &&
+      isNodeType(obj.type),
+  );
+}
+
+export function isStructuredText<
+  R1 extends DatoCmsRecord,
+  R2 extends DatoCmsRecord = R1
+>(obj: unknown): obj is StructuredText<R1, R2> {
+  return Boolean(isObject(obj) && 'value' in obj && isDocument(obj.value));
+}
+
+export function isDocument(obj: unknown): obj is Document {
+  return Boolean(
+    isObject(obj) &&
+      'schema' in obj &&
+      'document' in obj &&
+      obj.schema === 'dast',
+  );
+}
+
+export function isEmptyDocument(obj: unknown): boolean {
   if (!obj) {
     return true;
   }
 
-  const document = isStructuredText(obj)
-    ? obj.value
-    : isDocument(obj)
-    ? obj
-    : null;
+  const document =
+    isStructuredText(obj) && isDocument(obj.value)
+      ? obj.value
+      : isDocument(obj)
+      ? obj
+      : null;
 
   if (!document) {
     throw new Error(
@@ -133,7 +151,6 @@ export function isEmptyDocument(
   }
 
   return (
-    document.schema === 'dast' &&
     document.document.children.length === 1 &&
     document.document.children[0].type === 'paragraph' &&
     document.document.children[0].children.length === 1 &&

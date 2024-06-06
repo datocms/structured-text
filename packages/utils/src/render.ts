@@ -1,5 +1,5 @@
 import { Node, Record, Document, StructuredText } from './types';
-import { hasChildren, isDocument, isStructuredText } from './guards';
+import { hasChildren, isDocument, isNode, isStructuredText } from './guards';
 import { flatten } from 'array-flatten';
 
 export class RenderError extends Error {
@@ -90,12 +90,11 @@ export function transformNode<
 
   if (matchingTransform) {
     return matchingTransform.apply({ adapter, node, children, key, ancestors });
-  } else {
-    throw new RenderError(
-      `Don't know how to render a node with type "${node.type}". Please specify a custom renderRule for it!`,
-      node,
-    );
   }
+  throw new RenderError(
+    `Don't know how to render a node with type "${node.type}". Please specify a custom renderRule for it!`,
+    node,
+  );
 }
 
 export type Adapter<
@@ -128,18 +127,23 @@ export function render<
     return null;
   }
 
-  const result = transformNode(
-    adapter,
-    isStructuredText<R1, R2>(structuredTextOrNode)
+  const node =
+    isStructuredText<R1, R2>(structuredTextOrNode) &&
+    isDocument(structuredTextOrNode.value)
       ? structuredTextOrNode.value.document
       : isDocument(structuredTextOrNode)
       ? structuredTextOrNode.document
-      : structuredTextOrNode,
+      : isNode(structuredTextOrNode)
+      ? structuredTextOrNode
+      : undefined;
 
-    't-0',
-    [],
-    renderRules,
-  );
+  if (!node) {
+    throw new Error(
+      'Passed object is neither null, a Structured Text value, a DAST document or a DAST node',
+    );
+  }
+
+  const result = transformNode(adapter, node, 't-0', [], renderRules);
 
   return result;
 }

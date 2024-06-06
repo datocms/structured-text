@@ -1,6 +1,6 @@
 import {
   render,
-  StructuredTextGraphQlResponse,
+  TypesafeStructuredTextGraphQlResponse,
   StructuredTextDocument,
   RenderError,
   renderNodeRule,
@@ -44,7 +44,7 @@ describe('render', () => {
   });
 
   describe('simple dast with no links/blocks', () => {
-    const structuredText: StructuredTextGraphQlResponse = {
+    const structuredText: TypesafeStructuredTextGraphQlResponse = {
       value: {
         schema: 'dast',
         document: {
@@ -107,7 +107,7 @@ describe('render', () => {
       title: string;
     };
 
-    const structuredText: StructuredTextGraphQlResponse<
+    const structuredText: TypesafeStructuredTextGraphQlResponse<
       QuoteRecord | DocPageRecord
     > = {
       value: {
@@ -262,7 +262,7 @@ describe('render', () => {
 
         expect(
           render(
-            modifiedStructuredText as StructuredTextGraphQlResponse<
+            modifiedStructuredText as TypesafeStructuredTextGraphQlResponse<
               QuoteRecord | DocPageRecord
             >,
             {

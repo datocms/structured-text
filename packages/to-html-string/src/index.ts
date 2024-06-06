@@ -20,6 +20,7 @@ import {
   RenderResult,
   RenderRule,
   StructuredText as StructuredTextGraphQlResponse,
+  TypesafeStructuredText as TypesafeStructuredTextGraphQlResponse,
 } from 'datocms-structured-text-utils';
 import vhtml from 'vhtml';
 
@@ -30,6 +31,7 @@ export { renderNodeRule as renderRule };
 
 export type {
   StructuredTextDocument,
+  TypesafeStructuredTextGraphQlResponse,
   StructuredTextGraphQlResponse,
   StructuredTextGraphQlResponseRecord,
 };
