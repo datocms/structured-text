@@ -3,6 +3,7 @@
 👉 [Visit the DatoCMS homepage](https://www.datocms.com) or see [What is DatoCMS?](#what-is-datocms)
 
 ---
+
 <!--datocms-autoinclude-header end-->
 
 ![Node.js CI](https://github.com/datocms/structured-text/workflows/Node.js%20CI/badge.svg)
