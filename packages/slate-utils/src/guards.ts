@@ -4,6 +4,7 @@ import {
   blockDef,
   Blockquote,
   blockquoteDef,
+  BlockquoteSource,
   blockquoteSourceDef,
   Code,
   codeDef,
@@ -44,7 +45,7 @@ export const isParagraph = (element: NonTextNode): element is Paragraph =>
 
 export const isBlockquoteSource = (
   element: NonTextNode,
-): element is Paragraph => element.type === blockquoteSourceDef.type;
+): element is BlockquoteSource => element.type === blockquoteSourceDef.type;
 
 export const isHeading = (element: NonTextNode): element is Heading =>
   element.type === headingDef.type;
