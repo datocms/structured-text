@@ -11,6 +11,7 @@ import {
   Adapter,
   Document as StructuredTextDocument,
   isBlock,
+  isInlineBlock,
   isInlineItem,
   isItemLink,
   isStructuredText,
@@ -113,6 +114,10 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   ) => string | null | undefined;
   /** Fuction that converts a 'block' node into a string **/
   renderBlock?: (context: RenderBlockContext<R>) => string | null | undefined;
+  /** Fuction that converts an 'inlineBlock' node into a string **/
+  renderInlineBlock?: (
+    context: RenderBlockContext<R>,
+  ) => string | null | undefined;
   /** Fuction that converts a simple string text into a string **/
   renderText?: T;
   /** React.createElement-like function to use to convert a node into a string **/
@@ -137,6 +142,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   const renderInlineRecord = settings?.renderInlineRecord;
   const renderLinkToRecord = settings?.renderLinkToRecord;
   const renderBlock = settings?.renderBlock;
+  const renderInlineBlock = settings?.renderInlineBlock;
   const customRules = settings?.customNodeRules || settings?.customRules || [];
   const renderFragment =
     settings?.renderFragment || defaultAdapter.renderFragment;
@@ -229,6 +235,28 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         }
 
         return renderBlock({ record: item, adapter });
+      }),
+      renderNodeRule(isInlineBlock, ({ node, adapter }) => {
+        if (
+          !renderInlineBlock ||
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.blocks
+        ) {
+          return null;
+        }
+
+        const item = structuredTextOrNode.blocks.find(
+          (item) => item.id === node.item,
+        );
+
+        if (!item) {
+          throw new RenderError(
+            `The Structured Text document contains an 'inlineBlock' node, but cannot find a record with ID ${node.item} inside .blocks!`,
+            node,
+          );
+        }
+
+        return renderInlineBlock({ record: item, adapter });
       }),
     ],
   });
