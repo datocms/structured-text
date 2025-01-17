@@ -175,12 +175,26 @@ export type Definition = {
 
 export const paragraphDef: Definition = {
   type: 'paragraph',
-  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
+  accepts: [
+    'link',
+    'itemLink',
+    'inlineItem',
+    'inlineBlock',
+    'textWithMarks',
+    'text',
+  ],
 };
 
 export const headingDef: Definition = {
   type: 'heading',
-  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
+  accepts: [
+    'link',
+    'itemLink',
+    'inlineItem',
+    'inlineBlock',
+    'textWithMarks',
+    'text',
+  ],
 };
 
 export const thematicBreakDef: Definition = {
