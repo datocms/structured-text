@@ -107,8 +107,14 @@ describe('render', () => {
       title: string;
     };
 
+    type MentionRecord = {
+      id: string;
+      __typename: 'MentionRecord';
+      name: string;
+    };
+
     const structuredText: TypesafeStructuredTextGraphQlResponse<
-      QuoteRecord | DocPageRecord
+      QuoteRecord | DocPageRecord | MentionRecord
     > = {
       value: {
         schema: 'dast',
@@ -136,6 +142,10 @@ describe('render', () => {
                   type: 'itemLink',
                   item: '123',
                   children: [{ type: 'span', value: 'here!' }],
+                },
+                {
+                  type: 'inlineBlock',
+                  item: '789',
                 },
               ],
             },
@@ -170,6 +180,11 @@ describe('render', () => {
           __typename: 'QuoteRecord',
           quote: 'Foo bar.',
           author: 'Mark Smith',
+        },
+        {
+          id: '789',
+          __typename: 'MentionRecord',
+          name: 'John Doe',
         },
       ],
       links: [
@@ -224,6 +239,15 @@ describe('render', () => {
                   return null;
               }
             },
+            renderInlineBlock: ({ record, adapter }) => {
+              switch (record.__typename) {
+                case 'MentionRecord':
+                  return adapter.renderNode('em', null, record.name);
+
+                default:
+                  return null;
+              }
+            },
           }),
         ).toMatchSnapshot();
       });
@@ -263,7 +287,7 @@ describe('render', () => {
         expect(
           render(
             modifiedStructuredText as TypesafeStructuredTextGraphQlResponse<
-              QuoteRecord | DocPageRecord
+              QuoteRecord | DocPageRecord | MentionRecord
             >,
             {
               customRules: [
@@ -313,6 +337,15 @@ describe('render', () => {
                     return null;
                 }
               },
+              renderInlineBlock: ({ record, adapter }) => {
+                switch (record.__typename) {
+                  case 'MentionRecord':
+                    return adapter.renderNode('em', null, record.name);
+
+                  default:
+                    return null;
+                }
+              },
             },
           ),
         ).toMatchSnapshot();
@@ -334,6 +367,7 @@ describe('render', () => {
             renderInlineRecord: () => null,
             renderLinkToRecord: () => null,
             renderBlock: () => null,
+            renderInlineBlock: () => null,
           }),
         ).toMatchSnapshot();
       });
@@ -348,6 +382,7 @@ describe('render', () => {
               renderInlineRecord: () => null,
               renderLinkToRecord: () => null,
               renderBlock: () => null,
+              renderInlineBlock: () => null,
             },
           );
         }).toThrow(RenderError);

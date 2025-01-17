@@ -15,7 +15,7 @@ export type BlockNodeWithCustomStyle = Paragraph | Heading;
 
 export type BlockNodeTypeWithCustomStyle = ParagraphType | HeadingType;
 
-export type InlineNode = Span | Link | ItemLink | InlineItem;
+export type InlineNode = Span | Link | ItemLink | InlineItem | InlineBlock;
 
 export type NodeWithMeta = Link | ItemLink;
 
@@ -262,6 +262,22 @@ export type Block = {
   item: string;
 };
 
+export type InlineBlockType = 'inlineBlock';
+
+/**
+ * ```json
+ * {
+ *   "type": "inlineBlock",
+ *   "item": "1238455312"
+ * }
+ * ```
+ */
+export type InlineBlock = {
+  type: InlineBlockType;
+  /** The DatoCMS block record ID */
+  item: string;
+};
+
 export type SpanType = 'span';
 
 export type DefaultMark =
@@ -405,7 +421,7 @@ export type InlineItem = {
 
 export type WithChildrenNode = Exclude<
   Node,
-  Code | Span | Block | InlineItem | ThematicBreak
+  Code | Span | Block | InlineBlock | InlineItem | ThematicBreak
 >;
 
 /**
@@ -424,6 +440,7 @@ export type NodeType =
   | ItemLinkType
   | InlineItemType
   | BlockType
+  | InlineBlockType
   | ListType
   | ListItemType
   | BlockquoteType
