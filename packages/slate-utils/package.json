@@ -35,8 +35,8 @@
   "dependencies": {
     "datocms-structured-text-utils": "^4.0.1",
     "lodash-es": "^4.17.21",
-    "slate": "0.78.0",
-    "slate-react": "0.78.1"
+    "slate": "0.82.0",
+    "slate-react": "0.82.1"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.5",
