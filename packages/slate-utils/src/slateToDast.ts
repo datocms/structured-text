@@ -2,6 +2,7 @@ import {
   allowedAttributes,
   defaultMarks,
   BlockType,
+  InlineBlockType,
   Blockquote as FieldBlockquote,
   Code as FieldCode,
   Document as FieldDocument,
@@ -14,6 +15,7 @@ import {
 import pick from 'lodash-es/pick';
 import {
   isBlock,
+  isInlineBlock,
   isBlockquote,
   isBlockquoteSource,
   isCode,
@@ -23,17 +25,23 @@ import {
   isText,
   isThematicBreak,
 } from './guards';
-import { Block, BlockquoteSource, Node, nonTextNodeDefs } from './types';
+import {
+  Block,
+  BlockquoteSource,
+  InlineBlock,
+  Node,
+  nonTextNodeDefs,
+} from './types';
 
 type FieldBlockWithFullItem = {
-  type: BlockType;
+  type: BlockType | InlineBlockType;
   /** The DatoCMS block record ID */
   item: Record<string, unknown>;
 };
 
 function innerSerialize(
   nodes: Node[],
-  convertBlock: (block: Block) => FieldBlockWithFullItem,
+  convertBlock: (block: Block | InlineBlock) => FieldBlockWithFullItem,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any[] {
   return nodes.map((node: Node) => {
@@ -68,7 +76,7 @@ function innerSerialize(
       throw new Error(`Don't know how to serialize block of type ${node.type}`);
     }
 
-    if (isBlock(node)) {
+    if (isBlock(node) || isInlineBlock(node)) {
       return convertBlock(node);
     }
 
@@ -172,7 +180,7 @@ export function slateToDast(
     return null;
   }
 
-  const children = innerSerialize(nodes, (node: Block) => {
+  const children = innerSerialize(nodes, (node: Block | InlineBlock) => {
     const { blockModelId, id, ...blockAttributes } = node;
 
     const recordAttributes: Record<string, unknown> = {};
@@ -209,8 +217,10 @@ export function slateToDast(
       record.id = id;
     }
 
+    const type = isBlock(node) ? 'block' : 'inlineBlock';
+
     const fieldBlock: FieldBlockWithFullItem = {
-      type: 'block',
+      type,
       item: record,
     };
 

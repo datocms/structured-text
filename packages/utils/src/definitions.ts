@@ -2,6 +2,7 @@ import { DefaultMark, NodeType } from './types';
 
 export const blockquoteNodeType = 'blockquote' as const;
 export const blockNodeType = 'block' as const;
+export const inlineBlockNodeType = 'inlineBlock' as const;
 export const codeNodeType = 'code' as const;
 export const headingNodeType = 'heading' as const;
 export const inlineItemNodeType = 'inlineItem' as const;
@@ -17,6 +18,7 @@ export const thematicBreakNodeType = 'thematicBreak' as const;
 export const allowedNodeTypes = [
   blockquoteNodeType,
   blockNodeType,
+  inlineBlockNodeType,
   codeNodeType,
   headingNodeType,
   inlineItemNodeType,
@@ -35,6 +37,7 @@ export type AllowedChildren = Record<NodeType, 'inlineNodes' | NodeType[]>;
 export const allowedChildren: AllowedChildren = {
   [blockquoteNodeType]: [paragraphNodeType],
   [blockNodeType]: [],
+  [inlineBlockNodeType]: [],
   [codeNodeType]: [],
   [headingNodeType]: 'inlineNodes',
   [inlineItemNodeType]: [],
@@ -61,6 +64,7 @@ export const inlineNodeTypes = [
   linkNodeType,
   itemLinkNodeType,
   inlineItemNodeType,
+  inlineBlockNodeType,
 ];
 
 export type AllowedAttributes = Record<NodeType, string[]>;
@@ -68,6 +72,7 @@ export type AllowedAttributes = Record<NodeType, string[]>;
 export const allowedAttributes: AllowedAttributes = {
   [blockquoteNodeType]: ['children', 'attribution'],
   [blockNodeType]: ['item'],
+  [inlineBlockNodeType]: ['item'],
   [codeNodeType]: ['language', 'highlight', 'code'],
   [headingNodeType]: ['level', 'children', 'style'],
   [inlineItemNodeType]: ['item'],

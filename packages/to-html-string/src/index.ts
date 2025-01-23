@@ -21,6 +21,7 @@ import {
   RenderRule,
   StructuredText as StructuredTextGraphQlResponse,
   TypesafeStructuredText as TypesafeStructuredTextGraphQlResponse,
+  isInlineBlock,
 } from 'datocms-structured-text-utils';
 import vhtml from 'vhtml';
 
@@ -94,6 +95,8 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   renderLinkToRecord?: (context: RenderRecordLinkContext<R>) => string | null;
   /** Fuction that converts a 'block' node into an HTML string **/
   renderBlock?: (context: RenderBlockContext<R>) => string | null;
+  /** Fuction that converts an 'inlineBlock' node into an HTML string **/
+  renderInlineBlock?: (context: RenderBlockContext<R>) => string | null;
   /** Fuction that converts a simple string text into an HTML string **/
   renderText?: T;
   /** React.createElement-like function to use to convert a node into an HTML string **/
@@ -118,6 +121,7 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
   const renderInlineRecord = settings?.renderInlineRecord;
   const renderLinkToRecord = settings?.renderLinkToRecord;
   const renderBlock = settings?.renderBlock;
+  const renderInlineBlock = settings?.renderInlineBlock;
   const customRules = settings?.customNodeRules || settings?.customRules || [];
 
   const result = genericHtmlRender(structuredTextOrNode, {
@@ -233,6 +237,37 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         }
 
         return renderBlock({ record: item, adapter });
+      }),
+      renderNodeRule(isInlineBlock, ({ node, adapter }) => {
+        if (!renderInlineBlock) {
+          throw new RenderError(
+            `The Structured Text document contains an 'inlineBlock' node, but no 'renderInlineBlock' option is specified!`,
+            node,
+          );
+        }
+
+        if (
+          !isStructuredText(structuredTextOrNode) ||
+          !structuredTextOrNode.blocks
+        ) {
+          throw new RenderError(
+            `The document contains an 'inlineBlock' node, but the passed value is not a Structured Text GraphQL response, or .blocks is not present!`,
+            node,
+          );
+        }
+
+        const item = structuredTextOrNode.blocks.find(
+          (item) => item.id === node.item,
+        );
+
+        if (!item) {
+          throw new RenderError(
+            `The Structured Text document contains an 'inlineBlock' node, but cannot find a record with ID ${node.item} inside .blocks!`,
+            node,
+          );
+        }
+
+        return renderInlineBlock({ record: item, adapter });
       }),
     ],
   });

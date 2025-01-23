@@ -3,6 +3,7 @@ import {
   List,
   Blockquote,
   Block,
+  InlineBlock,
   Link,
   ItemLink,
   InlineItem,
@@ -31,6 +32,7 @@ import {
   listItemNodeType,
   blockquoteNodeType,
   blockNodeType,
+  inlineBlockNodeType,
   codeNodeType,
   linkNodeType,
   itemLinkNodeType,
@@ -77,6 +79,10 @@ export function isBlockquote(node: Node): node is Blockquote {
 
 export function isBlock(node: Node): node is Block {
   return node.type === blockNodeType;
+}
+
+export function isInlineBlock(node: Node): node is InlineBlock {
+  return node.type === inlineBlockNodeType;
 }
 
 export function isCode(node: Node): node is Code {
