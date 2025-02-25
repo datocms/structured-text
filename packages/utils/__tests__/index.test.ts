@@ -74,6 +74,7 @@ describe('datocms-structured-text-utils', () => {
                 type: 'paragraph',
                 children: [
                   { type: 'span', marks: ['strikethrough'], value: 'Foobar' },
+                  { type: 'inlineBlock', item: '123' },
                 ],
               },
             ],

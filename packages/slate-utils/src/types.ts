@@ -10,6 +10,8 @@ import {
   HeadingType,
   InlineItem as FieldInlineItem,
   InlineItemType,
+  InlineBlock as FieldInlineBlock,
+  InlineBlockType,
   ItemLink as FieldItemLink,
   ItemLinkType,
   Link as FieldLink,
@@ -40,6 +42,15 @@ export type Text = {
 
 export type Block = {
   type: BlockType;
+  blockModelId: string;
+  id?: string;
+  key?: string;
+  children: [{ text: '' }];
+  [fieldApiKey: string]: unknown;
+};
+
+export type InlineBlock = {
+  type: InlineBlockType;
   blockModelId: string;
   id?: string;
   key?: string;
@@ -118,39 +129,43 @@ type ReplaceSlateWithFieldTypes<T> = ReplaceType<
                 ReplaceType<
                   ReplaceType<
                     ReplaceType<
-                      ReplaceType<T, FieldThematicBreak, ThematicBreak>,
-                      FieldHeading,
-                      Heading
+                      ReplaceType<
+                        ReplaceType<T, FieldThematicBreak, ThematicBreak>,
+                        FieldHeading,
+                        Heading
+                      >,
+                      FieldParagraph,
+                      Paragraph
                     >,
-                    FieldParagraph,
-                    Paragraph
+                    FieldLink,
+                    Link
                   >,
-                  FieldLink,
-                  Link
+                  FieldInlineItem,
+                  InlineItem
                 >,
-                FieldInlineItem,
-                InlineItem
+                FieldItemLink,
+                ItemLink
               >,
-              FieldItemLink,
-              ItemLink
+              FieldBlockquote,
+              Blockquote
             >,
-            FieldBlockquote,
-            Blockquote
+            FieldList,
+            List
           >,
-          FieldList,
-          List
+          FieldListItem,
+          ListItem
         >,
-        FieldListItem,
-        ListItem
+        FieldCode,
+        Code
       >,
-      FieldCode,
-      Code
+      Span,
+      Text
     >,
-    Span,
-    Text
+    FieldBlock,
+    Block
   >,
-  FieldBlock,
-  Block
+  FieldInlineBlock,
+  InlineBlock
 >;
 
 export type Definition = {
@@ -160,12 +175,26 @@ export type Definition = {
 
 export const paragraphDef: Definition = {
   type: 'paragraph',
-  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
+  accepts: [
+    'link',
+    'itemLink',
+    'inlineItem',
+    'inlineBlock',
+    'textWithMarks',
+    'text',
+  ],
 };
 
 export const headingDef: Definition = {
   type: 'heading',
-  accepts: ['link', 'itemLink', 'inlineItem', 'textWithMarks', 'text'],
+  accepts: [
+    'link',
+    'itemLink',
+    'inlineItem',
+    'inlineBlock',
+    'textWithMarks',
+    'text',
+  ],
 };
 
 export const thematicBreakDef: Definition = {
@@ -190,6 +219,11 @@ export const inlineItemDef: Definition = {
 
 export const blockDef: Definition = {
   type: 'block',
+  accepts: [],
+};
+
+export const inlineBlockDef: Definition = {
+  type: 'inlineBlock',
   accepts: [],
 };
 
@@ -237,6 +271,7 @@ export type NonTextNode =
   | ItemLink
   | InlineItem
   | Block
+  | InlineBlock
   | List
   | ListItem
   | Blockquote
@@ -251,6 +286,7 @@ export type NodeType =
   | ItemLinkType
   | InlineItemType
   | BlockType
+  | InlineBlockType
   | ListType
   | ListItemType
   | BlockquoteType
@@ -258,13 +294,23 @@ export type NodeType =
   | CodeType
   | ThematicBreakType;
 
-export type InlineNode = Link | ItemLink | InlineItem;
+export type InlineNode = Link | ItemLink | InlineItem | InlineBlock;
 
-export const inlineNodes = [linkDef, itemLinkDef, inlineItemDef];
+export const inlineNodes = [
+  linkDef,
+  itemLinkDef,
+  inlineItemDef,
+  inlineBlockDef,
+];
 
-export type VoidNode = Block | InlineItem | ThematicBreak;
+export type VoidNode = Block | InlineBlock | InlineItem | ThematicBreak;
 
-export const voidNodes = [blockDef, inlineItemDef, thematicBreakDef];
+export const voidNodes = [
+  blockDef,
+  inlineBlockDef,
+  inlineItemDef,
+  thematicBreakDef,
+];
 
 export type Node = NonTextNode | Text;
 
@@ -286,6 +332,7 @@ export const nonTextNodeDefs: Record<string, Definition | undefined> = {
   [itemLinkDef.type]: itemLinkDef,
   [inlineItemDef.type]: inlineItemDef,
   [blockDef.type]: blockDef,
+  [inlineBlockDef.type]: inlineBlockDef,
   [listDef.type]: listDef,
   [listItemDef.type]: listItemDef,
   [blockquoteDef.type]: blockquoteDef,

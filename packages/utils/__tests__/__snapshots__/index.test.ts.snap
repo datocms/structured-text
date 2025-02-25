@@ -17,6 +17,10 @@ Object {
                   "type": "span",
                   "value": "Foobar",
                 },
+                Object {
+                  "item": "123",
+                  "type": "inlineBlock",
+                },
               ],
               "type": "paragraph",
             },
@@ -36,6 +40,10 @@ Object {
                   "type": "span",
                   "value": "Foobar",
                 },
+                Object {
+                  "item": "123",
+                  "type": "inlineBlock",
+                },
               ],
               "type": "paragraph",
             },
@@ -49,6 +57,10 @@ Object {
                       ],
                       "type": "span",
                       "value": "Foobar",
+                    },
+                    Object {
+                      "item": "123",
+                      "type": "inlineBlock",
                     },
                   ],
                   "type": "paragraph",
@@ -67,6 +79,53 @@ Object {
             "value": "Foobar",
           },
         },
+        Object {
+          "ancestors": Array [
+            Object {
+              "children": Array [
+                Object {
+                  "marks": Array [
+                    "strikethrough",
+                  ],
+                  "type": "span",
+                  "value": "Foobar",
+                },
+                Object {
+                  "item": "123",
+                  "type": "inlineBlock",
+                },
+              ],
+              "type": "paragraph",
+            },
+            Object {
+              "children": Array [
+                Object {
+                  "children": Array [
+                    Object {
+                      "marks": Array [
+                        "strikethrough",
+                      ],
+                      "type": "span",
+                      "value": "Foobar",
+                    },
+                    Object {
+                      "item": "123",
+                      "type": "inlineBlock",
+                    },
+                  ],
+                  "type": "paragraph",
+                },
+              ],
+              "type": "root",
+            },
+          ],
+          "children": undefined,
+          "key": "t-1",
+          "node": Object {
+            "item": "123",
+            "type": "inlineBlock",
+          },
+        },
       ],
       "key": "t-0",
       "node": Object {
@@ -77,6 +136,10 @@ Object {
             ],
             "type": "span",
             "value": "Foobar",
+          },
+          Object {
+            "item": "123",
+            "type": "inlineBlock",
           },
         ],
         "type": "paragraph",
@@ -94,6 +157,10 @@ Object {
             ],
             "type": "span",
             "value": "Foobar",
+          },
+          Object {
+            "item": "123",
+            "type": "inlineBlock",
           },
         ],
         "type": "paragraph",

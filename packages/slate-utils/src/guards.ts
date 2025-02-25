@@ -10,6 +10,8 @@ import {
   codeDef,
   Heading,
   headingDef,
+  InlineBlock,
+  inlineBlockDef,
   InlineItem,
   inlineItemDef,
   InlineNode,
@@ -61,6 +63,9 @@ export const isInlineItem = (element: NonTextNode): element is InlineItem =>
 
 export const isBlock = (element: NonTextNode): element is Block =>
   element.type === blockDef.type;
+
+export const isInlineBlock = (element: NonTextNode): element is InlineBlock =>
+  element.type === inlineBlockDef.type;
 
 export const isList = (element: NonTextNode): element is List =>
   element.type === listDef.type;
