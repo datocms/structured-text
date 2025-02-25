@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-utils",
-  "version": "4.1.0-alpha.0",
+  "version": "4.1.2",
   "description": "A set of Typescript types and helpers to work with DatoCMS Structured Text fields.",
   "keywords": [
     "datocms",
