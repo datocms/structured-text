@@ -43,6 +43,38 @@ describe('render', () => {
     });
   });
 
+  describe('simple dast with link inside paragraph', () => {
+    const structuredText: StructuredTextDocument = {
+      schema: 'dast',
+      document: {
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              {
+                url: 'https://www.datocms.com/',
+                type: 'link',
+                children: [
+                  {
+                    type: 'span',
+                    value: 'https://www.datocms.com/',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    describe('with default rules', () => {
+      it('renders the document', () => {
+        expect(render(structuredText)).toMatchSnapshot();
+      });
+    });
+  });
+
   describe('simple dast with no links/blocks', () => {
     const structuredText: StructuredTextGraphQlResponse = {
       value: {
