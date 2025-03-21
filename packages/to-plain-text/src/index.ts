@@ -97,7 +97,11 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
   adapter: Adapter<H, T, F>;
 };
 
-export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
+export type RenderSettings<
+  BlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
+  LinkRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
+  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord
+> = {
   /** A set of additional rules to convert the document to a string **/
   customNodeRules?: RenderRule<H, T, F>[];
   /** A set of additional rules to convert marks to HTML **/
@@ -106,17 +110,19 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   metaTransformer?: TransformMetaFn;
   /** Fuction that converts an 'inlineItem' node into a string **/
   renderInlineRecord?: (
-    context: RenderInlineRecordContext<R>,
+    context: RenderInlineRecordContext<LinkRecord>,
   ) => string | null | undefined;
   /** Fuction that converts an 'itemLink' node into a string **/
   renderLinkToRecord?: (
-    context: RenderRecordLinkContext<R>,
+    context: RenderRecordLinkContext<LinkRecord>,
   ) => string | null | undefined;
   /** Fuction that converts a 'block' node into a string **/
-  renderBlock?: (context: RenderBlockContext<R>) => string | null | undefined;
+  renderBlock?: (
+    context: RenderBlockContext<BlockRecord>,
+  ) => string | null | undefined;
   /** Fuction that converts an 'inlineBlock' node into a string **/
   renderInlineBlock?: (
-    context: RenderBlockContext<R>,
+    context: RenderBlockContext<InlineBlockRecord>,
   ) => string | null | undefined;
   /** Fuction that converts a simple string text into a string **/
   renderText?: T;
@@ -128,16 +134,20 @@ export type RenderSettings<R extends StructuredTextGraphQlResponseRecord> = {
   customRules?: RenderRule<H, T, F>[];
 };
 
-export function render<R extends StructuredTextGraphQlResponseRecord>(
+export function render<
+  BlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
+  LinkRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
+  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord
+>(
   /** The actual field value you get from DatoCMS **/
   structuredTextOrNode:
-    | StructuredTextGraphQlResponse<R>
+    | StructuredTextGraphQlResponse<BlockRecord, LinkRecord, InlineBlockRecord>
     | StructuredTextDocument
     | Node
     | null
     | undefined,
   /** Additional render settings **/
-  settings?: RenderSettings<R>,
+  settings?: RenderSettings<BlockRecord, LinkRecord, InlineBlockRecord>,
 ): ReturnType<F> | null {
   const renderInlineRecord = settings?.renderInlineRecord;
   const renderLinkToRecord = settings?.renderLinkToRecord;
@@ -240,18 +250,18 @@ export function render<R extends StructuredTextGraphQlResponseRecord>(
         if (
           !renderInlineBlock ||
           !isStructuredText(structuredTextOrNode) ||
-          !structuredTextOrNode.blocks
+          !structuredTextOrNode.inlineBlocks
         ) {
           return null;
         }
 
-        const item = structuredTextOrNode.blocks.find(
+        const item = structuredTextOrNode.inlineBlocks.find(
           (item) => item.id === node.item,
         );
 
         if (!item) {
           throw new RenderError(
-            `The Structured Text document contains an 'inlineBlock' node, but cannot find a record with ID ${node.item} inside .blocks!`,
+            `The Structured Text document contains an 'inlineBlock' node, but cannot find a record with ID ${node.item} inside .inlineBlocks!`,
             node,
           );
         }

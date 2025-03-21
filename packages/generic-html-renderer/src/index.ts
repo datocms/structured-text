@@ -1,5 +1,6 @@
 import {
   Adapter,
+  Document,
   isBlockquote,
   isCode,
   isHeading,
@@ -9,22 +10,21 @@ import {
   isParagraph,
   isRoot,
   isSpan,
+  isThematicBreak,
   Mark,
+  MetaEntry,
+  Node,
+  NodeWithMeta,
   Record,
   render as genericRender,
+  RenderContext,
+  RenderError,
   RenderResult,
   RenderRule,
   renderRule,
+  Span,
   StructuredText,
   TrasformFn,
-  RenderError,
-  Node,
-  Document,
-  isThematicBreak,
-  NodeWithMeta,
-  MetaEntry,
-  RenderContext,
-  Span,
 } from 'datocms-structured-text-utils';
 
 export { renderRule as renderNodeRule, RenderError };
@@ -156,11 +156,11 @@ export type TransformMetaFn = (
 export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
   const attributes: TransformedMeta = {};
 
-  meta.forEach((entry) => {
+  for (const entry of meta) {
     if (['target', 'title', 'rel'].includes(entry.id)) {
       attributes[entry.id] = entry.value;
     }
-  });
+  }
 
   return attributes;
 };
@@ -177,14 +177,15 @@ export type RenderOptions<
 };
 
 export function render<
-  R1 extends Record,
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn,
-  R2 extends Record = R1
+  BlockRecord extends Record,
+  LinkRecord extends Record,
+  InlineBlockRecord extends Record
 >(
   structuredTextOrNode:
-    | StructuredText<R1, R2>
+    | StructuredText<BlockRecord, LinkRecord, InlineBlockRecord>
     | Document
     | Node
     | null

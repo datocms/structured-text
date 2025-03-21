@@ -133,7 +133,8 @@ describe('render', () => {
     };
 
     const structuredText: StructuredTextGraphQlResponse<
-      QuoteRecord | DocPageRecord
+      QuoteRecord,
+      DocPageRecord
     > = {
       value: {
         schema: 'dast',

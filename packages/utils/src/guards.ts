@@ -1,45 +1,44 @@
 import {
-  Root,
-  List,
-  Blockquote,
-  Block,
-  InlineBlock,
-  Link,
-  ItemLink,
-  InlineItem,
-  Code,
-  ListItem,
-  Paragraph,
-  Heading,
-  Node,
-  Span,
-  WithChildrenNode,
-  InlineNode,
-  NodeType,
-  Record as DatoCmsRecord,
-  StructuredText,
-  ThematicBreak,
-  Document,
-} from './types';
-
-import {
   allowedNodeTypes,
-  headingNodeType,
-  spanNodeType,
-  rootNodeType,
-  paragraphNodeType,
-  listNodeType,
-  listItemNodeType,
-  blockquoteNodeType,
   blockNodeType,
-  inlineBlockNodeType,
+  blockquoteNodeType,
   codeNodeType,
-  linkNodeType,
-  itemLinkNodeType,
+  headingNodeType,
+  inlineBlockNodeType,
   inlineItemNodeType,
   inlineNodeTypes,
+  itemLinkNodeType,
+  linkNodeType,
+  listItemNodeType,
+  listNodeType,
+  paragraphNodeType,
+  rootNodeType,
+  spanNodeType,
   thematicBreakNodeType,
 } from './definitions';
+import {
+  Block,
+  Blockquote,
+  Code,
+  Document,
+  Heading,
+  InlineBlock,
+  InlineItem,
+  InlineNode,
+  ItemLink,
+  Link,
+  List,
+  ListItem,
+  Node,
+  NodeType,
+  Paragraph,
+  Record as DatoCmsRecord,
+  Root,
+  Span,
+  StructuredText,
+  ThematicBreak,
+  WithChildrenNode,
+} from './types';
 
 export function hasChildren(node: Node): node is WithChildrenNode {
   return 'children' in node;
@@ -123,9 +122,12 @@ export function isNode(obj: unknown): obj is Node {
 }
 
 export function isStructuredText<
-  R1 extends DatoCmsRecord,
-  R2 extends DatoCmsRecord = R1
->(obj: unknown): obj is StructuredText<R1, R2> {
+  BlockRecord extends DatoCmsRecord,
+  LinkRecord extends DatoCmsRecord,
+  InlineBlockRecord extends DatoCmsRecord
+>(
+  obj: unknown,
+): obj is StructuredText<BlockRecord, LinkRecord, InlineBlockRecord> {
   return Boolean(isObject(obj) && 'value' in obj && isDocument(obj.value));
 }
 

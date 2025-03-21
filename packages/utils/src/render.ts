@@ -1,6 +1,6 @@
-import { Node, Record, Document, StructuredText } from './types';
-import { hasChildren, isDocument, isNode, isStructuredText } from './guards';
 import { flatten } from 'array-flatten';
+import { hasChildren, isDocument, isNode, isStructuredText } from './guards';
+import { Document, Node, Record, StructuredText } from './types';
 
 export class RenderError extends Error {
   node: Node;
@@ -111,12 +111,13 @@ export function render<
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn,
-  R1 extends Record,
-  R2 extends Record = R1
+  BlockRecord extends Record,
+  LinkRecord extends Record,
+  InlineBlockRecord extends Record
 >(
   adapter: Adapter<H, T, F>,
   structuredTextOrNode:
-    | StructuredText<R1, R2>
+    | StructuredText<BlockRecord, LinkRecord, InlineBlockRecord>
     | Document
     | Node
     | null
@@ -128,8 +129,9 @@ export function render<
   }
 
   const node =
-    isStructuredText<R1, R2>(structuredTextOrNode) &&
-    isDocument(structuredTextOrNode.value)
+    isStructuredText<BlockRecord, LinkRecord, InlineBlockRecord>(
+      structuredTextOrNode,
+    ) && isDocument(structuredTextOrNode.value)
       ? structuredTextOrNode.value.document
       : isDocument(structuredTextOrNode)
       ? structuredTextOrNode.document

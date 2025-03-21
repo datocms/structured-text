@@ -195,6 +195,8 @@ describe('render', () => {
           quote: 'Foo bar.',
           author: 'Mark Smith',
         },
+      ],
+      inlineBlocks: [
         {
           id: '789',
           __typename: 'MentionRecord',

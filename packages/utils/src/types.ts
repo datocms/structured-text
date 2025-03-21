@@ -458,8 +458,9 @@ export type NodeType =
  */
 
 export type StructuredText<
-  R1 extends Record = Record,
-  R2 extends Record = R1
+  BlockRecord extends Record = Record,
+  LinkRecord extends Record = Record,
+  InlineBlockRecord extends Record = Record
 > = {
   /**
    * A DatoCMS "dast" document
@@ -468,14 +469,17 @@ export type StructuredText<
    */
   value: Document | unknown;
   /** Blocks associated with the Structured Text */
-  blocks?: R1[];
+  blocks?: BlockRecord[];
+  /** Inline blocks associated with the Structured Text */
+  inlineBlocks?: InlineBlockRecord[];
   /** Links associated with the Structured Text */
-  links?: R2[];
+  links?: LinkRecord[];
 };
 
 export type TypesafeStructuredText<
-  R1 extends Record = Record,
-  R2 extends Record = R1
+  BlockRecord extends Record = Record,
+  LinkRecord extends Record = Record,
+  InlineBlockRecord extends Record = Record
 > = {
   /**
    * A DatoCMS "dast" document
@@ -484,9 +488,11 @@ export type TypesafeStructuredText<
    */
   value: Document;
   /** Blocks associated with the Structured Text */
-  blocks?: R1[];
+  blocks?: BlockRecord[];
+  /** Inline blocks associated with the Structured Text */
+  inlineBlocks?: InlineBlockRecord[];
   /** Links associated with the Structured Text */
-  links?: R2[];
+  links?: LinkRecord[];
 };
 
 export type Record = {
