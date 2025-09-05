@@ -1,6 +1,8 @@
 import {
   Adapter,
+  CdaStructuredTextValue,
   Document,
+  render as genericRender,
   isBlockquote,
   isCode,
   isHeading,
@@ -16,18 +18,16 @@ import {
   Node,
   NodeWithMeta,
   Record,
-  render as genericRender,
   RenderContext,
   RenderError,
   RenderResult,
   RenderRule,
   renderRule,
   Span,
-  StructuredText,
   TrasformFn,
 } from 'datocms-structured-text-utils';
 
-export { renderRule as renderNodeRule, RenderError };
+export { RenderError, renderRule as renderNodeRule };
 
 export function markToTagName(mark: Mark): string {
   switch (mark) {
@@ -185,7 +185,7 @@ export function render<
   InlineBlockRecord extends Record
 >(
   structuredTextOrNode:
-    | StructuredText<BlockRecord, LinkRecord, InlineBlockRecord>
+    | CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>
     | Document
     | Node
     | null

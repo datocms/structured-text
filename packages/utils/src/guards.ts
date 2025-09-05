@@ -18,7 +18,9 @@ import {
 } from './definitions';
 import {
   Block,
+  BlockId,
   Blockquote,
+  CdaStructuredTextValue,
   Code,
   Document,
   Heading,
@@ -40,67 +42,99 @@ import {
   WithChildrenNode,
 } from './types';
 
-export function hasChildren(node: Node): node is WithChildrenNode {
+export function hasChildren<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is WithChildrenNode<BlockItemType> {
   return 'children' in node;
 }
 
-export function isInlineNode(node: Node): node is InlineNode {
+export function isInlineNode<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is InlineNode<BlockItemType> {
   return (inlineNodeTypes as NodeType[]).includes(node.type);
 }
 
-export function isHeading(node: Node): node is Heading {
+export function isHeading<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Heading<BlockItemType> {
   return node.type === headingNodeType;
 }
 
-export function isSpan(node: Node): node is Span {
+export function isSpan<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Span {
   return node.type === spanNodeType;
 }
 
-export function isRoot(node: Node): node is Root {
+export function isRoot<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Root<BlockItemType> {
   return node.type === rootNodeType;
 }
 
-export function isParagraph(node: Node): node is Paragraph {
+export function isParagraph<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Paragraph<BlockItemType> {
   return node.type === paragraphNodeType;
 }
 
-export function isList(node: Node): node is List {
+export function isList<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is List<BlockItemType> {
   return node.type === listNodeType;
 }
 
-export function isListItem(node: Node): node is ListItem {
+export function isListItem<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is ListItem<BlockItemType> {
   return node.type === listItemNodeType;
 }
 
-export function isBlockquote(node: Node): node is Blockquote {
+export function isBlockquote<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Blockquote<BlockItemType> {
   return node.type === blockquoteNodeType;
 }
 
-export function isBlock(node: Node): node is Block {
+export function isBlock<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Block<BlockItemType> {
   return node.type === blockNodeType;
 }
 
-export function isInlineBlock(node: Node): node is InlineBlock {
+export function isInlineBlock<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is InlineBlock<BlockItemType> {
   return node.type === inlineBlockNodeType;
 }
 
-export function isCode(node: Node): node is Code {
+export function isCode<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Code {
   return node.type === codeNodeType;
 }
 
-export function isLink(node: Node): node is Link {
+export function isLink<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is Link {
   return node.type === linkNodeType;
 }
 
-export function isItemLink(node: Node): node is ItemLink {
+export function isItemLink<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is ItemLink {
   return node.type === itemLinkNodeType;
 }
 
-export function isInlineItem(node: Node): node is InlineItem {
+export function isInlineItem<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is InlineItem {
   return node.type === inlineItemNodeType;
 }
 
-export function isThematicBreak(node: Node): node is ThematicBreak {
+export function isThematicBreak<BlockItemType = BlockId>(
+  node: Node<BlockItemType>,
+): node is ThematicBreak {
   return node.type === thematicBreakNodeType;
 }
 
@@ -112,7 +146,9 @@ export function isNodeType(value: string): value is NodeType {
   return allowedNodeTypes.includes(value as NodeType);
 }
 
-export function isNode(obj: unknown): obj is Node {
+export function isNode<BlockItemType = BlockId>(
+  obj: unknown,
+): obj is Node<BlockItemType> {
   return Boolean(
     isObject(obj) &&
       'type' in obj &&
@@ -121,6 +157,19 @@ export function isNode(obj: unknown): obj is Node {
   );
 }
 
+export function isCdaStructuredTextValue<
+  BlockRecord extends DatoCmsRecord,
+  LinkRecord extends DatoCmsRecord,
+  InlineBlockRecord extends DatoCmsRecord
+>(
+  obj: unknown,
+): obj is CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord> {
+  return Boolean(isObject(obj) && 'value' in obj && isDocument(obj.value));
+}
+
+/**
+ * @deprecated Use isCdaStructuredTextValue instead
+ */
 export function isStructuredText<
   BlockRecord extends DatoCmsRecord,
   LinkRecord extends DatoCmsRecord,
@@ -128,10 +177,12 @@ export function isStructuredText<
 >(
   obj: unknown,
 ): obj is StructuredText<BlockRecord, LinkRecord, InlineBlockRecord> {
-  return Boolean(isObject(obj) && 'value' in obj && isDocument(obj.value));
+  return isCdaStructuredTextValue(obj);
 }
 
-export function isDocument(obj: unknown): obj is Document {
+export function isDocument<BlockItemType = BlockId>(
+  obj: unknown,
+): obj is Document<BlockItemType> {
   return Boolean(
     isObject(obj) &&
       'schema' in obj &&

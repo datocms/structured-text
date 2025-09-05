@@ -1,13 +1,13 @@
 import {
-  allowedNodeTypes,
-  allowedChildren,
   allowedAttributes,
+  allowedChildren,
+  allowedNodeTypes,
+  CdaStructuredTextValue,
   isHeading,
-  render,
-  StructuredText,
-  renderRule,
   Node,
+  render,
   RenderError,
+  renderRule,
 } from '../src';
 
 describe('datocms-structured-text-utils', () => {
@@ -64,7 +64,7 @@ describe('datocms-structured-text-utils', () => {
     });
 
     describe('some value', () => {
-      const structuredText: StructuredText = {
+      const structuredText: CdaStructuredTextValue = {
         value: {
           schema: 'dast',
           document: {

@@ -1,21 +1,32 @@
-export type Node = BlockNode | InlineNode;
+export type BlockId = string;
 
-export type BlockNode =
-  | Root
-  | Paragraph
-  | Heading
-  | Block
-  | List
-  | ListItem
-  | Blockquote
+export type Node<BlockItemType = BlockId> =
+  | BlockNode<BlockItemType>
+  | InlineNode<BlockItemType>;
+
+export type BlockNode<BlockItemType = BlockId> =
+  | Root<BlockItemType>
+  | Paragraph<BlockItemType>
+  | Heading<BlockItemType>
+  | Block<BlockItemType>
+  | List<BlockItemType>
+  | ListItem<BlockItemType>
+  | Blockquote<BlockItemType>
   | Code
   | ThematicBreak;
 
-export type BlockNodeWithCustomStyle = Paragraph | Heading;
+export type BlockNodeWithCustomStyle<BlockItemType = BlockId> =
+  | Paragraph<BlockItemType>
+  | Heading<BlockItemType>;
 
 export type BlockNodeTypeWithCustomStyle = ParagraphType | HeadingType;
 
-export type InlineNode = Span | Link | ItemLink | InlineItem | InlineBlock;
+export type InlineNode<BlockItemType = BlockId> =
+  | Span
+  | Link
+  | ItemLink
+  | InlineItem
+  | InlineBlock<BlockItemType>;
 
 export type NodeWithMeta = Link | ItemLink;
 
@@ -51,10 +62,16 @@ export type RootType = 'root';
  * }
  * ```
  */
-export type Root = {
+export type Root<BlockItemType = BlockId> = {
   type: RootType;
   children: Array<
-    Paragraph | Heading | List | Code | Blockquote | Block | ThematicBreak
+    | Paragraph<BlockItemType>
+    | Heading<BlockItemType>
+    | List<BlockItemType>
+    | Code
+    | Blockquote<BlockItemType>
+    | Block<BlockItemType>
+    | ThematicBreak
   >;
 };
 
@@ -75,11 +92,11 @@ export type ParagraphType = 'paragraph';
  * }
  * ```
  */
-export type Paragraph = {
+export type Paragraph<BlockItemType = BlockId> = {
   type: ParagraphType;
   /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
   style?: string;
-  children: Array<InlineNode>;
+  children: Array<InlineNode<BlockItemType>>;
 };
 
 export type HeadingType = 'heading';
@@ -101,12 +118,12 @@ export type HeadingType = 'heading';
  * }
  * ```
  */
-export type Heading = {
+export type Heading<BlockItemType = BlockId> = {
   type: HeadingType;
   level: 1 | 2 | 3 | 4 | 5 | 6;
   /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
   style?: string;
-  children: Array<InlineNode>;
+  children: Array<InlineNode<BlockItemType>>;
 };
 
 export type ListType = 'list';
@@ -138,10 +155,10 @@ export type ListType = 'list';
  * }
  * ```
  */
-export type List = {
+export type List<BlockItemType = BlockId> = {
   type: ListType;
   style: 'bulleted' | 'numbered';
-  children: Array<ListItem>;
+  children: Array<ListItem<BlockItemType>>;
 };
 
 export type ListItemType = 'listItem';
@@ -166,9 +183,9 @@ export type ListItemType = 'listItem';
  * }
  * ```
  */
-export type ListItem = {
+export type ListItem<BlockItemType = BlockId> = {
   type: ListItemType;
-  children: Array<Paragraph | List>;
+  children: Array<Paragraph<BlockItemType> | List<BlockItemType>>;
 };
 
 export type ThematicBreakType = 'thematicBreak';
@@ -233,11 +250,11 @@ export type BlockquoteType = 'blockquote';
  * }
  * ```
  */
-export type Blockquote = {
+export type Blockquote<BlockItemType = BlockId> = {
   type: BlockquoteType;
   /** Attribution for the quote (ie `"Mark Smith"`) */
   attribution?: string;
-  children: Array<Paragraph>;
+  children: Array<Paragraph<BlockItemType>>;
 };
 
 export type BlockType = 'block';
@@ -256,10 +273,10 @@ export type BlockType = 'block';
  * }
  * ```
  */
-export type Block = {
+export type Block<BlockItemType = BlockId> = {
   type: BlockType;
-  /** The DatoCMS block record ID */
-  item: string;
+  /** The actual DatoCMS block record */
+  item: BlockItemType;
 };
 
 export type InlineBlockType = 'inlineBlock';
@@ -272,10 +289,10 @@ export type InlineBlockType = 'inlineBlock';
  * }
  * ```
  */
-export type InlineBlock = {
+export type InlineBlock<BlockItemType = BlockId> = {
   type: InlineBlockType;
-  /** The DatoCMS block record ID */
-  item: string;
+  /** The actual DatoCMS block record */
+  item: BlockItemType;
 };
 
 export type SpanType = 'span';
@@ -419,18 +436,23 @@ export type InlineItem = {
   item: string;
 };
 
-export type WithChildrenNode = Exclude<
-  Node,
-  Code | Span | Block | InlineBlock | InlineItem | ThematicBreak
+export type WithChildrenNode<BlockItemType = BlockId> = Exclude<
+  Node<BlockItemType>,
+  | Code
+  | Span
+  | Block<BlockItemType>
+  | InlineBlock<BlockItemType>
+  | InlineItem
+  | ThematicBreak
 >;
 
 /**
  * A Structured Text `dast`-compatible value, composed by the `dast` document
  * itself and the `schema` attribute.
  */
-export type Document = {
+export type Document<BlockItemType = BlockId> = {
   schema: 'dast';
-  document: Root;
+  document: Root<BlockItemType>;
 };
 
 export type NodeType =
@@ -449,14 +471,7 @@ export type NodeType =
   | SpanType
   | ThematicBreakType;
 
-/**
- * Structured Text enables authors to create rich text content, on par with
- * traditional editors.
- *
- * Additionally, it allows records and Media Area assets to be linked dynamically
- * and embedded within the flow of the text.
- */
-
+/** @deprecated Use CdaStructuredTextValue */
 export type StructuredText<
   BlockRecord extends Record = Record,
   LinkRecord extends Record = Record,
@@ -476,6 +491,22 @@ export type StructuredText<
   links?: LinkRecord[];
 };
 
+/**
+ * CDA (Content Delivery API) format for structured text values.
+ *
+ * Structured Text enables authors to create rich text content, on par with
+ * traditional editors.
+ *
+ * Additionally, it allows records and Media Area assets to be linked dynamically
+ * and embedded within the flow of the text.
+ */
+export type CdaStructuredTextValue<
+  BlockRecord extends Record = Record,
+  LinkRecord extends Record = Record,
+  InlineBlockRecord extends Record = Record
+> = StructuredText<BlockRecord, LinkRecord, InlineBlockRecord>;
+
+/** @deprecated Use TypesafeCdaStructuredTextValue */
 export type TypesafeStructuredText<
   BlockRecord extends Record = Record,
   LinkRecord extends Record = Record,
@@ -494,6 +525,21 @@ export type TypesafeStructuredText<
   /** Links associated with the Structured Text */
   links?: LinkRecord[];
 };
+
+/**
+ * CDA (Content Delivery API) format for structured text values.
+ *
+ * Structured Text enables authors to create rich text content, on par with
+ * traditional editors.
+ *
+ * Additionally, it allows records and Media Area assets to be linked dynamically
+ * and embedded within the flow of the text.
+ */
+export type TypesafeCdaStructuredTextValue<
+  BlockRecord extends Record = Record,
+  LinkRecord extends Record = Record,
+  InlineBlockRecord extends Record = Record
+> = TypesafeStructuredText<BlockRecord, LinkRecord, InlineBlockRecord>;
 
 export type Record = {
   __typename: string;
