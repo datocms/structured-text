@@ -42,99 +42,123 @@ import {
   WithChildrenNode,
 } from './types';
 
-export function hasChildren<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is WithChildrenNode<BlockItemType> {
+export function hasChildren<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is WithChildrenNode<BlockItemType, InlineBlockItemType> {
   return 'children' in node;
 }
 
-export function isInlineNode<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is InlineNode<BlockItemType> {
+export function isInlineNode<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is InlineNode<InlineBlockItemType> {
   return (inlineNodeTypes as NodeType[]).includes(node.type);
 }
 
-export function isHeading<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is Heading<BlockItemType> {
+export function isHeading<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is Heading<InlineBlockItemType> {
   return node.type === headingNodeType;
 }
 
-export function isSpan<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
+export function isSpan<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Span {
   return node.type === spanNodeType;
 }
 
-export function isRoot<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is Root<BlockItemType> {
+export function isRoot<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is Root<BlockItemType, InlineBlockItemType> {
   return node.type === rootNodeType;
 }
 
-export function isParagraph<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is Paragraph<BlockItemType> {
+export function isParagraph<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is Paragraph<InlineBlockItemType> {
   return node.type === paragraphNodeType;
 }
 
-export function isList<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is List<BlockItemType> {
+export function isList<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is List<BlockItemType, InlineBlockItemType> {
   return node.type === listNodeType;
 }
 
-export function isListItem<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is ListItem<BlockItemType> {
+export function isListItem<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is ListItem<BlockItemType, InlineBlockItemType> {
   return node.type === listItemNodeType;
 }
 
-export function isBlockquote<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is Blockquote<BlockItemType> {
+export function isBlockquote<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is Blockquote<InlineBlockItemType> {
   return node.type === blockquoteNodeType;
 }
 
-export function isBlock<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
+export function isBlock<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Block<BlockItemType> {
   return node.type === blockNodeType;
 }
 
-export function isInlineBlock<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is InlineBlock<BlockItemType> {
+export function isInlineBlock<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is InlineBlock<InlineBlockItemType> {
   return node.type === inlineBlockNodeType;
 }
 
-export function isCode<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
+export function isCode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Code {
   return node.type === codeNodeType;
 }
 
-export function isLink<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
+export function isLink<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Link {
   return node.type === linkNodeType;
 }
 
-export function isItemLink<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is ItemLink {
+export function isItemLink<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(node: Node<BlockItemType, InlineBlockItemType>): node is ItemLink {
   return node.type === itemLinkNodeType;
 }
 
-export function isInlineItem<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is InlineItem {
+export function isInlineItem<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(node: Node<BlockItemType, InlineBlockItemType>): node is InlineItem {
   return node.type === inlineItemNodeType;
 }
 
-export function isThematicBreak<BlockItemType = BlockId>(
-  node: Node<BlockItemType>,
-): node is ThematicBreak {
+export function isThematicBreak<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(node: Node<BlockItemType, InlineBlockItemType>): node is ThematicBreak {
   return node.type === thematicBreakNodeType;
 }
 
@@ -146,9 +170,9 @@ export function isNodeType(value: string): value is NodeType {
   return allowedNodeTypes.includes(value as NodeType);
 }
 
-export function isNode<BlockItemType = BlockId>(
+export function isNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   obj: unknown,
-): obj is Node<BlockItemType> {
+): obj is Node<BlockItemType, InlineBlockItemType> {
   return Boolean(
     isObject(obj) &&
       'type' in obj &&
@@ -180,9 +204,10 @@ export function isStructuredText<
   return isCdaStructuredTextValue(obj);
 }
 
-export function isDocument<BlockItemType = BlockId>(
-  obj: unknown,
-): obj is Document<BlockItemType> {
+export function isDocument<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(obj: unknown): obj is Document<BlockItemType, InlineBlockItemType> {
   return Boolean(
     isObject(obj) &&
       'schema' in obj &&

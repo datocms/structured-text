@@ -1,32 +1,32 @@
 export type BlockId = string;
 
-export type Node<BlockItemType = BlockId> =
-  | BlockNode<BlockItemType>
-  | InlineNode<BlockItemType>;
+export type Node<BlockItemType = BlockId, InlineBlockItemType = BlockId> =
+  | BlockNode<BlockItemType, InlineBlockItemType>
+  | InlineNode<InlineBlockItemType>;
 
-export type BlockNode<BlockItemType = BlockId> =
-  | Root<BlockItemType>
-  | Paragraph<BlockItemType>
-  | Heading<BlockItemType>
+export type BlockNode<BlockItemType = BlockId, InlineBlockItemType = BlockId> =
+  | Root<BlockItemType, InlineBlockItemType>
+  | Paragraph<InlineBlockItemType>
+  | Heading<InlineBlockItemType>
   | Block<BlockItemType>
-  | List<BlockItemType>
-  | ListItem<BlockItemType>
-  | Blockquote<BlockItemType>
+  | List<BlockItemType, InlineBlockItemType>
+  | ListItem<BlockItemType, InlineBlockItemType>
+  | Blockquote<InlineBlockItemType>
   | Code
   | ThematicBreak;
 
-export type BlockNodeWithCustomStyle<BlockItemType = BlockId> =
-  | Paragraph<BlockItemType>
-  | Heading<BlockItemType>;
+export type BlockNodeWithCustomStyle<InlineBlockItemType = BlockId> =
+  | Paragraph<InlineBlockItemType>
+  | Heading<InlineBlockItemType>;
 
 export type BlockNodeTypeWithCustomStyle = ParagraphType | HeadingType;
 
-export type InlineNode<BlockItemType = BlockId> =
+export type InlineNode<InlineBlockItemType = BlockId> =
   | Span
   | Link
   | ItemLink
   | InlineItem
-  | InlineBlock<BlockItemType>;
+  | InlineBlock<InlineBlockItemType>;
 
 export type NodeWithMeta = Link | ItemLink;
 
@@ -62,14 +62,14 @@ export type RootType = 'root';
  * }
  * ```
  */
-export type Root<BlockItemType = BlockId> = {
+export type Root<BlockItemType = BlockId, InlineBlockItemType = BlockId> = {
   type: RootType;
   children: Array<
-    | Paragraph<BlockItemType>
-    | Heading<BlockItemType>
-    | List<BlockItemType>
+    | Paragraph<InlineBlockItemType>
+    | Heading<InlineBlockItemType>
+    | List<BlockItemType, InlineBlockItemType>
     | Code
-    | Blockquote<BlockItemType>
+    | Blockquote<InlineBlockItemType>
     | Block<BlockItemType>
     | ThematicBreak
   >;
@@ -92,11 +92,11 @@ export type ParagraphType = 'paragraph';
  * }
  * ```
  */
-export type Paragraph<BlockItemType = BlockId> = {
+export type Paragraph<InlineBlockItemType = BlockId> = {
   type: ParagraphType;
   /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
   style?: string;
-  children: Array<InlineNode<BlockItemType>>;
+  children: Array<InlineNode<InlineBlockItemType>>;
 };
 
 export type HeadingType = 'heading';
@@ -118,12 +118,12 @@ export type HeadingType = 'heading';
  * }
  * ```
  */
-export type Heading<BlockItemType = BlockId> = {
+export type Heading<InlineBlockItemType = BlockId> = {
   type: HeadingType;
   level: 1 | 2 | 3 | 4 | 5 | 6;
   /** Custom style applied to the node. Styles can be configured using the Plugin SDK */
   style?: string;
-  children: Array<InlineNode<BlockItemType>>;
+  children: Array<InlineNode<InlineBlockItemType>>;
 };
 
 export type ListType = 'list';
@@ -155,10 +155,10 @@ export type ListType = 'list';
  * }
  * ```
  */
-export type List<BlockItemType = BlockId> = {
+export type List<BlockItemType = BlockId, InlineBlockItemType = BlockId> = {
   type: ListType;
   style: 'bulleted' | 'numbered';
-  children: Array<ListItem<BlockItemType>>;
+  children: Array<ListItem<BlockItemType, InlineBlockItemType>>;
 };
 
 export type ListItemType = 'listItem';
@@ -183,9 +183,11 @@ export type ListItemType = 'listItem';
  * }
  * ```
  */
-export type ListItem<BlockItemType = BlockId> = {
+export type ListItem<BlockItemType = BlockId, InlineBlockItemType = BlockId> = {
   type: ListItemType;
-  children: Array<Paragraph<BlockItemType> | List<BlockItemType>>;
+  children: Array<
+    Paragraph<InlineBlockItemType> | List<BlockItemType, InlineBlockItemType>
+  >;
 };
 
 export type ThematicBreakType = 'thematicBreak';
@@ -250,11 +252,11 @@ export type BlockquoteType = 'blockquote';
  * }
  * ```
  */
-export type Blockquote<BlockItemType = BlockId> = {
+export type Blockquote<InlineBlockItemType = BlockId> = {
   type: BlockquoteType;
   /** Attribution for the quote (ie `"Mark Smith"`) */
   attribution?: string;
-  children: Array<Paragraph<BlockItemType>>;
+  children: Array<Paragraph<InlineBlockItemType>>;
 };
 
 export type BlockType = 'block';
@@ -289,10 +291,10 @@ export type InlineBlockType = 'inlineBlock';
  * }
  * ```
  */
-export type InlineBlock<BlockItemType = BlockId> = {
+export type InlineBlock<InlineBlockItemType = BlockId> = {
   type: InlineBlockType;
   /** The actual DatoCMS block record */
-  item: BlockItemType;
+  item: InlineBlockItemType;
 };
 
 export type SpanType = 'span';
@@ -436,12 +438,15 @@ export type InlineItem = {
   item: string;
 };
 
-export type WithChildrenNode<BlockItemType = BlockId> = Exclude<
-  Node<BlockItemType>,
+export type WithChildrenNode<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+> = Exclude<
+  Node<BlockItemType, InlineBlockItemType>,
   | Code
   | Span
   | Block<BlockItemType>
-  | InlineBlock<BlockItemType>
+  | InlineBlock<InlineBlockItemType>
   | InlineItem
   | ThematicBreak
 >;
@@ -450,9 +455,9 @@ export type WithChildrenNode<BlockItemType = BlockId> = Exclude<
  * A Structured Text `dast`-compatible value, composed by the `dast` document
  * itself and the `schema` attribute.
  */
-export type Document<BlockItemType = BlockId> = {
+export type Document<BlockItemType = BlockId, InlineBlockItemType = BlockId> = {
   schema: 'dast';
-  document: Root<BlockItemType>;
+  document: Root<BlockItemType, InlineBlockItemType>;
 };
 
 export type NodeType =
