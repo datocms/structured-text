@@ -229,18 +229,22 @@ describe('manipulation utilities', () => {
     it('can transform node types', () => {
       const result = mapNodes(simpleRoot, (node) => {
         if (isSpan(node)) {
-          return { ...node, type: 'span' as const, transformed: true };
+          return { ...node, value: `TRANSFORMED_${node.value}` };
         }
         return node;
       });
 
       const transformedSpans = collectNodes(
         result,
-        (node) => isSpan(node) && 'transformed' in node && node.transformed,
+        (node) => isSpan(node) && node.value.startsWith('TRANSFORMED_'),
       );
 
       expect(transformedSpans).toHaveLength(2);
-      expect(transformedSpans.every(({ node }) => isSpan(node))).toBe(true);
+      expect(
+        transformedSpans.every(
+          ({ node }) => isSpan(node) && node.value.startsWith('TRANSFORMED_'),
+        ),
+      ).toBe(true);
     });
   });
 

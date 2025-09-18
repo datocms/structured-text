@@ -178,7 +178,7 @@ export function mapNodes<T, R>(
   mapper: NodePredicate<T, R>,
   parent?: AllNodesInTree<T> | null,
   path?: TreePath,
-): Document<R>;
+): Document<T>;
 
 /**
  * Transform nodes in the Structured Text tree by applying a mapping function.
@@ -195,7 +195,7 @@ export function mapNodes<T, R>(
   mapper: NodePredicate<T, R>,
   parent?: AllNodesInTree<T> | null,
   path?: TreePath,
-): R;
+): T;
 
 export function mapNodes<T, R>(
   input: StructuredTextDocumentOrNode<T>,
