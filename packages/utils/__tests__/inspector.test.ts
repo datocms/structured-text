@@ -317,12 +317,11 @@ describe('inspector', () => {
         };
 
         const result = inspect(root, {
-          blockFormatter: (item: unknown) => {
+          blockFormatter: (item) => {
             if (typeof item === 'string') {
               return `ID: ${item}`;
             }
-            const blockItem = item as BlockObject;
-            return `${blockItem.attributes.title} (${blockItem.id})`;
+            return `${item.attributes.title} (${item.id})`;
           },
         });
         expect(result).toMatchSnapshot();
@@ -368,16 +367,15 @@ describe('inspector', () => {
         };
 
         const result = inspect(root, {
-          blockFormatter: (item: unknown) => {
+          blockFormatter: (item) => {
             if (typeof item === 'string') {
               return `ID: ${item}`;
             }
-            const blockItem = item as ComplexBlockObject;
             return [
-              `${blockItem.attributes.title} (${blockItem.id})`,
-              `Description: ${blockItem.attributes.description}`,
-              `Author: ${blockItem.attributes.metadata.author}`,
-              `Date: ${blockItem.attributes.metadata.date}`,
+              `${item.attributes.title} (${item.id})`,
+              `Description: ${item.attributes.description}`,
+              `Author: ${item.attributes.metadata.author}`,
+              `Date: ${item.attributes.metadata.date}`,
             ].join('\n');
           },
         });
@@ -421,12 +419,11 @@ describe('inspector', () => {
         };
 
         const result = inspect(root, {
-          blockFormatter: (item: unknown) => {
+          blockFormatter: (item) => {
             if (typeof item === 'string') {
               return `ID: ${item}`;
             }
-            const blockItem = item as InlineBlockObject;
-            return `${blockItem.attributes.name}: "${blockItem.attributes.text}"`;
+            return `${item.attributes.name}: "${item.attributes.text}"`;
           },
         });
         expect(result).toMatchSnapshot();
