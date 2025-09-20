@@ -101,7 +101,67 @@ exports[`inspector inspect should render thematic break 1`] = `
 exports[`inspector inspect should truncate long text content 1`] = `
 "└ root
   ├ paragraph
-  │ └ span \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
-  └ code \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+  │ └ span \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+  └ code \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should fall back to default formatting when no formatter provided 1`] = `
+"└ root
+  ├ block (item: \\"block-123\\")
+  └ paragraph
+    └ inlineBlock (item: \\"inline-456\\")
+"
+`;
+
+exports[`inspector inspect with block formatter should fall back to default formatting when no formatter provided 2`] = `
+"└ root
+  ├ block (item: \\"block-123\\")
+  └ paragraph
+    └ inlineBlock (item: \\"inline-456\\")
+"
+`;
+
+exports[`inspector inspect with block formatter should format block with ID using custom formatter 1`] = `
+"└ root
+  └ block ID: block-123
+"
+`;
+
+exports[`inspector inspect with block formatter should format block with object using custom formatter 1`] = `
+"└ root
+  └ block My Block Title (block-456)
+"
+`;
+
+exports[`inspector inspect with block formatter should format inline blocks with custom formatter 1`] = `
+"└ root
+  └ paragraph
+    ├ span \\"Click \\"
+    ├ inlineBlock Button: \\"Click me\\"
+    └ span \\" to continue\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should handle multi-line block formatter output 1`] = `
+"└ root
+  ├ paragraph
+  │ └ span \\"Before block\\"
+  ├ block
+  │ Complex Block (block-789)
+  │ Description: A detailed description
+  │ Author: John Doe
+  │ Date: 2023-01-01
+  └ paragraph
+    └ span \\"After block\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should provide max line width to formatter 1`] = `
+"└ root
+  └ block
+    My Block
+    Description: This is a very long description that might exceed the suggested line width
+    ID: block-123
 "
 `;

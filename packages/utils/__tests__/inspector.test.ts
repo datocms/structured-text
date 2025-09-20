@@ -268,5 +268,238 @@ describe('inspector', () => {
       const result = inspect(root);
       expect(result).toMatchSnapshot();
     });
+
+    describe('with block formatter', () => {
+      it('should format block with ID using custom formatter', () => {
+        const root: Root = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: 'block-123',
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => `ID: ${item}`,
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should format block with object using custom formatter', () => {
+        type BlockObject = {
+          id: string;
+          type: string;
+          attributes: {
+            title: string;
+            content: string;
+          };
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-456',
+          type: 'item',
+          attributes: {
+            title: 'My Block Title',
+            content: 'Block content here',
+          },
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item: unknown) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            const blockItem = item as BlockObject;
+            return `${blockItem.attributes.title} (${blockItem.id})`;
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should handle multi-line block formatter output', () => {
+        type ComplexBlockObject = {
+          id: string;
+          type: string;
+          attributes: {
+            title: string;
+            description: string;
+            metadata: { author: string; date: string };
+          };
+        };
+
+        const blockObject: ComplexBlockObject = {
+          id: 'block-789',
+          type: 'item',
+          attributes: {
+            title: 'Complex Block',
+            description: 'A detailed description',
+            metadata: { author: 'John Doe', date: '2023-01-01' },
+          },
+        };
+
+        const root: Root<ComplexBlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'paragraph',
+              children: [{ type: 'span', value: 'Before block' }],
+            },
+            {
+              type: 'block',
+              item: blockObject,
+            },
+            {
+              type: 'paragraph',
+              children: [{ type: 'span', value: 'After block' }],
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item: unknown) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            const blockItem = item as ComplexBlockObject;
+            return [
+              `${blockItem.attributes.title} (${blockItem.id})`,
+              `Description: ${blockItem.attributes.description}`,
+              `Author: ${blockItem.attributes.metadata.author}`,
+              `Date: ${blockItem.attributes.metadata.date}`,
+            ].join('\n');
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should format inline blocks with custom formatter', () => {
+        type InlineBlockObject = {
+          id: string;
+          type: string;
+          attributes: {
+            name: string;
+            text: string;
+          };
+        };
+
+        const inlineBlockObject: InlineBlockObject = {
+          id: 'inline-123',
+          type: 'item',
+          attributes: {
+            name: 'Button',
+            text: 'Click me',
+          },
+        };
+
+        const root: Root<string, InlineBlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'paragraph',
+              children: [
+                { type: 'span', value: 'Click ' },
+                {
+                  type: 'inlineBlock',
+                  item: inlineBlockObject,
+                },
+                { type: 'span', value: ' to continue' },
+              ],
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item: unknown) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            const blockItem = item as InlineBlockObject;
+            return `${blockItem.attributes.name}: "${blockItem.attributes.text}"`;
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should fall back to default formatting when no formatter provided', () => {
+        const root: Root = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: 'block-123',
+            },
+            {
+              type: 'paragraph',
+              children: [
+                {
+                  type: 'inlineBlock',
+                  item: 'inline-456',
+                },
+              ],
+            },
+          ],
+        };
+
+        // Test without formatter (should use default)
+        const resultWithoutFormatter = inspect(root);
+        expect(resultWithoutFormatter).toMatchSnapshot();
+
+        // Test with empty options (should use default)
+        const resultWithEmptyOptions = inspect(root, {});
+        expect(resultWithEmptyOptions).toMatchSnapshot();
+      });
+
+      it('should provide max line width to formatter', () => {
+        type BlockObject = {
+          id: string;
+          title: string;
+          description: string;
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-123',
+          title: 'My Block',
+          description:
+            'This is a very long description that might exceed the suggested line width',
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+
+            return [
+              item.title,
+              `Description: ${item.description}`,
+              `ID: ${item.id}`,
+            ].join('\n');
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+    });
   });
 });

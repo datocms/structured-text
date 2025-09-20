@@ -378,3 +378,100 @@ const customNodes = collectNodes(
 );
 // customNodes is now Array<{ node: Block; path: TreePath }>
 ```
+
+## Tree Visualization with Inspector
+
+The package includes a powerful tree visualization utility that renders structured text documents as ASCII trees, making it easy to debug and understand document structure during development.
+
+### Basic Usage
+
+| Function                                                                                               | Description                                                |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| [`inspect`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/inspector.ts#L202) | Render a structured text document or node as an ASCII tree |
+
+```javascript
+import { inspect } from 'datocms-structured-text-utils';
+
+const structuredText = {
+  schema: 'dast',
+  document: {
+    type: 'root',
+    children: [
+      {
+        type: 'heading',
+        level: 1,
+        children: [{ type: 'span', value: 'Main Title' }],
+      },
+      {
+        type: 'paragraph',
+        children: [
+          { type: 'span', value: 'This is a ' },
+          { type: 'span', marks: ['strong'], value: 'bold' },
+          { type: 'span', value: ' paragraph.' },
+        ],
+      },
+      {
+        type: 'block',
+        item: 'block-123',
+      },
+    ],
+  },
+};
+
+console.log(inspect(structuredText));
+```
+
+**Output:**
+
+```
+└ root
+  ├ heading (level: 1)
+  │ └ span "Main Title"
+  ├ paragraph
+  │ ├ span "This is a "
+  │ ├ span (marks: strong) "bold"
+  │ └ span " paragraph."
+  └ block (item: "block-123")
+```
+
+### Custom Block Formatting
+
+The inspector supports custom formatting for block and inline block nodes, allowing you to display rich information about embedded content:
+
+```javascript
+import { inspect } from 'datocms-structured-text-utils';
+
+// Example with block objects instead of just IDs
+const blockObject = {
+  id: 'block-456',
+  type: 'item',
+  attributes: {
+    title: 'Hero Section',
+    subtitle: 'Welcome to our site',
+    buttonText: 'Get Started',
+  },
+};
+
+// Simple formatter
+const tree = inspect(document, {
+  blockFormatter: (item, maxWidth) => {
+    if (typeof item === 'string') return `ID: ${item}`;
+    return `id: ${item.id}\ntitle: ${item.attributes.title}`;
+  },
+});
+
+console.log(tree);
+```
+
+**Output:**
+
+```
+└ root
+  ├ paragraph
+  │ └ span "Content before block"
+  ├ block
+  │ id: 456
+  │ title: Hero Section
+  └ paragraph
+    └ span "Content after block"
+```
