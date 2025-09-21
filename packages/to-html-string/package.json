@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-to-html-string",
-  "version": "5.1.3",
+  "version": "5.1.4",
   "description": "Convert DatoCMS Structured Text field to HTML string",
   "keywords": [
     "datocms",
@@ -33,8 +33,8 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-generic-html-renderer": "^5.1.3",
-    "datocms-structured-text-utils": "^5.1.3",
+    "datocms-structured-text-generic-html-renderer": "^5.1.4",
+    "datocms-structured-text-utils": "^5.1.4",
     "vhtml": "^2.2.0"
   },
   "devDependencies": {
