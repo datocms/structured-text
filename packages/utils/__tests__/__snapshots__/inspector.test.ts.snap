@@ -1,167 +1,186 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`inspector inspect should render a document wrapper 1`] = `
-"└ root
-  └ paragraph
-    └ span \\"Test\\"
+"└ paragraph
+  └ span \\"Test\\"
 "
 `;
 
 exports[`inspector inspect should render a simple root node 1`] = `
-"└ root
-  └ paragraph
-    └ span \\"Hello World\\"
+"└ paragraph
+  └ span \\"Hello World\\"
 "
 `;
 
 exports[`inspector inspect should render block and inline block nodes 1`] = `
-"└ root
-  ├ block (item: \\"block-123\\")
-  └ paragraph
-    ├ span \\"Text with \\"
-    ├ inlineBlock (item: \\"inline-456\\")
-    └ span \\" inline block\\"
+"├ block (item: \\"block-123\\")
+└ paragraph
+  ├ span \\"Text with \\"
+  ├ inlineBlock (item: \\"inline-456\\")
+  └ span \\" inline block\\"
 "
 `;
 
 exports[`inspector inspect should render code nodes with language and content 1`] = `
-"└ root
-  ├ code (language: \\"javascript\\") \\"console.log(\\"Hello, World!\\");\\"
-  └ code \\"echo \\"No language specified\\"\\"
+"├ code (language: \\"javascript\\") \\"console.log(\\"Hello, World!\\");\\"
+└ code \\"echo \\"No language specified\\"\\"
 "
 `;
 
 exports[`inspector inspect should render heading nodes with level 1`] = `
-"└ root
-  ├ heading (level: 1)
-  │ └ span \\"Main Title\\"
-  └ heading (level: 2)
-    └ span \\"Subtitle\\"
+"├ heading (level: 1)
+│ └ span \\"Main Title\\"
+└ heading (level: 2)
+  └ span \\"Subtitle\\"
 "
 `;
 
 exports[`inspector inspect should render link nodes with URL and meta 1`] = `
-"└ root
-  └ paragraph
-    ├ span \\"Visit \\"
-    ├ link (url: \\"https://example.com\\")
-    │ └ span \\"this link\\"
-    └ link (url: \\"https://meta.example.com\\", meta: {title=\\"Example Site\\", target=\\"_blank\\"})
-      └ span \\"link with meta\\"
+"└ paragraph
+  ├ span \\"Visit \\"
+  ├ link (url: \\"https://example.com\\")
+  │ └ span \\"this link\\"
+  └ link (url: \\"https://meta.example.com\\", meta: {title=\\"Example Site\\", target=\\"_blank\\"})
+    └ span \\"link with meta\\"
 "
 `;
 
 exports[`inspector inspect should render list nodes with style 1`] = `
-"└ root
-  └ list (style: bulleted)
-    ├ listItem
-    │ └ paragraph
-    │   └ span \\"First item\\"
-    └ listItem
-      └ paragraph
-        └ span \\"Second item\\"
+"└ list (style: bulleted)
+  ├ listItem
+  │ └ paragraph
+  │   └ span \\"First item\\"
+  └ listItem
+    └ paragraph
+      └ span \\"Second item\\"
 "
 `;
 
 exports[`inspector inspect should render multiple children with correct tree structure 1`] = `
-"└ root
-  ├ paragraph
-  │ └ span \\"First paragraph\\"
-  └ paragraph
-    └ span \\"Second paragraph\\"
+"├ paragraph
+│ └ span \\"First paragraph\\"
+└ paragraph
+  └ span \\"Second paragraph\\"
 "
 `;
 
 exports[`inspector inspect should render paragraph with custom style 1`] = `
-"└ root
-  └ paragraph (style: \\"custom-style\\")
-    └ span \\"Styled paragraph\\"
+"└ paragraph (style: \\"custom-style\\")
+  └ span \\"Styled paragraph\\"
 "
 `;
 
 exports[`inspector inspect should render span nodes with marks 1`] = `
-"└ root
-  └ paragraph
-    ├ span \\"Normal text\\"
-    ├ span (marks: strong) \\"Bold text\\"
-    └ span (marks: strong, emphasis) \\"Bold italic\\"
+"└ paragraph
+  ├ span \\"Normal text\\"
+  ├ span (marks: strong) \\"Bold text\\"
+  └ span (marks: strong, emphasis) \\"Bold italic\\"
 "
 `;
 
 exports[`inspector inspect should render thematic break 1`] = `
-"└ root
-  ├ paragraph
-  │ └ span \\"Before break\\"
-  ├ thematicBreak
-  └ paragraph
-    └ span \\"After break\\"
+"├ paragraph
+│ └ span \\"Before break\\"
+├ thematicBreak
+└ paragraph
+  └ span \\"After break\\"
 "
 `;
 
 exports[`inspector inspect should truncate long text content 1`] = `
-"└ root
-  ├ paragraph
-  │ └ span \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
-  └ code \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+"├ paragraph
+│ └ span \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+└ code \\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should add TreeNode children to blocks without existing children 1`] = `
+"└ block
+  └ Block Info
+    ├ Title: Block with TreeNode Children
+    └ ID: block-789
 "
 `;
 
 exports[`inspector inspect with block formatter should fall back to default formatting when no formatter provided 1`] = `
-"└ root
-  ├ block (item: \\"block-123\\")
-  └ paragraph
-    └ inlineBlock (item: \\"inline-456\\")
+"├ block (item: \\"block-123\\")
+└ paragraph
+  └ inlineBlock (item: \\"inline-456\\")
 "
 `;
 
 exports[`inspector inspect with block formatter should fall back to default formatting when no formatter provided 2`] = `
-"└ root
-  ├ block (item: \\"block-123\\")
-  └ paragraph
-    └ inlineBlock (item: \\"inline-456\\")
+"├ block (item: \\"block-123\\")
+└ paragraph
+  └ inlineBlock (item: \\"inline-456\\")
 "
 `;
 
 exports[`inspector inspect with block formatter should format block with ID using custom formatter 1`] = `
-"└ root
-  └ block ID: block-123
+"└ block ID: block-123
 "
 `;
 
 exports[`inspector inspect with block formatter should format block with object using custom formatter 1`] = `
-"└ root
-  └ block My Block Title (block-456)
+"└ block My Block Title (block-456)
 "
 `;
 
 exports[`inspector inspect with block formatter should format inline blocks with custom formatter 1`] = `
-"└ root
-  └ paragraph
-    ├ span \\"Click \\"
-    ├ inlineBlock Button: \\"Click me\\"
-    └ span \\" to continue\\"
+"└ paragraph
+  ├ span \\"Click \\"
+  ├ inlineBlock Button: \\"Click me\\"
+  └ span \\" to continue\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should handle TreeNode returns for inline blocks 1`] = `
+"└ paragraph
+  ├ span \\"Click \\"
+  ├ inlineBlock
+  │ └ button (button-123)
+  │   ├ Variant: primary
+  │   └ Size: large
+  └ span \\" to continue\\"
+"
+`;
+
+exports[`inspector inspect with block formatter should handle blockFormatter returning a single TreeNode 1`] = `
+"└ block
+  └ Content: Block content here
+    ├ Title: My Block Title
+    └ ID: block-123
+"
+`;
+
+exports[`inspector inspect with block formatter should handle blockFormatter returning an array of TreeNodes 1`] = `
+"└ block
+  ├ Properties
+  │ ├ Title: Complex Block
+  │ └ ID: block-456
+  └ Metadata
+    ├ Author: Jane Doe
+    └ Tags
+      ├ important
+      └ feature
 "
 `;
 
 exports[`inspector inspect with block formatter should handle multi-line block formatter output 1`] = `
-"└ root
-  ├ paragraph
-  │ └ span \\"Before block\\"
-  ├ block
-  │ Complex Block (block-789)
-  │ Description: A detailed description
-  │ Author: John Doe
-  │ Date: 2023-01-01
-  └ paragraph
-    └ span \\"After block\\"
+"├ paragraph
+│ └ span \\"Before block\\"
+├ block Complex Block (block-789) Description: A detailed description Author: John Doe Date: 2023-01-01
+└ paragraph
+  └ span \\"After block\\"
 "
 `;
 
 exports[`inspector inspect with block formatter should provide max line width to formatter 1`] = `
-"└ root
-  └ block
-    My Block
-    Description: This is a very long description that might exceed the suggested line width
-    ID: block-123
+"└ block My Block Description: This is a very long description that might exceed the suggested line width ID: block-123
+"
+`;
+
+exports[`inspector inspect with block formatter should treat string returns as single-line (strip newlines) 1`] = `
+"└ block Title: Multi-line Block Description: Description with multiple lines ID: block-789
 "
 `;

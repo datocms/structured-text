@@ -28,20 +28,6 @@ type StructuredTextDocumentOrNode<
   | Document<BlockItemType, InlineBlockItemType>;
 
 /**
- * Tree formatting constants for consistent visualization.
- */
-const TREE_SYMBOLS = {
-  /** Connector for last child: └ */
-  LAST_CHILD: '└',
-  /** Connector for middle child: ├ */
-  MIDDLE_CHILD: '├',
-  /** Vertical line for continuation: │ */
-  VERTICAL_LINE: '│',
-  /** Horizontal spacing */
-  SPACING: ' ',
-} as const;
-
-/**
  * Default configuration values.
  */
 const DEFAULT_CONFIG = {
@@ -63,33 +49,37 @@ export interface InspectOptions<
    * Custom formatter for block and inlineBlock nodes.
    *
    * This function receives the raw item value and the suggested maximum line width
-   * for the content (considering current indentation). The formatter can use this
-   * information to decide whether to use single-line or multi-line output.
+   * for the content (considering current indentation). The formatter can return:
+   * - String: Always treated as single-line content (newlines will be stripped)
+   * - TreeNode: Appended as a child node below the block
+   * - TreeNode[]: Multiple child nodes appended below the block
    *
    * @param item - The item value (either ID string or full object)
    * @param maxLineWidth - Suggested maximum line width for content (accounting for indentation)
-   * @returns A string representation (can be multi-line)
+   * @returns String (single-line), TreeNode, or TreeNode[] representation
    *
    * @example
    * ```typescript
-   * // Simple ID formatting
+   * // Simple string formatting (single-line)
    * const formatter = (item: string, maxWidth: number) => `ID: ${item}`;
    *
-   * // Responsive formatting based on available width
+   * // TreeNode formatting for complex structures
    * const formatter = (item: MyBlockType, maxWidth: number) => {
    *   if (typeof item === 'string') return `ID: ${item}`;
-   *   return [
-   *     `${item.title} (${item.id})`,
-   *     `Type: ${item.type}`,
-   *     `Created: ${item.createdAt}`
-   *   ].join('\n');
+   *   return {
+   *     label: item.title,
+   *     nodes: [
+   *       { label: `Type: ${item.type}` },
+   *       { label: `ID: ${item.id}` }
+   *     ]
+   *   };
    * };
    * ```
    */
   blockFormatter?: (
     item: BlockItemType | InlineBlockItemType,
     maxLineWidth: number,
-  ) => string;
+  ) => string | TreeNode | TreeNode[];
 
   /**
    * Maximum width for the entire inspect output.
@@ -148,149 +138,135 @@ function extractNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 /**
  * Inspects and renders a structured text document or node as a tree structure.
+ * Skips the root node and returns its children directly.
  *
  * @template BlockItemType - Type of block items (defaults to BlockId)
  * @template InlineBlockItemType - Type of inline block items (defaults to BlockId)
  * @param input - The structured text document or node to inspect
  * @param options - Configuration options for the inspector
- * @returns A string representation of the tree structure
+ * @returns A TreeNode representation of the structure (without root node)
  *
  * @example
  * ```typescript
- * const tree = inspect(document, {
+ * const tree = inspectionTreeNodes(document, {
  *   blockFormatter: (item) => typeof item === 'string' ? item : item.title
  * });
- * console.log(tree);
+ * console.log(formatAsTree(tree));
+ * ```
+ */
+export function inspectionTreeNodes<
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  input: StructuredTextDocumentOrNode<BlockItemType, InlineBlockItemType>,
+  options: InspectOptions<BlockItemType, InlineBlockItemType> = {},
+): TreeNode {
+  const rootNode = extractNode(input);
+  const rootTreeNode = buildTreeNode(rootNode, options);
+
+  // Skip the root node and return a wrapper containing its children
+  if (rootTreeNode.nodes && rootTreeNode.nodes.length > 0) {
+    // If there's only one child, return it directly
+    if (rootTreeNode.nodes.length === 1) {
+      return rootTreeNode.nodes[0];
+    }
+    // If there are multiple children, create a wrapper node with empty label
+    return {
+      label: '',
+      nodes: rootTreeNode.nodes,
+    };
+  }
+
+  // Fallback: return empty wrapper if no children
+  return { label: '' };
+}
+
+/**
+ * Inspects and formats a structured text document or node as a tree string.
+ * This is a convenience function that combines inspectionTreeNodes and formatAsTree.
+ *
+ * @template BlockItemType - Type of block items (defaults to BlockId)
+ * @template InlineBlockItemType - Type of inline block items (defaults to BlockId)
+ * @param input - The structured text document or node to inspect
+ * @param options - Configuration options for the inspector
+ * @returns A formatted tree string representation
+ *
+ * @example
+ * ```typescript
+ * const treeString = inspect(document, {
+ *   blockFormatter: (item) => typeof item === 'string' ? item : item.title
+ * });
+ * console.log(treeString);
  * ```
  */
 export function inspect<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   input: StructuredTextDocumentOrNode<BlockItemType, InlineBlockItemType>,
   options: InspectOptions<BlockItemType, InlineBlockItemType> = {},
 ): string {
-  const rootNode = extractNode(input);
-  return buildTree(rootNode, '', true, options);
+  return formatAsTree(inspectionTreeNodes(input, options));
 }
 
 /**
- * Recursively builds the tree representation of a node and its children.
+ * Recursively builds a TreeNode representation of a node and its children.
  *
  * @template BlockItemType - Type of block items
  * @template InlineBlockItemType - Type of inline block items
  * @param node - The current node to process
- * @param prefix - The prefix string for tree formatting
- * @param isLast - Whether this is the last child at its level
  * @param options - Configuration options
- * @returns String representation of the node and its subtree
+ * @returns TreeNode representation of the node and its subtree
  */
-function buildTree<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+function buildTreeNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   node: Node<BlockItemType, InlineBlockItemType>,
-  prefix: string,
-  isLast: boolean,
   options: InspectOptions<BlockItemType, InlineBlockItemType>,
-): string {
-  const connector = isLast
-    ? TREE_SYMBOLS.LAST_CHILD
-    : TREE_SYMBOLS.MIDDLE_CHILD;
-
+): TreeNode {
   // Calculate available width for block content
-  // Accounts for current prefix + connector + space
-  const currentIndentWidth = prefix.length + connector.length + 1;
+  // Mimicking the old calculation: prefix + connector + space (typically around 6-8 characters for deeper nodes)
   const maxWidth = options.maxWidth ?? DEFAULT_CONFIG.MAX_WIDTH;
-  const availableWidth = Math.max(20, maxWidth - currentIndentWidth);
+  const availableWidth = Math.max(20, maxWidth - 8);
 
   const nodeLabel = buildNodeLabel(node, options, availableWidth);
 
-  // Check if nodeLabel starts with newline (indicates multi-line block content)
-  const isMultiLineBlock = nodeLabel.startsWith('\n');
+  // Create the TreeNode with the label
+  const treeNode: TreeNode = {
+    label: nodeLabel,
+  };
 
-  if (isMultiLineBlock) {
-    // Remove the leading newline and split into lines
-    const blockContent = nodeLabel.substring(1);
-    const lines = blockContent.split('\n').filter((line) => line.trim() !== '');
-
-    // First line: just the node type without content
-    const nodeType =
-      isBlock(node) || isInlineBlock(node) ? node.type : node.type;
-    const firstLine = `${prefix}${connector} ${nodeType}\n`;
-
-    let result = firstLine;
-
-    // Add block content lines with proper indentation
-    const hasActualChildren = nodeHasChildren(node);
-    const contentPrefix =
-      prefix +
-      (isLast && !hasActualChildren
-        ? TREE_SYMBOLS.SPACING.repeat(2)
-        : TREE_SYMBOLS.VERTICAL_LINE + TREE_SYMBOLS.SPACING);
-
-    for (const line of lines) {
-      if (line.trim() !== '') {
-        result += `${contentPrefix}${line}\n`;
+  // Add children if the node has them
+  if (nodeHasChildren(node)) {
+    const children = node.children;
+    if (children.length > 0) {
+      treeNode.nodes = [];
+      for (const child of children) {
+        treeNode.nodes.push(
+          buildTreeNode(
+            child as Node<BlockItemType, InlineBlockItemType>,
+            options,
+          ),
+        );
       }
     }
-
-    // Handle actual node children
-    if (hasActualChildren && nodeHasChildren(node)) {
-      const children = node.children;
-      const childPrefix =
-        prefix +
-        (isLast
-          ? TREE_SYMBOLS.SPACING.repeat(2)
-          : TREE_SYMBOLS.VERTICAL_LINE + TREE_SYMBOLS.SPACING);
-
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        const isLastChild = i === children.length - 1;
-        result += buildTree(child, childPrefix, isLastChild, options);
-      }
-    }
-
-    return result;
-  } else {
-    // Single line content - use existing logic
-    const lines = nodeLabel.split('\n').filter((line) => line.trim() !== '');
-    const firstLine = `${prefix}${connector} ${lines[0]}\n`;
-
-    // Determine if we have additional content lines or actual children
-    const hasAdditionalContentLines = lines.length > 1;
-    const hasActualChildren = nodeHasChildren(node);
-
-    let result = firstLine;
-
-    // Handle multi-line formatter content as continuation lines (not child nodes)
-    if (hasAdditionalContentLines) {
-      const contentPrefix =
-        prefix +
-        (isLast && !hasActualChildren
-          ? TREE_SYMBOLS.SPACING.repeat(2)
-          : TREE_SYMBOLS.VERTICAL_LINE + TREE_SYMBOLS.SPACING);
-
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i];
-        if (line.trim() !== '') {
-          result += `${contentPrefix}${line}\n`;
-        }
-      }
-    }
-
-    // Handle actual node children with proper type safety
-    if (hasActualChildren && nodeHasChildren(node)) {
-      const children = node.children;
-      const childPrefix =
-        prefix +
-        (isLast
-          ? TREE_SYMBOLS.SPACING.repeat(2)
-          : TREE_SYMBOLS.VERTICAL_LINE + TREE_SYMBOLS.SPACING);
-
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        const isLastChild = i === children.length - 1;
-        result += buildTree(child, childPrefix, isLastChild, options);
-      }
-    }
-
-    return result;
   }
+
+  // Handle TreeNode returns from blockFormatter for block/inlineBlock nodes
+  if ((isBlock(node) || isInlineBlock(node)) && options.blockFormatter) {
+    const formattedContent = options.blockFormatter(node.item, availableWidth);
+
+    if (typeof formattedContent !== 'string') {
+      // Initialize nodes array if it doesn't exist
+      if (!treeNode.nodes) {
+        treeNode.nodes = [];
+      }
+
+      // Handle single TreeNode or array of TreeNodes
+      if (Array.isArray(formattedContent)) {
+        treeNode.nodes.push(...formattedContent);
+      } else {
+        treeNode.nodes.push(formattedContent);
+      }
+    }
+  }
+
+  return treeNode;
 }
 
 /**
@@ -344,16 +320,13 @@ function buildNodeLabel<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   } else if (isBlock(node) || isInlineBlock(node)) {
     const formatter = options.blockFormatter || defaultBlockFormatter;
     const formattedContent = formatter(node.item, availableWidth);
-    // For single line, display inline; for multi-line, display below
-    const lines = formattedContent
-      .split('\n')
-      .filter((line) => line.trim() !== '');
-    if (lines.length === 1) {
-      content = ` ${formattedContent}`;
-    } else {
-      // Multi-line content will be handled in buildTree function
-      content = `\n${formattedContent}`;
+
+    // Handle string returns - always treat as single-line (strip newlines)
+    if (typeof formattedContent === 'string') {
+      const singleLineContent = formattedContent.replace(/\n/g, ' ').trim();
+      content = ` ${singleLineContent}`;
     }
+    // TreeNode/TreeNode[] returns will be handled in buildTreeNode function
   } else if (isParagraph(node)) {
     if (node.style) {
       metaInfo.push(`style: "${node.style}"`);
@@ -370,4 +343,60 @@ function truncateText(text: string, maxLength: number): string {
   }
 
   return text.substring(0, maxLength - 3) + '...';
+}
+
+export interface TreeNode {
+  label: string;
+  nodes?: TreeNode[];
+}
+
+export function formatAsTree(input: TreeNode | string): string {
+  const root: TreeNode = typeof input === 'string' ? { label: input } : input;
+  const out: string[] = [];
+
+  function render(
+    node: TreeNode,
+    ancestorsHasNext: boolean[],
+    isLast: boolean,
+  ) {
+    const label = node.label.trim();
+    const children = node.nodes || [];
+
+    // ⬇️ Skip wrapper nodes (no label but has children)
+    if (!label && children.length > 0) {
+      children.forEach((child, idx) => {
+        const childIsLast = idx === children.length - 1;
+        render(child, ancestorsHasNext, childIsLast);
+      });
+      return;
+    }
+
+    // Build ancestor prefix from booleans: true -> '│ ', false -> '  '
+    const ancestorPrefix = ancestorsHasNext
+      .map((h) => (h ? '│ ' : '  '))
+      .join('');
+    const branch = isLast ? '└' : '├';
+
+    const lines = label.split('\n');
+
+    // First line
+    out.push(`${ancestorPrefix}${branch} ${lines[0]}`);
+
+    // Continuations
+    const contPrefix = ancestorPrefix + (isLast ? '  ' : '│ ');
+    for (let i = 1; i < lines.length; i++) {
+      out.push(`${contPrefix}${lines[i]}`);
+    }
+
+    // Recurse children
+    children.forEach((child, idx) => {
+      const childIsLast = idx === children.length - 1;
+      render(child, [...ancestorsHasNext, !isLast], childIsLast);
+    });
+  }
+
+  // Root as a top element
+  render(root, [], true);
+
+  return out.join('\n') + '\n';
 }

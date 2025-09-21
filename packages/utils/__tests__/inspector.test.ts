@@ -497,6 +497,224 @@ describe('inspector', () => {
         });
         expect(result).toMatchSnapshot();
       });
+
+      it('should handle blockFormatter returning a single TreeNode', () => {
+        type BlockObject = {
+          id: string;
+          title: string;
+          content: string;
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-123',
+          title: 'My Block Title',
+          content: 'Block content here',
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            return {
+              label: `Content: ${item.content}`,
+              nodes: [
+                { label: `Title: ${item.title}` },
+                { label: `ID: ${item.id}` },
+              ],
+            };
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should handle blockFormatter returning an array of TreeNodes', () => {
+        type BlockObject = {
+          id: string;
+          title: string;
+          metadata: { author: string; tags: string[] };
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-456',
+          title: 'Complex Block',
+          metadata: {
+            author: 'Jane Doe',
+            tags: ['important', 'feature'],
+          },
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            return [
+              {
+                label: 'Properties',
+                nodes: [
+                  { label: `Title: ${item.title}` },
+                  { label: `ID: ${item.id}` },
+                ],
+              },
+              {
+                label: 'Metadata',
+                nodes: [
+                  { label: `Author: ${item.metadata.author}` },
+                  {
+                    label: 'Tags',
+                    nodes: item.metadata.tags.map((tag) => ({ label: tag })),
+                  },
+                ],
+              },
+            ];
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should handle TreeNode returns for inline blocks', () => {
+        type InlineBlockObject = {
+          id: string;
+          type: string;
+          config: { variant: string; size: string };
+        };
+
+        const inlineBlockObject: InlineBlockObject = {
+          id: 'button-123',
+          type: 'button',
+          config: {
+            variant: 'primary',
+            size: 'large',
+          },
+        };
+
+        const root: Root<string, InlineBlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'paragraph',
+              children: [
+                { type: 'span', value: 'Click ' },
+                {
+                  type: 'inlineBlock',
+                  item: inlineBlockObject,
+                },
+                { type: 'span', value: ' to continue' },
+              ],
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            return {
+              label: `${item.type} (${item.id})`,
+              nodes: [
+                { label: `Variant: ${item.config.variant}` },
+                { label: `Size: ${item.config.size}` },
+              ],
+            };
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should add TreeNode children to blocks without existing children', () => {
+        type BlockObject = {
+          id: string;
+          title: string;
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-789',
+          title: 'Block with TreeNode Children',
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            return {
+              label: 'Block Info',
+              nodes: [
+                { label: `Title: ${item.title}` },
+                { label: `ID: ${item.id}` },
+              ],
+            };
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
+
+      it('should treat string returns as single-line (strip newlines)', () => {
+        type BlockObject = {
+          id: string;
+          title: string;
+          description: string;
+        };
+
+        const blockObject: BlockObject = {
+          id: 'block-789',
+          title: 'Multi-line Block',
+          description: 'Description with\nmultiple\nlines',
+        };
+
+        const root: Root<BlockObject> = {
+          type: 'root',
+          children: [
+            {
+              type: 'block',
+              item: blockObject,
+            },
+          ],
+        };
+
+        const result = inspect(root, {
+          blockFormatter: (item) => {
+            if (typeof item === 'string') {
+              return `ID: ${item}`;
+            }
+            // Return multi-line string that should be converted to single-line
+            return `Title: ${item.title}\nDescription: ${item.description}\nID: ${item.id}`;
+          },
+        });
+        expect(result).toMatchSnapshot();
+      });
     });
   });
 });

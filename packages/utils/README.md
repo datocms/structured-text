@@ -387,7 +387,7 @@ The package includes a powerful tree visualization utility that renders structur
 
 | Function                                                                                               | Description                                                |
 | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| [`inspect`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/inspector.ts#L202) | Render a structured text document or node as an ASCII tree |
+| [`inspect`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/inspector.ts#L199) | Render a structured text document or node as an ASCII tree |
 
 ```javascript
 import { inspect } from 'datocms-structured-text-utils';
@@ -424,14 +424,13 @@ console.log(inspect(structuredText));
 **Output:**
 
 ```
-└ root
-  ├ heading (level: 1)
-  │ └ span "Main Title"
-  ├ paragraph
-  │ ├ span "This is a "
-  │ ├ span (marks: strong) "bold"
-  │ └ span " paragraph."
-  └ block (item: "block-123")
+├ heading (level: 1)
+│ └ span "Main Title"
+├ paragraph
+│ ├ span "This is a "
+│ ├ span (marks: strong) "bold"
+│ └ span " paragraph."
+└ block (item: "block-123")
 ```
 
 ### Custom Block Formatting
@@ -466,12 +465,11 @@ console.log(tree);
 **Output:**
 
 ```
-└ root
-  ├ paragraph
-  │ └ span "Content before block"
-  ├ block
-  │ id: 456
-  │ title: Hero Section
-  └ paragraph
-    └ span "Content after block"
+├ paragraph
+│ └ span "Content before block"
+├ block
+│ id: 456
+│ title: Hero Section
+└ paragraph
+  └ span "Content after block"
 ```
