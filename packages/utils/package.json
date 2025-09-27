@@ -26,7 +26,7 @@
     "url": "git+https://github.com/datocms/structured-text.git"
   },
   "scripts": {
-    "build": "tsc && tsc --project ./tsconfig.esnext.json",
+    "build": "node update-links.js && tsc && tsc --project ./tsconfig.esnext.json",
     "prebuild": "rimraf dist"
   },
   "bugs": {
