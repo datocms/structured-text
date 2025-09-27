@@ -36,7 +36,7 @@ const structuredText = {
             {
               type: 'span',
               value: 'Hello!',
-              marks: ['foobar'],
+              marks: ['invalidmark'],
             },
           ],
         },
@@ -48,7 +48,7 @@ const structuredText = {
 const result = validate(structuredText);
 
 if (!result.valid) {
-  console.error(result.message); // "span has an invalid mark "foobar"
+  console.error(result.message); // "span has an invalid mark "invalidmark"
 }
 ```
 
@@ -207,19 +207,27 @@ await forEachNodeAsync(structuredText, async (node, parent, path) => {
 Transform nodes while preserving the tree structure:
 
 ```javascript
-import { mapNodes, mapNodesAsync } from 'datocms-structured-text-utils';
+import {
+  mapNodes,
+  mapNodesAsync,
+  isHeading,
+  isSpan,
+  isBlock,
+} from 'datocms-structured-text-utils';
 
-// Add custom properties to all nodes
-const enhanced = mapNodes(structuredText, (node) => ({
-  ...node,
-  id: generateId(),
-}));
+// Transform heading levels for better hierarchy
+const enhanced = mapNodes(structuredText, (node) => {
+  if (isHeading(node) && node.level === 1) {
+    return { ...node, level: 2 };
+  }
+  return node;
+});
 
 // Async transformation with external API calls
 const processed = await mapNodesAsync(structuredText, async (node) => {
-  if (isBlock(node)) {
-    const enrichedData = await fetchBlockData(node.item);
-    return { ...node, enrichedData };
+  if (isSpan(node) && node.value.includes('TODO')) {
+    const updatedText = await translateText(node.value);
+    return { ...node, value: updatedText };
   }
   return node;
 });
@@ -273,7 +281,12 @@ const strongText = collectNodes(
 Remove nodes that don't match a predicate:
 
 ```javascript
-import { filterNodes, filterNodesAsync } from 'datocms-structured-text-utils';
+import {
+  filterNodes,
+  filterNodesAsync,
+  isCode,
+  isBlock,
+} from 'datocms-structured-text-utils';
 
 // Remove all code blocks
 const withoutCode = filterNodes(structuredText, (node) => !isCode(node));
@@ -339,6 +352,9 @@ import {
   everyNode,
   someNodeAsync,
   everyNodeAsync,
+  isHeading,
+  isSpan,
+  isBlock,
 } from 'datocms-structured-text-utils';
 
 // Check if document contains any headings
@@ -372,11 +388,11 @@ headings.forEach(({ node, path }) => {
 });
 
 // Custom type guards work too
-const customNodes = collectNodes(
+const strongSpans = collectNodes(
   structuredText,
-  (node): node is Block => isBlock(node) && node.item.startsWith('custom-'),
+  (node): node is Span => isSpan(node) && node.marks?.includes('strong'),
 );
-// customNodes is now Array<{ node: Block; path: TreePath }>
+// strongSpans is now Array<{ node: Span; path: TreePath }>
 ```
 
 ## Tree Visualization with Inspector
