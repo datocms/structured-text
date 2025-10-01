@@ -1,0 +1,108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`render all heading levels renders all heading levels 1`] = `
+"# H1
+
+## H2
+
+### H3
+
+#### H4
+
+##### H5
+
+###### H6"
+`;
+
+exports[`render all inline marks renders all marks 1`] = `"**bold** *italic* \`code\` <u>underline</u> ~~strikethrough~~ ==highlight=="`;
+
+exports[`render blockquote renders blockquotes 1`] = `
+"> This is a quote
+>
+> With another paragraph
+>
+>
+
+> Quote with attribution
+>
+> — John Doe"
+`;
+
+exports[`render code blocks renders code blocks 1`] = `
+"\`\`\`javascript
+const x = 1;
+console.log(x);
+\`\`\`
+
+\`\`\`
+plain code
+\`\`\`"
+`;
+
+exports[`render combined marks renders nested marks in the expected order 1`] = `"***Bold and italic*** & <u>==highlighted underline==</u> with text. \`***nested combo***\`"`;
+
+exports[`render custom rules applies custom rules 1`] = `"[H1] Custom Title"`;
+
+exports[`render deep mixed lists renders nested mixed lists with proper indentation 1`] = `
+"1. Step one
+  
+  - Detail A
+    
+    1. Deep follow-up
+1. Step two"
+`;
+
+exports[`render line breaks renders line breaks 1`] = `
+"Line 1
+Line 2
+Line 3"
+`;
+
+exports[`render links renders links 1`] = `"Check out [DatoCMS](https://www.datocms.com/)!"`;
+
+exports[`render list items with paragraphs keeps intra-item paragraphs and nested lists formatted 1`] = `
+"- Intro paragraph
+  
+  Follow-up paragraph
+  
+  1. Nested step"
+`;
+
+exports[`render lists renders lists correctly 1`] = `
+"- First item
+- Second item
+- Third item
+  
+  - Nested item
+
+1. First
+1. Second"
+`;
+
+exports[`render markdown special characters escapes special characters 1`] = `"Special chars: \\\\* \\\\_ \\\\# \\\\[ \\\\] \\\\( \\\\) \\\\{ \\\\} \\\\< \\\\> \\\\\\\\ \\\\| \\\\\`"`;
+
+exports[`render simple dast with default rules renders the document 1`] = `
+"# This is a title!
+
+This is a paragraph."
+`;
+
+exports[`render thematic break renders thematic breaks 1`] = `
+"Before
+
+---
+
+After"
+`;
+
+exports[`render with links/blocks with default rules renders the document 1`] = `
+"Read about [How to code](/docs/how-to-code). Find out more [here](/docs/how-to-code) and mention **@John Doe**!
+
+> Foo bar.
+>
+> — Mark Smith"
+`;
+
+exports[`render with links/blocks with missing renderInlineRecord skips the node 1`] = `"Read about . Find out more here and mention !"`;
+
+exports[`render with no value renders null 1`] = `null`;

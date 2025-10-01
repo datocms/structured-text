@@ -1,0 +1,40 @@
+{
+  "name": "datocms-structured-text-to-markdown",
+  "version": "5.1.4",
+  "description": "Convert DatoCMS Structured Text field to Markdown",
+  "keywords": [
+    "datocms",
+    "structured-text",
+    "markdown"
+  ],
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/to-markdown#readme",
+  "license": "MIT",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
+  "sideEffects": false,
+  "directories": {
+    "lib": "dist",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datocms/structured-text.git"
+  },
+  "scripts": {
+    "build": "tsc && tsc --project ./tsconfig.esnext.json",
+    "prebuild": "rimraf dist"
+  },
+  "bugs": {
+    "url": "https://github.com/datocms/structured-text/issues"
+  },
+  "dependencies": {
+    "datocms-structured-text-generic-html-renderer": "^5.1.4",
+    "datocms-structured-text-utils": "^5.1.4"
+  }
+}

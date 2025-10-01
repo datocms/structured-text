@@ -26,6 +26,8 @@ Monorepo with Typescript libraries for handling and rendering [DatoCMS Structure
   - Plain text renderer for the Structured Text document.
 - [`datocms-structured-text-to-html-string`](https://github.com/datocms/structured-text/tree/master/packages/to-html-string)
   - HTML renderer for the DatoCMS Structured Text field type.
+- [`datocms-structured-text-to-markdown`](https://github.com/datocms/structured-text/tree/master/packages/to-markdown)
+  - Markdown renderer for the DatoCMS Structured Text field type.
 - [`<StructuredText />`](https://github.com/datocms/react-datocms#structured-text)
   - React component that you can use to render Structured Text documents.
 - [`<datocms-structured-text />`](https://github.com/datocms/vue-datocms#structured-text)
