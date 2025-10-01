@@ -9,6 +9,8 @@ import {
 } from 'datocms-structured-text-generic-html-renderer';
 import {
   Adapter,
+  CdaStructuredTextRecord,
+  CdaStructuredTextValue,
   Document as StructuredTextDocument,
   isBlock,
   isInlineBlock,
@@ -21,18 +23,18 @@ import {
   RenderResult,
   RenderRule,
   StructuredText as StructuredTextGraphQlResponse,
+  TypesafeCdaStructuredTextValue,
   TypesafeStructuredText as TypesafeStructuredTextGraphQlResponse,
 } from 'datocms-structured-text-utils';
 import hyperscript from 'hyperscript';
 
 export { renderNodeRule, renderMarkRule, RenderError };
-// deprecated export
-export { renderNodeRule as renderRule };
+
 export type {
   StructuredTextDocument,
-  TypesafeStructuredTextGraphQlResponse,
-  StructuredTextGraphQlResponse,
-  StructuredTextGraphQlResponseRecord,
+  CdaStructuredTextValue,
+  TypesafeCdaStructuredTextValue,
+  CdaStructuredTextRecord,
 };
 
 type AdapterReturn = Element[] | Element | string | null;
@@ -286,3 +288,19 @@ export function render<
 
   return result as ReturnType<F> | null;
 }
+
+// ============================================================================
+// DEPRECATED EXPORTS - kept for backward compatibility
+// ============================================================================
+
+/**
+ * @deprecated Use renderNodeRule instead
+ */
+export { renderNodeRule as renderRule };
+
+/** @deprecated Use CdaStructuredTextValue */
+export type { StructuredTextGraphQlResponse };
+/** @deprecated Use TypesafeCdaStructuredTextValue */
+export type { TypesafeStructuredTextGraphQlResponse };
+/** @deprecated Use CdaStructuredTextRecord */
+export type { StructuredTextGraphQlResponseRecord };

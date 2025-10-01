@@ -476,11 +476,26 @@ export type NodeType =
   | SpanType
   | ThematicBreakType;
 
-/** @deprecated Use CdaStructuredTextValue */
-export type StructuredText<
-  BlockRecord extends Record = Record,
-  LinkRecord extends Record = Record,
-  InlineBlockRecord extends Record = Record
+export type CdaStructuredTextRecord = {
+  __typename: string;
+  id: string;
+} & {
+  [prop: string]: unknown;
+};
+
+/**
+ * CDA (Content Delivery API) format for structured text values.
+ *
+ * Structured Text enables authors to create rich text content, on par with
+ * traditional editors.
+ *
+ * Additionally, it allows records and Media Area assets to be linked dynamically
+ * and embedded within the flow of the text.
+ */
+export type CdaStructuredTextValue<
+  BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
 > = {
   /**
    * A DatoCMS "dast" document
@@ -505,17 +520,10 @@ export type StructuredText<
  * Additionally, it allows records and Media Area assets to be linked dynamically
  * and embedded within the flow of the text.
  */
-export type CdaStructuredTextValue<
-  BlockRecord extends Record = Record,
-  LinkRecord extends Record = Record,
-  InlineBlockRecord extends Record = Record
-> = StructuredText<BlockRecord, LinkRecord, InlineBlockRecord>;
-
-/** @deprecated Use TypesafeCdaStructuredTextValue */
-export type TypesafeStructuredText<
-  BlockRecord extends Record = Record,
-  LinkRecord extends Record = Record,
-  InlineBlockRecord extends Record = Record
+export type TypesafeCdaStructuredTextValue<
+  BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
 > = {
   /**
    * A DatoCMS "dast" document
@@ -531,24 +539,19 @@ export type TypesafeStructuredText<
   links?: LinkRecord[];
 };
 
-/**
- * CDA (Content Delivery API) format for structured text values.
- *
- * Structured Text enables authors to create rich text content, on par with
- * traditional editors.
- *
- * Additionally, it allows records and Media Area assets to be linked dynamically
- * and embedded within the flow of the text.
- */
-export type TypesafeCdaStructuredTextValue<
-  BlockRecord extends Record = Record,
-  LinkRecord extends Record = Record,
-  InlineBlockRecord extends Record = Record
-> = TypesafeStructuredText<BlockRecord, LinkRecord, InlineBlockRecord>;
+/** @deprecated Use CdaStructuredTextRecord */
+export type Record = CdaStructuredTextRecord;
 
-export type Record = {
-  __typename: string;
-  id: string;
-} & {
-  [prop: string]: unknown;
-};
+/** @deprecated Use CdaStructuredTextValue */
+export type StructuredText<
+  BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+> = CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>;
+
+/** @deprecated Use TypesafeCdaStructuredTextValue */
+export type TypesafeStructuredText<
+  BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+> = TypesafeCdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>;
