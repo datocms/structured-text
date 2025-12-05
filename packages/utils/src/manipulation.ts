@@ -18,6 +18,8 @@ type AllNodesInTree<T, Depth extends number = 10> = Depth extends 0
   ? T | AllNodesInTree<Children, Prev<Depth>>
   : T;
 
+type WithChildren<T> = Extract<T, { children: readonly unknown[] }>;
+
 type Prev<T extends number> = T extends 0
   ? 0
   : T extends 1
@@ -57,7 +59,7 @@ type StructuredTextDocumentOrNode<T> = T | Document<T>;
  */
 export type NodePredicate<T, R> = (
   node: AllNodesInTree<T>,
-  parent: AllNodesInTree<T> | null,
+  parent: WithChildren<AllNodesInTree<T>> | null,
   path: TreePath,
 ) => R;
 
@@ -109,7 +111,7 @@ function hasChildren(node: unknown): node is { children: readonly unknown[] } {
 export function forEachNode<T>(
   input: StructuredTextDocumentOrNode<T>,
   visitor: NodePredicate<T, void>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): void {
   const node = extractNode(input);
@@ -121,11 +123,12 @@ export function forEachNode<T>(
   if (hasChildren(node)) {
     for (let index = 0; index < node.children.length; index++) {
       const child = node.children[index];
-      forEachNode(child as T, visitor, node as AllNodesInTree<T>, [
-        ...path,
-        'children',
-        index,
-      ]);
+      forEachNode(
+        child as T,
+        visitor,
+        node as WithChildren<AllNodesInTree<T>>,
+        [...path, 'children', index],
+      );
     }
   }
 }
@@ -142,7 +145,7 @@ export function forEachNode<T>(
 export async function forEachNodeAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   visitor: NodePredicate<T, Promise<void>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<void> {
   const node = extractNode(input);
@@ -154,11 +157,12 @@ export async function forEachNodeAsync<T>(
   if (hasChildren(node)) {
     for (let index = 0; index < node.children.length; index++) {
       const child = node.children[index];
-      await forEachNodeAsync(child as T, visitor, node as AllNodesInTree<T>, [
-        ...path,
-        'children',
-        index,
-      ]);
+      await forEachNodeAsync(
+        child as T,
+        visitor,
+        node as WithChildren<AllNodesInTree<T>>,
+        [...path, 'children', index],
+      );
     }
   }
 }
@@ -200,7 +204,7 @@ export function mapNodes<T, R>(
 export function mapNodes<T, R>(
   input: StructuredTextDocumentOrNode<T>,
   mapper: NodePredicate<T, R>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): StructuredTextDocumentOrNode<R> {
   const node = extractNode(input);
@@ -281,7 +285,7 @@ export async function mapNodesAsync<T, R>(
 export async function mapNodesAsync<T, R>(
   input: StructuredTextDocumentOrNode<T>,
   mapper: NodePredicate<T, Promise<R>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<StructuredTextDocumentOrNode<R>> {
   const node = extractNode(input);
@@ -367,7 +371,7 @@ export function collectNodes<T>(
 export function collectNodes<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, boolean>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Array<{ node: AllNodesInTree<T>; path: TreePath }> {
   const results: Array<{ node: AllNodesInTree<T>; path: TreePath }> = [];
@@ -405,7 +409,7 @@ export async function collectNodesAsync<T>(
 export async function collectNodesAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, Promise<boolean>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<Array<{ node: AllNodesInTree<T>; path: TreePath }>> {
   const results: Array<{ node: AllNodesInTree<T>; path: TreePath }> = [];
@@ -464,7 +468,7 @@ export function findFirstNode<T>(
 export function findFirstNode<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, boolean>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): { node: AllNodesInTree<T>; path: TreePath } | null {
   const node = extractNode(input);
@@ -522,7 +526,7 @@ export async function findFirstNodeAsync<T>(
 export async function findFirstNodeAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, Promise<boolean>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<{ node: AllNodesInTree<T>; path: TreePath } | null> {
   const node = extractNode(input);
@@ -588,7 +592,7 @@ export function filterNodes<T>(
 export function filterNodes<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, boolean>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): StructuredTextDocumentOrNode<T> | null {
   const node = extractNode(input);
@@ -671,7 +675,7 @@ export async function filterNodesAsync<T>(
 export async function filterNodesAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, Promise<boolean>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<StructuredTextDocumentOrNode<T> | null> {
   const node = extractNode(input);
@@ -740,7 +744,7 @@ export function reduceNodes<T, R>(
     path: TreePath,
   ) => R,
   initialValue: R,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): R {
   const node = extractNode(input);
@@ -785,7 +789,7 @@ export async function reduceNodesAsync<T, R>(
     path: TreePath,
   ) => Promise<R>,
   initialValue: R,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<R> {
   const node = extractNode(input);
@@ -821,7 +825,7 @@ export async function reduceNodesAsync<T, R>(
 export function someNode<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, boolean>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): boolean {
   const node = extractNode(input);
@@ -836,11 +840,12 @@ export function someNode<T>(
     for (let index = 0; index < node.children.length; index++) {
       const child = node.children[index];
       if (
-        someNode(child as T, predicate, node as AllNodesInTree<T>, [
-          ...path,
-          'children',
-          index,
-        ])
+        someNode(
+          child as T,
+          predicate,
+          node as WithChildren<AllNodesInTree<T>>,
+          [...path, 'children', index],
+        )
       ) {
         return true;
       }
@@ -862,7 +867,7 @@ export function someNode<T>(
 export async function someNodeAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, Promise<boolean>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<boolean> {
   const node = extractNode(input);
@@ -877,11 +882,12 @@ export async function someNodeAsync<T>(
     for (let index = 0; index < node.children.length; index++) {
       const child = node.children[index];
       if (
-        await someNodeAsync(child as T, predicate, node as AllNodesInTree<T>, [
-          ...path,
-          'children',
-          index,
-        ])
+        await someNodeAsync(
+          child as T,
+          predicate,
+          node as WithChildren<AllNodesInTree<T>>,
+          [...path, 'children', index],
+        )
       ) {
         return true;
       }
@@ -903,7 +909,7 @@ export async function someNodeAsync<T>(
 export function everyNode<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, boolean>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): boolean {
   const node = extractNode(input);
@@ -912,7 +918,7 @@ export function everyNode<T>(
     node,
     (
       currentNode: AllNodesInTree<T>,
-      currentParent: AllNodesInTree<T> | null,
+      currentParent: WithChildren<AllNodesInTree<T>> | null,
       currentPath: TreePath,
     ) => {
       return !predicate(currentNode, currentParent, currentPath);
@@ -934,7 +940,7 @@ export function everyNode<T>(
 export async function everyNodeAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
   predicate: NodePredicate<T, Promise<boolean>>,
-  parent: AllNodesInTree<T> | null = null,
+  parent: WithChildren<AllNodesInTree<T>> | null = null,
   path: TreePath = [],
 ): Promise<boolean> {
   const node = extractNode(input);
@@ -943,7 +949,7 @@ export async function everyNodeAsync<T>(
     node,
     async (
       currentNode: AllNodesInTree<T>,
-      currentParent: AllNodesInTree<T> | null,
+      currentParent: WithChildren<AllNodesInTree<T>> | null,
       currentPath: TreePath,
     ) => {
       return !(await predicate(currentNode, currentParent, currentPath));
