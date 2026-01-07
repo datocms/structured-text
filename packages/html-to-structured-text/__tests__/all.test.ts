@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 
-import { Options, parse5ToStructuredText } from '../src';
+import { parse5ToStructuredText, Options } from '../src';
 import parse5 from 'parse5';
 import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
-import { CONTINUE, find, findAll, visit } from 'unist-utils-core';
-import googleDocsPreprocessor from '../src/preprocessors/google-docs';
+import { findAll, find, visit, CONTINUE } from 'unist-utils-core';
 
 /* This is a shim for NodeJS. The actual CMS software usually uses DOMParser.
  Don't call it htmlToStructuredText() because there is an exported function
