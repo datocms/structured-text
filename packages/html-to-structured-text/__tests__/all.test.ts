@@ -7,8 +7,10 @@ import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
 import { CONTINUE, find, findAll, visit } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
 
-// This is a shim for NodeJS. The actual CMS software uses DOMParser and can have different output, unfortunately
-function parse5HtmlToStructuredText(html: string, options: Options = {}) {
+/* This is a shim for NodeJS. The actual CMS software usually uses DOMParser.
+ Don't call it htmlToStructuredText() because there is an exported function
+ by that same name already (in ../src) */
+function parse5HtmlToStructuredTextShim(html: string, options: Options = {}) {
   return parse5ToStructuredText(
     parse5.parse(html, {
       sourceCodeLocationInfo: true,
@@ -20,14 +22,14 @@ function parse5HtmlToStructuredText(html: string, options: Options = {}) {
 describe('htmlToStructuredText', () => {
   it('works with empty document', async () => {
     const html = '';
-    const result = await parse5HtmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
   it('ignores doctype and HTML comments', async () => {
     const html = `<!doctype html> <!-- <p>test</p> -->`;
-    const result = await parse5HtmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
@@ -53,7 +55,7 @@ describe('htmlToStructuredText', () => {
       <script>console.log('script')</script>
     `;
 
-    const result = await parse5HtmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
@@ -64,7 +66,7 @@ describe('htmlToStructuredText', () => {
         <p>twice</p>
       `;
 
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           text: async (createNode, node, context) => {
@@ -94,7 +96,7 @@ describe('htmlToStructuredText', () => {
       const html = `
         <p>twice</p>
       `;
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         handlers: {
           p: (createNode, node, context) => {
             return [
@@ -116,7 +118,7 @@ describe('htmlToStructuredText', () => {
         <p>already wrapped</p>
         needs wrapping
       `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             unknown: (createNode, node, context) => {
@@ -145,7 +147,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <custom>span</custom>
       `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             custom: async (createNode, node, context) => {
@@ -165,7 +167,7 @@ describe('htmlToStructuredText', () => {
           <blockquote>override</blockquote>
           <p>regular paragraph</p>
       `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             blockquote: async (createNode, node, context) => {
               // turn a blockquote into a paragraph
@@ -189,7 +191,7 @@ describe('htmlToStructuredText', () => {
           <p>already wrapped</p>
           needs wrapping
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -215,7 +217,7 @@ describe('htmlToStructuredText', () => {
           </section>
           <a href="#">hyperlink</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
 
         expect(
@@ -251,7 +253,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <base href="https://datocms.com" />
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             base: async (createNode, node, context) => {
               expect(context.global.baseUrl).toBe(null);
@@ -275,7 +277,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="./contact" target="_blank" title="Foo bar" other="Ignore me" rel="noopener noreferrer">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const { meta } = find(result.document, 'link');
         expect(meta).toMatchInlineSnapshot(`
@@ -301,7 +303,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com" />
           <a href="./contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/contact',
@@ -313,7 +315,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com" />
           <a href="contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/contact',
@@ -325,7 +327,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/t/" />
           <a href="/contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/t/contact',
@@ -337,7 +339,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/t/" />
           <a href="https://datocms.com/b/contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/b/contact',
@@ -349,7 +351,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           shared: {
             baseUrl: 'http://acme.com',
           },
@@ -365,7 +367,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           shared: {
             baseUrl: 'http://acme.com',
             baseUrlFound: true,
@@ -388,7 +390,7 @@ describe('htmlToStructuredText', () => {
           <span style="font-weight: bold;">span</span>
         `;
 
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'paragraph')).toHaveLength(1);
         const spans = findAll(result.document, 'span');
@@ -428,7 +430,7 @@ describe('htmlToStructuredText', () => {
             nested implicit paragraph
           </article>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -449,7 +451,7 @@ describe('htmlToStructuredText', () => {
             <span>[span becomes simple text]</span>
           </p>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -487,7 +489,7 @@ describe('htmlToStructuredText', () => {
             <div>[separate paragraph]</div>
           </p>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -519,7 +521,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>needs wrapping</h1>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('heading');
         expect(result.document.children[0].children[0].type).toBe('span');
@@ -530,7 +532,7 @@ describe('htmlToStructuredText', () => {
           <h7>needs wrapping</h7>
           <p>hello</p>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -547,7 +549,7 @@ describe('htmlToStructuredText', () => {
           <h1>needs wrapping</h1>
           <p>hello</p>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedHeadingLevels: [2],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -565,7 +567,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1><p>p not allowed inside h1</p></h1>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'paragraph')).toHaveLength(0);
       });
@@ -574,7 +576,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>span <a href="#">link</a></h1>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].children).toMatchInlineSnapshot(`
           Array [
@@ -609,7 +611,7 @@ describe('htmlToStructuredText', () => {
             </code>
           </pre>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
@@ -618,7 +620,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>dato</h1>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -633,7 +635,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">import</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"file.html"</span> /&gt;</span></code></pre>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0]).toMatchInlineSnapshot(`
           Object {
@@ -650,7 +652,7 @@ describe('htmlToStructuredText', () => {
             <li><pre><code class="language-html">dast()</code></pre></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'paragraph')).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(0);
@@ -669,7 +671,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code class="language-html">dast()</code>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0]).toMatchInlineSnapshot(`
@@ -685,7 +687,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code>dast()</code>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0].language).toBeFalsy();
@@ -695,7 +697,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code>let dato</code>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -708,7 +710,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <pre><code>foo<br>bar</code></pre>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -728,7 +730,7 @@ describe('htmlToStructuredText', () => {
           <blockquote>1</blockquote>
           <blockquote><span>2</span></blockquote>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -759,7 +761,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <blockquote>1<br>2</blockquote>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -794,7 +796,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <blockquote>dato</blockquote>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -809,7 +811,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <ul><li>test</li></ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].style).toBe('bulleted');
       });
@@ -818,7 +820,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <ol><li>test</li></ol>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].style).toBe('numbered');
       });
@@ -832,7 +834,7 @@ describe('htmlToStructuredText', () => {
             <li><p>4</p></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(
           find(result.document, 'list').children.every(
@@ -847,7 +849,7 @@ describe('htmlToStructuredText', () => {
             <li><ul><li>1</li></ul></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(find(result.document, 'list'), 'list')).toBeTruthy();
       });
@@ -858,7 +860,7 @@ describe('htmlToStructuredText', () => {
             <li><blockquote>1</blockquote></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'blockquote')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -870,7 +872,7 @@ describe('htmlToStructuredText', () => {
             <li><h1>1</h1></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'h1')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -882,7 +884,7 @@ describe('htmlToStructuredText', () => {
             <li><code>1</code></li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -895,7 +897,7 @@ describe('htmlToStructuredText', () => {
             <a href="#">3</a>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'link')).toHaveLength(2);
         const items = findAll(result.document, 'listItem').map((listItem) =>
@@ -924,7 +926,7 @@ describe('htmlToStructuredText', () => {
             <ul><li>5</li></ul>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const lists = findAll(result.document, 'list');
         expect(lists).toHaveLength(1);
@@ -946,7 +948,7 @@ describe('htmlToStructuredText', () => {
             <blockquote>1<hr></blockquote>
           </div>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const thematicBreaks = findAll(result.document, 'thematicBreak');
         expect(thematicBreaks).toHaveLength(1);
@@ -958,7 +960,7 @@ describe('htmlToStructuredText', () => {
             <li>dato</li>
           </ul>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -973,7 +975,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="#">1</a>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
@@ -984,7 +986,7 @@ describe('htmlToStructuredText', () => {
           const html = `
             <a href="#"><h1>1</h1>2</a>
           `;
-          const result = await parse5HtmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(result.document.children[0].type).toBe('heading');
           expect(find(find(result.document, 'heading'), 'link')).toBeTruthy();
@@ -995,7 +997,7 @@ describe('htmlToStructuredText', () => {
           const html = `
             <ul><a href="#"><h1>1</h1>2</a></ul>
           `;
-          const result = await parse5HtmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(findAll(result.document, 'heading')).toHaveLength(0);
         });
@@ -1005,7 +1007,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="#"><h1>dato</h1>2</a>
         `;
-        const result = await parse5HtmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -1044,7 +1046,7 @@ describe('htmlToStructuredText', () => {
           const html = `
           <p><${tagName}>${markName}</${tagName}></p>
         `;
-          const result = await parse5HtmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           const span = find(result.document, 'span');
           expect(span.marks).toBeTruthy();
@@ -1058,7 +1060,7 @@ describe('htmlToStructuredText', () => {
           const html = `
           <p><${tagName}>${markName}</${tagName}></p>
         `;
-          const result = await parse5HtmlToStructuredText(html, {
+          const result = await parse5HtmlToStructuredTextShim(html, {
             allowedMarks: [],
           });
           expect(validate(result).valid).toBeTruthy();
@@ -1071,7 +1073,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p><em>em<strong>strong-em<u>u-strong-em</u>strong-em</strong>em</em></p>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(
           findAll(result.document, 'span')
@@ -1094,7 +1096,7 @@ describe('htmlToStructuredText', () => {
       describe('code', () => {
         it('turns inline code tags to span with code mark', async () => {
           const html = `<p>To make it even easier to offer responsive, progressive images on your projects, we released a package called <a href="https://github.com/datocms/react-datocms"><code>react-datocms</code></a> that exposes an <code>&lt;Image /&gt;</code> component and pairs perfectly with the <code>responsiveImage</code> query.</p>`;
-          const result = await parse5HtmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(findAll(result.document, 'code')).toHaveLength(0);
           const spans = findAll(result.document, 'span').filter(
@@ -1115,7 +1117,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <br>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result).toBe(null);
       });
@@ -1124,7 +1126,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <br><br>hello
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1139,7 +1141,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           hello<br><br>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1154,7 +1156,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           hello<br>world
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1169,7 +1171,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p>hello<br>world</p>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1184,7 +1186,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p>hello</p><br><div>world</div>
         `;
-        const result = await parse5HtmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((c) => c.type).join(',')).toBe(
           'paragraph,paragraph',
@@ -1285,7 +1287,7 @@ describe('htmlToStructuredText', () => {
       const html = `
         <p>heading</p>
       `;
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: (tree) => {
           findAll(tree, (node) => {
             if (node.type === 'element' && node.tagName === 'p') {
@@ -1320,7 +1322,7 @@ describe('htmlToStructuredText', () => {
         </div>
       `;
 
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1417,7 +1419,7 @@ describe('htmlToStructuredText', () => {
         </ul>
       `;
 
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1471,7 +1473,7 @@ describe('htmlToStructuredText', () => {
         </ul>
       `;
 
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1529,7 +1531,7 @@ describe('htmlToStructuredText', () => {
         <li>item 3</li>
       </ul>
       `;
-      const result = await parse5HtmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: (tree) => {
           visit(tree, (node, index, parents) => {
             if (node.tagName === 'img' && parents.length > 1) {
@@ -1567,7 +1569,7 @@ describe('htmlToStructuredText', () => {
 describe('preprocessors', () => {
   describe('Google Docs', () => {
     const googleDocsToStructuredText = (html: string, options: Options) =>
-      parse5HtmlToStructuredText(html, {
+      parse5HtmlToStructuredTextShim(html, {
         ...options,
         preprocess: googleDocsPreprocessor,
       });
