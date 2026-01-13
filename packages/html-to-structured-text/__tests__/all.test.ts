@@ -7,7 +7,10 @@ import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
 import { findAll, find, visit, CONTINUE } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
 
-function htmlToStructuredText(html: string, options: Options = {}) {
+/* This is a shim for NodeJS. The actual CMS software usually uses DOMParser.
+ Don't call it htmlToStructuredText() because there is an exported function
+ by that same name already (in ../src) */
+function parse5HtmlToStructuredTextShim(html: string, options: Options = {}) {
   return parse5ToStructuredText(
     parse5.parse(html, {
       sourceCodeLocationInfo: true,
@@ -19,14 +22,14 @@ function htmlToStructuredText(html: string, options: Options = {}) {
 describe('htmlToStructuredText', () => {
   it('works with empty document', async () => {
     const html = '';
-    const result = await htmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
 
   it('ignores doctype and HTML comments', async () => {
     const html = `<!doctype html> <!-- <p>test</p> -->`;
-    const result = await htmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
@@ -52,7 +55,7 @@ describe('htmlToStructuredText', () => {
       <script>console.log('script')</script>
     `;
 
-    const result = await htmlToStructuredText(html);
+    const result = await parse5HtmlToStructuredTextShim(html);
     expect(validate(result).valid).toBeTruthy();
     expect(result).toMatchInlineSnapshot(`null`);
   });
@@ -63,7 +66,7 @@ describe('htmlToStructuredText', () => {
         <p>twice</p>
       `;
 
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           text: async (createNode, node, context) => {
@@ -93,7 +96,7 @@ describe('htmlToStructuredText', () => {
       const html = `
         <p>twice</p>
       `;
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         handlers: {
           p: (createNode, node, context) => {
             return [
@@ -115,7 +118,7 @@ describe('htmlToStructuredText', () => {
         <p>already wrapped</p>
         needs wrapping
       `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             unknown: (createNode, node, context) => {
@@ -144,7 +147,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <custom>span</custom>
       `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             custom: async (createNode, node, context) => {
@@ -164,7 +167,7 @@ describe('htmlToStructuredText', () => {
           <blockquote>override</blockquote>
           <p>regular paragraph</p>
       `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             blockquote: async (createNode, node, context) => {
               // turn a blockquote into a paragraph
@@ -188,7 +191,7 @@ describe('htmlToStructuredText', () => {
           <p>already wrapped</p>
           needs wrapping
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -214,7 +217,7 @@ describe('htmlToStructuredText', () => {
           </section>
           <a href="#">hyperlink</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
 
         expect(
@@ -250,7 +253,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <base href="https://datocms.com" />
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           handlers: {
             base: async (createNode, node, context) => {
               expect(context.global.baseUrl).toBe(null);
@@ -274,7 +277,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="./contact" target="_blank" title="Foo bar" other="Ignore me" rel="noopener noreferrer">contact</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const { meta } = find(result.document, 'link');
         expect(meta).toMatchInlineSnapshot(`
@@ -300,7 +303,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com" />
           <a href="./contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/contact',
@@ -312,7 +315,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com" />
           <a href="contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/contact',
@@ -324,7 +327,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/t/" />
           <a href="/contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/t/contact',
@@ -336,7 +339,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/t/" />
           <a href="https://datocms.com/b/contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'link').url).toBe(
           'https://datocms.com/b/contact',
@@ -348,7 +351,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           shared: {
             baseUrl: 'http://acme.com',
           },
@@ -364,7 +367,7 @@ describe('htmlToStructuredText', () => {
           <base href="https://datocms.com/" />
           <a href="/contact">contact</a>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           shared: {
             baseUrl: 'http://acme.com',
             baseUrlFound: true,
@@ -387,7 +390,7 @@ describe('htmlToStructuredText', () => {
           <span style="font-weight: bold;">span</span>
         `;
 
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'paragraph')).toHaveLength(1);
         const spans = findAll(result.document, 'span');
@@ -427,7 +430,7 @@ describe('htmlToStructuredText', () => {
             nested implicit paragraph
           </article>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -448,7 +451,7 @@ describe('htmlToStructuredText', () => {
             <span>[span becomes simple text]</span>
           </p>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -486,7 +489,7 @@ describe('htmlToStructuredText', () => {
             <div>[separate paragraph]</div>
           </p>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -518,7 +521,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>needs wrapping</h1>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('heading');
         expect(result.document.children[0].children[0].type).toBe('span');
@@ -529,7 +532,7 @@ describe('htmlToStructuredText', () => {
           <h7>needs wrapping</h7>
           <p>hello</p>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -546,7 +549,7 @@ describe('htmlToStructuredText', () => {
           <h1>needs wrapping</h1>
           <p>hello</p>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedHeadingLevels: [2],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -564,7 +567,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1><p>p not allowed inside h1</p></h1>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'paragraph')).toHaveLength(0);
       });
@@ -573,7 +576,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>span <a href="#">link</a></h1>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].children).toMatchInlineSnapshot(`
           Array [
@@ -608,7 +611,7 @@ describe('htmlToStructuredText', () => {
             </code>
           </pre>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'heading')).toHaveLength(0);
       });
@@ -617,7 +620,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <h1>dato</h1>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -632,7 +635,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <pre><code class="language-html"><span class="hljs-tag">&lt;<span class="hljs-name">import</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"file.html"</span> /&gt;</span></code></pre>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0]).toMatchInlineSnapshot(`
           Object {
@@ -649,7 +652,7 @@ describe('htmlToStructuredText', () => {
             <li><pre><code class="language-html">dast()</code></pre></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(result.document, 'paragraph')).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(0);
@@ -668,7 +671,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code class="language-html">dast()</code>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0]).toMatchInlineSnapshot(`
@@ -684,7 +687,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code>dast()</code>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0].language).toBeFalsy();
@@ -694,7 +697,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <code>let dato</code>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -707,7 +710,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <pre><code>foo<br>bar</code></pre>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -727,7 +730,7 @@ describe('htmlToStructuredText', () => {
           <blockquote>1</blockquote>
           <blockquote><span>2</span></blockquote>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
@@ -758,7 +761,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <blockquote>1<br>2</blockquote>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
           Array [
@@ -793,7 +796,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <blockquote>dato</blockquote>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -808,7 +811,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <ul><li>test</li></ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].style).toBe('bulleted');
       });
@@ -817,7 +820,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <ol><li>test</li></ol>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].style).toBe('numbered');
       });
@@ -831,7 +834,7 @@ describe('htmlToStructuredText', () => {
             <li><p>4</p></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(
           find(result.document, 'list').children.every(
@@ -846,7 +849,7 @@ describe('htmlToStructuredText', () => {
             <li><ul><li>1</li></ul></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(find(find(result.document, 'list'), 'list')).toBeTruthy();
       });
@@ -857,7 +860,7 @@ describe('htmlToStructuredText', () => {
             <li><blockquote>1</blockquote></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'blockquote')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -869,7 +872,7 @@ describe('htmlToStructuredText', () => {
             <li><h1>1</h1></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'h1')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -881,7 +884,7 @@ describe('htmlToStructuredText', () => {
             <li><code>1</code></li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(0);
         expect(find(result.document, 'span').value).toBe('1');
@@ -894,7 +897,7 @@ describe('htmlToStructuredText', () => {
             <a href="#">3</a>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'link')).toHaveLength(2);
         const items = findAll(result.document, 'listItem').map((listItem) =>
@@ -923,7 +926,7 @@ describe('htmlToStructuredText', () => {
             <ul><li>5</li></ul>
           </ul>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const lists = findAll(result.document, 'list');
         expect(lists).toHaveLength(1);
@@ -945,7 +948,7 @@ describe('htmlToStructuredText', () => {
             <blockquote>1<hr></blockquote>
           </div>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         const thematicBreaks = findAll(result.document, 'thematicBreak');
         expect(thematicBreaks).toHaveLength(1);
@@ -957,7 +960,7 @@ describe('htmlToStructuredText', () => {
             <li>dato</li>
           </ul>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -972,7 +975,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="#">1</a>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(find(find(result.document, 'paragraph'), 'link')).toBeTruthy();
@@ -983,7 +986,7 @@ describe('htmlToStructuredText', () => {
           const html = `
             <a href="#"><h1>1</h1>2</a>
           `;
-          const result = await htmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(result.document.children[0].type).toBe('heading');
           expect(find(find(result.document, 'heading'), 'link')).toBeTruthy();
@@ -994,7 +997,7 @@ describe('htmlToStructuredText', () => {
           const html = `
             <ul><a href="#"><h1>1</h1>2</a></ul>
           `;
-          const result = await htmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(findAll(result.document, 'heading')).toHaveLength(0);
         });
@@ -1004,7 +1007,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <a href="#"><h1>dato</h1>2</a>
         `;
-        const result = await htmlToStructuredText(html, {
+        const result = await parse5HtmlToStructuredTextShim(html, {
           allowedBlocks: [],
         });
         expect(validate(result).valid).toBeTruthy();
@@ -1043,7 +1046,7 @@ describe('htmlToStructuredText', () => {
           const html = `
           <p><${tagName}>${markName}</${tagName}></p>
         `;
-          const result = await htmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           const span = find(result.document, 'span');
           expect(span.marks).toBeTruthy();
@@ -1057,7 +1060,7 @@ describe('htmlToStructuredText', () => {
           const html = `
           <p><${tagName}>${markName}</${tagName}></p>
         `;
-          const result = await htmlToStructuredText(html, {
+          const result = await parse5HtmlToStructuredTextShim(html, {
             allowedMarks: [],
           });
           expect(validate(result).valid).toBeTruthy();
@@ -1070,7 +1073,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p><em>em<strong>strong-em<u>u-strong-em</u>strong-em</strong>em</em></p>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(
           findAll(result.document, 'span')
@@ -1093,7 +1096,7 @@ describe('htmlToStructuredText', () => {
       describe('code', () => {
         it('turns inline code tags to span with code mark', async () => {
           const html = `<p>To make it even easier to offer responsive, progressive images on your projects, we released a package called <a href="https://github.com/datocms/react-datocms"><code>react-datocms</code></a> that exposes an <code>&lt;Image /&gt;</code> component and pairs perfectly with the <code>responsiveImage</code> query.</p>`;
-          const result = await htmlToStructuredText(html);
+          const result = await parse5HtmlToStructuredTextShim(html);
           expect(validate(result).valid).toBeTruthy();
           expect(findAll(result.document, 'code')).toHaveLength(0);
           const spans = findAll(result.document, 'span').filter(
@@ -1114,7 +1117,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <br>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result).toBe(null);
       });
@@ -1123,7 +1126,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <br><br>hello
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1138,7 +1141,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           hello<br><br>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1153,7 +1156,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           hello<br>world
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1168,7 +1171,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p>hello<br>world</p>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].type).toBe('paragraph');
         expect(result.document.children).toHaveLength(1);
@@ -1183,7 +1186,7 @@ describe('htmlToStructuredText', () => {
         const html = `
           <p>hello</p><br><div>world</div>
         `;
-        const result = await htmlToStructuredText(html);
+        const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((c) => c.type).join(',')).toBe(
           'paragraph,paragraph',
@@ -1284,7 +1287,7 @@ describe('htmlToStructuredText', () => {
       const html = `
         <p>heading</p>
       `;
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: (tree) => {
           findAll(tree, (node) => {
             if (node.type === 'element' && node.tagName === 'p') {
@@ -1319,7 +1322,7 @@ describe('htmlToStructuredText', () => {
         </div>
       `;
 
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1416,7 +1419,7 @@ describe('htmlToStructuredText', () => {
         </ul>
       `;
 
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1470,7 +1473,7 @@ describe('htmlToStructuredText', () => {
         </ul>
       `;
 
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: liftImages,
         handlers: {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1528,7 +1531,7 @@ describe('htmlToStructuredText', () => {
         <li>item 3</li>
       </ul>
       `;
-      const result = await htmlToStructuredText(html, {
+      const result = await parse5HtmlToStructuredTextShim(html, {
         preprocess: (tree) => {
           visit(tree, (node, index, parents) => {
             if (node.tagName === 'img' && parents.length > 1) {
@@ -1566,7 +1569,7 @@ describe('htmlToStructuredText', () => {
 describe('preprocessors', () => {
   describe('Google Docs', () => {
     const googleDocsToStructuredText = (html: string, options: Options) =>
-      htmlToStructuredText(html, {
+      parse5HtmlToStructuredTextShim(html, {
         ...options,
         preprocess: googleDocsPreprocessor,
       });
@@ -1659,6 +1662,92 @@ describe('preprocessors', () => {
       const spans = findAll(result.document, 'span');
       expect(spans).toHaveLength(1);
       expect(spans[0].marks).toEqual(['strong']);
+    });
+
+    /* Different browsers will copy different HTML from GDocs
+      See https://community.datocms.com/t/structure-text-editor-does-not-copy-paste-styles-anymore/8466/8 for discussion
+      You can use this gdoc as a test: https://docs.google.com/document/d/1H2WeqDd-VWywlds5big1_YVSNx3rrFn6FsIFVDuSWeg/edit?usp=sharing
+      And this tool to get the raw HTML in the clipboard: https://evercoder.github.io/clipboard-inspector/
+    */
+    describe('correctly preserves rich text formatting across browsers', () => {
+      const assertRichTextPaste = async (html: string) => {
+        const result = await googleDocsToStructuredText(html);
+
+        expect(validate(result).valid).toBeTruthy();
+
+        // "This is a" should not be marked
+        expect(
+          findAll(
+            result.document,
+            (node) =>
+              node.type === 'span' &&
+              node.value === 'This is a ' &&
+              node.marks === undefined,
+          ),
+        ).toHaveLength(1);
+
+        // "test" should be bold
+        expect(
+          findAll(
+            result.document,
+            (node) =>
+              node.type === 'span' &&
+              node.value === 'test' &&
+              Array.isArray(node.marks) &&
+              node.marks.length === 1 &&
+              node.marks[0] === 'strong',
+          ),
+        ).toHaveLength(1);
+
+        // "rich" is italics
+        expect(
+          findAll(
+            result.document,
+            (node) =>
+              node.type === 'span' &&
+              node.value === 'rich' &&
+              Array.isArray(node.marks) &&
+              node.marks.length === 1 &&
+              node.marks[0] === 'emphasis',
+          ),
+        ).toHaveLength(1);
+
+        // "text" is bold, underline, and italics
+        expect(
+          findAll(
+            result.document,
+            (node) =>
+              node.type === 'span' &&
+              node.value === 'text' &&
+              Array.isArray(node.marks) &&
+              node.marks.length === 3 &&
+              node.marks.includes('strong') &&
+              node.marks.includes('emphasis') &&
+              node.marks.includes('underline'),
+          ),
+        ).toHaveLength(1);
+      };
+
+      it('when copied from Firefox (Jan 2026)', async () => {
+        const firefoxHtml = `
+    <meta charset="utf-8"><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;" id="docs-internal-guid-896be425-7fff-8783-cb1f-d1c470b0197a"><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">This is a </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:700;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">test</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"> of </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:italic;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">rich</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"> </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:700;font-style:italic;font-variant:normal;text-decoration:underline;-webkit-text-decoration-skip:none;text-decoration-skip-ink:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">text</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">.</span></p>
+    `;
+        await assertRichTextPaste(firefoxHtml);
+      });
+
+      it('when copied from Chrome (Jan 2026)', async () => {
+        const chromeHtml = `
+    <meta charset='utf-8'><meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-101ba830-7fff-3043-16a6-7affa1358f2d"><p dir="ltr" style="line-height:1.38;margin-top:0pt;margin-bottom:0pt;"><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">This is a </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:700;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">test</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"> of </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:italic;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">rich</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;"> </span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:700;font-style:italic;font-variant:normal;text-decoration:underline;-webkit-text-decoration-skip:none;text-decoration-skip-ink:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">text</span><span style="font-size:11pt;font-family:Arial,sans-serif;color:#000000;background-color:transparent;font-weight:400;font-style:normal;font-variant:normal;text-decoration:none;vertical-align:baseline;white-space:pre;white-space:pre-wrap;">.</span></p></b><br class="Apple-interchange-newline">
+    `;
+        await assertRichTextPaste(chromeHtml);
+      });
+
+      it('when copied from Safari (Jan 2026)', async () => {
+        const safariHtml = `
+    <b id="docs-internal-guid-09da8ff4-7fff-9d5d-727e-5574a97f2c80" style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0); font-style: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-line: none; text-decoration-thickness: auto; text-decoration-style: solid; font-weight: normal;"><p dir="ltr" style="line-height: 1.38; margin-top: 0pt; margin-bottom: 0pt;"><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 400; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;">This is a </span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;">test</span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 400; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;"> of </span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 400; font-style: italic; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;">rich</span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 400; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;"> </span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 700; font-style: italic; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: underline; text-decoration-skip-ink: none; vertical-align: baseline; white-space: pre-wrap;">text</span><span style="font-size: 11pt; font-family: Arial, sans-serif; color: rgb(0, 0, 0); background-color: transparent; font-weight: 400; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-variant-alternates: normal; font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-position: normal; font-variant-emoji: normal; text-decoration: none; vertical-align: baseline; white-space: pre-wrap;">.</span></p></b><br class="Apple-interchange-newline" style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0); font-style: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-line: none; text-decoration-thickness: auto; text-decoration-style: solid;"><br class="Apple-interchange-newline">
+    `;
+        await assertRichTextPaste(safariHtml);
+      });
     });
   });
 });
