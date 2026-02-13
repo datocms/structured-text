@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-slate-utils",
-  "version": "5.1.7",
+  "version": "5.1.8",
   "description": "A set of helpers to translate DatoCMS Structured Text fields into Slate structures",
   "keywords": [
     "datocms",
