@@ -20,6 +20,7 @@ import {
   Block,
   BlockId,
   Blockquote,
+  CdaStructuredTextRecord,
   CdaStructuredTextValue,
   Code,
   Document,
@@ -34,7 +35,6 @@ import {
   Node,
   NodeType,
   Paragraph,
-  Record as DatoCmsRecord,
   Root,
   Span,
   StructuredText,
@@ -120,6 +120,64 @@ export function isBlock<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   return node.type === blockNodeType;
 }
 
+/**
+ * Narrows a union of block item shapes to the member whose model
+ * (`item_type`) matches `Id`.
+ *
+ * Any object carrying `relationships.item_type.data.id` is narrowable —
+ * that covers items from `nested: true` responses as well as the object
+ * variants of request payloads (updated / newly-created blocks). The bare
+ * string IDs that may appear inside request payloads (to reference
+ * existing, unchanged blocks) are filtered out of the result.
+ */
+export type NarrowBlockItemByItemType<T, Id extends string> = Extract<
+  T,
+  { relationships: { item_type: { data: { type: 'item_type'; id: Id } } } }
+>;
+
+/**
+ * Builds a type guard that narrows a `block` node to the variant whose
+ * `item` belongs to a specific model.
+ *
+ * Call it with the block's `itemTypeId` literal — the ID generic is
+ * inferred from the argument, so no explicit type parameter is needed.
+ * Usable directly with `findFirstNode` / `findAllNodes` / `Array#filter`
+ * over block-bearing DAST trees.
+ *
+ * For the literal `Id` to be preserved (and narrowing to work), the
+ * argument must be typed as a literal — use `as const` on pre-set ID
+ * constants.
+ *
+ * @example
+ * ```ts
+ * const needle = findFirstNode(
+ *   body.document,
+ *   isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
+ * );
+ * if (needle) {
+ *   needle.node.item; // narrowed to the Warning item shape
+ * }
+ * ```
+ */
+function itemHasItemTypeId(item: unknown, itemTypeId: string): boolean {
+  if (typeof item !== 'object' || item === null) return false;
+  const relationships = (item as { relationships?: unknown }).relationships;
+  if (typeof relationships !== 'object' || relationships === null) return false;
+  const itemType = (relationships as { item_type?: unknown }).item_type;
+  if (typeof itemType !== 'object' || itemType === null) return false;
+  const data = (itemType as { data?: unknown }).data;
+  if (typeof data !== 'object' || data === null) return false;
+  return (data as { id?: unknown }).id === itemTypeId;
+}
+
+export function isBlockWithItemOfType<Id extends string>(itemTypeId: Id) {
+  return <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+    node: Node<BlockItemType, InlineBlockItemType>,
+  ): node is Block<NarrowBlockItemByItemType<BlockItemType, Id>> =>
+    node.type === blockNodeType &&
+    itemHasItemTypeId((node as Block<BlockItemType>).item, itemTypeId);
+}
+
 export function isInlineBlock<
   BlockItemType = BlockId,
   InlineBlockItemType = BlockId
@@ -127,6 +185,40 @@ export function isInlineBlock<
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is InlineBlock<InlineBlockItemType> {
   return node.type === inlineBlockNodeType;
+}
+
+/**
+ * Builds a type guard that narrows an `inlineBlock` node to the variant
+ * whose `item` belongs to a specific model.
+ *
+ * Mirrors {@link isBlockWithItemOfType} for inline blocks. Call it with
+ * the block's `itemTypeId` literal — the ID generic is inferred from the
+ * argument, so no explicit type parameter is needed.
+ *
+ * For the literal `Id` to be preserved (and narrowing to work), the
+ * argument must be typed as a literal — use `as const` on pre-set ID
+ * constants.
+ *
+ * @example
+ * ```ts
+ * const needle = findFirstNode(
+ *   body.document,
+ *   isInlineBlockWithItemOfType(CALLOUT_BLOCK_TYPE_ID),
+ * );
+ * if (needle) {
+ *   needle.node.item; // narrowed to the Callout item shape
+ * }
+ * ```
+ */
+export function isInlineBlockWithItemOfType<Id extends string>(itemTypeId: Id) {
+  return <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+    node: Node<BlockItemType, InlineBlockItemType>,
+  ): node is InlineBlock<NarrowBlockItemByItemType<InlineBlockItemType, Id>> =>
+    node.type === inlineBlockNodeType &&
+    itemHasItemTypeId(
+      (node as InlineBlock<InlineBlockItemType>).item,
+      itemTypeId,
+    );
 }
 
 export function isCode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
@@ -182,9 +274,9 @@ export function isNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 }
 
 export function isCdaStructuredTextValue<
-  BlockRecord extends DatoCmsRecord,
-  LinkRecord extends DatoCmsRecord,
-  InlineBlockRecord extends DatoCmsRecord
+  BlockRecord extends CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord
 >(
   obj: unknown,
 ): obj is CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord> {
@@ -195,9 +287,9 @@ export function isCdaStructuredTextValue<
  * @deprecated Use isCdaStructuredTextValue instead
  */
 export function isStructuredText<
-  BlockRecord extends DatoCmsRecord,
-  LinkRecord extends DatoCmsRecord,
-  InlineBlockRecord extends DatoCmsRecord
+  BlockRecord extends CdaStructuredTextRecord,
+  LinkRecord extends CdaStructuredTextRecord,
+  InlineBlockRecord extends CdaStructuredTextRecord
 >(
   obj: unknown,
 ): obj is StructuredText<BlockRecord, LinkRecord, InlineBlockRecord> {
@@ -222,7 +314,7 @@ export function isEmptyDocument(obj: unknown): boolean {
   }
 
   const document =
-    isStructuredText(obj) && isDocument(obj.value)
+    isCdaStructuredTextValue(obj) && isDocument(obj.value)
       ? obj.value
       : isDocument(obj)
       ? obj

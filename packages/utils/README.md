@@ -170,6 +170,31 @@ function isCdaStructuredTextValue(
 ): object is CdaStructuredTextValue {}
 ```
 
+### Narrowing blocks by model
+
+When your DAST tree has been fetched with typed responses (eg. the CMA client in `nested: true` mode), `block.item` / `inlineBlock.item` is a union of all possible block-model shapes. `isBlockWithItemOfType(itemTypeId)` and `isInlineBlockWithItemOfType(itemTypeId)` build a type guard that filters that union down to a single model and narrows the node accordingly.
+
+```typescript
+import {
+  findFirstNode,
+  isBlockWithItemOfType,
+} from 'datocms-structured-text-utils';
+
+const WARNING_BLOCK_TYPE_ID = 'abc123' as const;
+
+const needle = findFirstNode(
+  body.document,
+  isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
+);
+
+if (needle) {
+  // needle.node.item is narrowed to the Warning block-model shape
+  console.log(needle.node.item.attributes.message);
+}
+```
+
+Pass the `itemTypeId` as a literal (`as const` on pre-set constants) for narrowing to kick in. At runtime the guard walks `item.relationships.item_type.data.id`, so it works for any block item carrying that shape — CMA nested-mode responses and the object variants of request payloads. Bare string IDs (used in request payloads to reference unchanged blocks) are filtered out.
+
 ## Tree Manipulation Utilities
 
 The package provides a comprehensive set of utilities for traversing, transforming, and querying structured text trees. All utilities support both synchronous and asynchronous operations, work with both document wrappers and plain nodes, and provide full TypeScript support with proper type narrowing.
