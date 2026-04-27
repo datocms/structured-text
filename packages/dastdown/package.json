@@ -1,0 +1,43 @@
+{
+  "name": "datocms-structured-text-dastdown",
+  "version": "5.1.9",
+  "description": "Lossless textual serialization (dastdown) for DatoCMS Structured Text fields, with parser and serializer.",
+  "keywords": [
+    "datocms",
+    "structured-text",
+    "dastdown",
+    "markdown"
+  ],
+  "author": "Stefano Verna <s.verna@datocms.com>",
+  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/dastdown#readme",
+  "license": "MIT",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/types/index.d.ts",
+  "sideEffects": false,
+  "directories": {
+    "lib": "dist",
+    "test": "__tests__"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/datocms/structured-text.git"
+  },
+  "scripts": {
+    "build": "tsc && tsc --project ./tsconfig.esnext.json",
+    "prebuild": "rimraf dist"
+  },
+  "bugs": {
+    "url": "https://github.com/datocms/structured-text/issues"
+  },
+  "dependencies": {
+    "datocms-structured-text-utils": "^5.1.9"
+  },
+  "devDependencies": {
+    "@datocms/cma-client": "^5.4.6"
+  }
+}
