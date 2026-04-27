@@ -172,7 +172,12 @@ function isCdaStructuredTextValue(
 
 ### Narrowing blocks by model
 
-When your DAST tree has been fetched with typed responses (eg. the CMA client in `nested: true` mode), `block.item` / `inlineBlock.item` is a union of all possible block-model shapes. `isBlockWithItemOfType(itemTypeId)` and `isInlineBlockWithItemOfType(itemTypeId)` build a type guard that filters that union down to a single model and narrows the node accordingly.
+When your DAST tree has been fetched with typed responses (eg. the CMA client in `nested: true` mode), `block.item` / `inlineBlock.item` is a union of all possible block-model shapes. `isBlockWithItemOfType` and `isInlineBlockWithItemOfType` filter that union down to a single model and narrow the node accordingly.
+
+Both guards support two call styles:
+
+- Curried — `isBlockWithItemOfType(itemTypeId)` returns a predicate, handy with `findFirstNode` / `findAllNodes` / `Array#filter`.
+- Direct — `isBlockWithItemOfType(itemTypeId, node)` checks a node inline (e.g. inside an `if`).
 
 ```typescript
 import {
@@ -182,6 +187,7 @@ import {
 
 const WARNING_BLOCK_TYPE_ID = 'abc123' as const;
 
+// Curried
 const needle = findFirstNode(
   body.document,
   isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
@@ -190,6 +196,11 @@ const needle = findFirstNode(
 if (needle) {
   // needle.node.item is narrowed to the Warning block-model shape
   console.log(needle.node.item.attributes.message);
+}
+
+// Direct
+if (isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID, node)) {
+  console.log(node.item.attributes.message);
 }
 ```
 

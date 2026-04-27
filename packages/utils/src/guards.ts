@@ -135,30 +135,6 @@ export type NarrowBlockItemByItemType<T, Id extends string> = Extract<
   { relationships: { item_type: { data: { type: 'item_type'; id: Id } } } }
 >;
 
-/**
- * Builds a type guard that narrows a `block` node to the variant whose
- * `item` belongs to a specific model.
- *
- * Call it with the block's `itemTypeId` literal — the ID generic is
- * inferred from the argument, so no explicit type parameter is needed.
- * Usable directly with `findFirstNode` / `findAllNodes` / `Array#filter`
- * over block-bearing DAST trees.
- *
- * For the literal `Id` to be preserved (and narrowing to work), the
- * argument must be typed as a literal — use `as const` on pre-set ID
- * constants.
- *
- * @example
- * ```ts
- * const needle = findFirstNode(
- *   body.document,
- *   isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
- * );
- * if (needle) {
- *   needle.node.item; // narrowed to the Warning item shape
- * }
- * ```
- */
 function itemHasItemTypeId(item: unknown, itemTypeId: string): boolean {
   if (typeof item !== 'object' || item === null) return false;
   const relationships = (item as { relationships?: unknown }).relationships;
@@ -170,12 +146,61 @@ function itemHasItemTypeId(item: unknown, itemTypeId: string): boolean {
   return (data as { id?: unknown }).id === itemTypeId;
 }
 
-export function isBlockWithItemOfType<Id extends string>(itemTypeId: Id) {
-  return <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
-    node: Node<BlockItemType, InlineBlockItemType>,
-  ): node is Block<NarrowBlockItemByItemType<BlockItemType, Id>> =>
+/**
+ * Type guard that narrows a `block` node to the variant whose `item`
+ * belongs to a specific model.
+ *
+ * Two call styles are available:
+ *
+ * - Curried: `isBlockWithItemOfType(itemTypeId)` returns a predicate,
+ *   handy with `findFirstNode` / `findAllNodes` / `Array#filter`.
+ * - Direct: `isBlockWithItemOfType(itemTypeId, node)` checks a node
+ *   inline (e.g. inside an `if`).
+ *
+ * For the literal `Id` to be preserved (and narrowing to work), the
+ * `itemTypeId` argument must be typed as a literal — use `as const` on
+ * pre-set ID constants.
+ *
+ * @example
+ * ```ts
+ * // Curried
+ * const needle = findFirstNode(
+ *   body.document,
+ *   isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
+ * );
+ *
+ * // Direct
+ * if (isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID, node)) {
+ *   node.item; // narrowed to the Warning item shape
+ * }
+ * ```
+ */
+export function isBlockWithItemOfType<Id extends string>(
+  itemTypeId: Id,
+): <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+) => node is Block<NarrowBlockItemByItemType<BlockItemType, Id>>;
+export function isBlockWithItemOfType<
+  Id extends string,
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  itemTypeId: Id,
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is Block<NarrowBlockItemByItemType<BlockItemType, Id>>;
+export function isBlockWithItemOfType(
+  itemTypeId: string,
+  node?: Node,
+): unknown {
+  if (node === undefined) {
+    return (n: Node): boolean =>
+      n.type === blockNodeType &&
+      itemHasItemTypeId((n as Block<unknown>).item, itemTypeId);
+  }
+  return (
     node.type === blockNodeType &&
-    itemHasItemTypeId((node as Block<BlockItemType>).item, itemTypeId);
+    itemHasItemTypeId((node as Block<unknown>).item, itemTypeId)
+  );
 }
 
 export function isInlineBlock<
@@ -188,37 +213,57 @@ export function isInlineBlock<
 }
 
 /**
- * Builds a type guard that narrows an `inlineBlock` node to the variant
- * whose `item` belongs to a specific model.
+ * Type guard that narrows an `inlineBlock` node to the variant whose
+ * `item` belongs to a specific model.
  *
- * Mirrors {@link isBlockWithItemOfType} for inline blocks. Call it with
- * the block's `itemTypeId` literal — the ID generic is inferred from the
- * argument, so no explicit type parameter is needed.
+ * Mirrors {@link isBlockWithItemOfType} for inline blocks; supports both
+ * the curried form (`isInlineBlockWithItemOfType(itemTypeId)`) and the
+ * direct form (`isInlineBlockWithItemOfType(itemTypeId, node)`).
  *
  * For the literal `Id` to be preserved (and narrowing to work), the
- * argument must be typed as a literal — use `as const` on pre-set ID
- * constants.
+ * `itemTypeId` argument must be typed as a literal — use `as const` on
+ * pre-set ID constants.
  *
  * @example
  * ```ts
+ * // Curried
  * const needle = findFirstNode(
  *   body.document,
  *   isInlineBlockWithItemOfType(CALLOUT_BLOCK_TYPE_ID),
  * );
- * if (needle) {
- *   needle.node.item; // narrowed to the Callout item shape
+ *
+ * // Direct
+ * if (isInlineBlockWithItemOfType(CALLOUT_BLOCK_TYPE_ID, node)) {
+ *   node.item; // narrowed to the Callout item shape
  * }
  * ```
  */
-export function isInlineBlockWithItemOfType<Id extends string>(itemTypeId: Id) {
-  return <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
-    node: Node<BlockItemType, InlineBlockItemType>,
-  ): node is InlineBlock<NarrowBlockItemByItemType<InlineBlockItemType, Id>> =>
+export function isInlineBlockWithItemOfType<Id extends string>(
+  itemTypeId: Id,
+): <BlockItemType = BlockId, InlineBlockItemType = BlockId>(
+  node: Node<BlockItemType, InlineBlockItemType>,
+) => node is InlineBlock<NarrowBlockItemByItemType<InlineBlockItemType, Id>>;
+export function isInlineBlockWithItemOfType<
+  Id extends string,
+  BlockItemType = BlockId,
+  InlineBlockItemType = BlockId
+>(
+  itemTypeId: Id,
+  node: Node<BlockItemType, InlineBlockItemType>,
+): node is InlineBlock<NarrowBlockItemByItemType<InlineBlockItemType, Id>>;
+export function isInlineBlockWithItemOfType(
+  itemTypeId: string,
+  node?: Node,
+): unknown {
+  if (node === undefined) {
+    return (n: Node): boolean =>
+      n.type === inlineBlockNodeType &&
+      itemHasItemTypeId((n as InlineBlock<unknown>).item, itemTypeId);
+  }
+  return (
     node.type === inlineBlockNodeType &&
-    itemHasItemTypeId(
-      (node as InlineBlock<InlineBlockItemType>).item,
-      itemTypeId,
-    );
+    itemHasItemTypeId((node as InlineBlock<unknown>).item, itemTypeId)
+  );
 }
 
 export function isCode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
