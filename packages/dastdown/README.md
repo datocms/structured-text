@@ -45,6 +45,27 @@ const edited = text
 await client.items.update('article-id', { body: parse(edited) });
 ```
 
+### Round-trip with the original document
+
+When you fetch a record with `?nested=true`, blocks come back as full item objects. Pass that document as the second argument to `parse` and the result keeps both the original static type and the original block items — `parse` just looks up each `<block id="…"/>` in the original by id and re-attaches the full object:
+
+```ts
+import { parse, serialize } from 'datocms-structured-text-dastdown';
+
+const cur = await client.items.find<Schema.Article>('article-id', {
+  nested: true,
+});
+const edited = serialize(cur.body).replace(/Acme Corp/g, '**Acme Inc.**');
+
+const body = parse(edited, cur.body);
+//    ^? StructuredTextFieldValueInNestedResponse<Schema.X, Schema.Y> | null
+//    every untouched block/inlineBlock keeps its original `item` (same reference).
+
+await client.items.update<Schema.Article>('article-id', { body });
+```
+
+This makes dastdown safe for prose-level edits even when blocks carry data the format cannot represent. If the edited text references an id that isn't in the original, `parse` throws — the signal that the block needs to be created via the regular CMA flow rather than through dastdown.
+
 ## Format cheat-sheet
 
 | Construct       | Syntax                                    |
@@ -74,19 +95,25 @@ Marks nest in canonical outer-to-inner order: `highlight → strikethrough → u
 
 ## API
 
-### `parse(input)`
+### `parse(input, original?)`
 
 ```ts
-parse(input: string | null | undefined): Document | null
+parse(input: string | null | undefined): Document | null;
+parse<B, IB>(
+  input: string | null | undefined,
+  original: Document<B, IB> | null | undefined,
+): Document<B, IB> | null;
 ```
 
 Parses a `dastdown` source string into a `dast` document.
 
-- `null` / `undefined` → `null` (so the return type matches `StructuredTextFieldValue` from `@datocms/cma-client` exactly).
+- `null` / `undefined` input → `null` (so the return type matches `StructuredTextFieldValue` from `@datocms/cma-client` exactly).
 - `''` or whitespace-only string → a document with a single empty paragraph.
 - Otherwise → the parsed document, validated against the `dast` schema.
 
-`block` / `inlineBlock` / `inlineItem` / `itemLink` references always come back with their `item` field as a string id, since `dastdown` only encodes ids on the wire.
+By default, `block` / `inlineBlock` / `inlineItem` / `itemLink` references come back with their `item` field as a string id, since `dastdown` only encodes ids on the wire.
+
+If a second argument is passed, each parsed `block` / `inlineBlock` is rehydrated by looking up its id in `original` and reusing the original `item` object. The return type follows `Document<B, IB>`, so a `parse(serialize(doc), doc)` round-trip preserves both static types and the original block items (e.g. full `BlockInNestedResponse<…>` objects from a `?nested=true` fetch). A serialized id that isn't present in `original` throws `DastdownParseError`.
 
 If the input is malformed, `parse` throws a `DastdownParseError` carrying `line` and `column` info:
 
@@ -187,7 +214,8 @@ Thrown by `parse` on malformed input. Exposes `line` (1-indexed) and `column` (1
 
 For two documents `d1` and `d2`:
 
-- `parse(serialize(d)) ≡ canonicalize(d)`
+- `parse(serialize(d)) ≡ canonicalize(d)` (block items collapse to string ids)
+- `parse(serialize(d), d) ≡ canonicalize(d)` with original block items restored, type preserved
 - `serialize(parse(text)) ≡ text` after one canonicalization pass
 
 ## Why not CommonMark?

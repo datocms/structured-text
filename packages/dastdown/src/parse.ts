@@ -18,6 +18,7 @@ import {
 } from 'datocms-structured-text-utils';
 import { canonicalize } from './canonicalize';
 import { DastdownParseError } from './errors';
+import type { SerializableBlockId } from './serialize';
 import { decodeSpanEscapes } from './string-utils';
 import { parseAttributeTrailer } from './attributes';
 import { tryParseSelfClosingTag, tryParseMOpen, isMClose } from './tags';
@@ -741,17 +742,185 @@ function emptyDocument(): Document {
   };
 }
 
+function getOriginalItemId(item: SerializableBlockId): string {
+  return typeof item === 'string' ? item : item.id;
+}
+
+/**
+ * Walks the original document and indexes its `block` and `inlineBlock`
+ * items by id, so the parser can swap the bare string ids it produces back
+ * to the original objects on a `parse(serialize(doc), doc)` round-trip.
+ */
+function indexOriginalItems<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(
+  original: Document<B, IB>,
+): { blocks: Map<string, B>; inlineBlocks: Map<string, IB> } {
+  const blocks = new Map<string, B>();
+  const inlineBlocks = new Map<string, IB>();
+
+  const visitInlineChildren = (
+    children: ReadonlyArray<Paragraph<IB>['children'][number]>,
+  ): void => {
+    for (const child of children) {
+      if (child.type === 'inlineBlock') {
+        inlineBlocks.set(getOriginalItemId(child.item), child.item);
+      }
+    }
+  };
+
+  const visitListItem = (item: ListItem<B, IB>): void => {
+    for (const child of item.children) {
+      if (child.type === 'paragraph') visitInlineChildren(child.children);
+      else for (const inner of child.children) visitListItem(inner);
+    }
+  };
+
+  const visitNode = (node: Root<B, IB>['children'][number]): void => {
+    switch (node.type) {
+      case 'block':
+        blocks.set(getOriginalItemId(node.item), node.item);
+        return;
+      case 'paragraph':
+      case 'heading':
+        visitInlineChildren(node.children);
+        return;
+      case 'list':
+        for (const item of node.children) visitListItem(item);
+        return;
+      case 'blockquote':
+        for (const p of node.children) visitInlineChildren(p.children);
+        return;
+    }
+  };
+
+  for (const child of original.document.children) visitNode(child);
+  return { blocks, inlineBlocks };
+}
+
+function restoreOriginalItems<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(
+  parsed: Document<string, string>,
+  original: Document<B, IB>,
+): Document<B, IB> {
+  const { blocks, inlineBlocks } = indexOriginalItems(original);
+
+  const lookup = <T>(map: Map<string, T>, kind: string, id: string): T => {
+    const value = map.get(id);
+    if (value === undefined) {
+      throw new DastdownParseError(
+        `${kind} with id "${id}" was not found in the original document`,
+        1,
+        1,
+      );
+    }
+    return value;
+  };
+
+  type ParsedRootChild = Root<string, string>['children'][number];
+  type ParsedInlineChild = Paragraph<string>['children'][number];
+
+  const visitInlineChildren = (
+    children: ParsedInlineChild[],
+  ): Paragraph<IB>['children'] =>
+    children.map((c) =>
+      c.type === 'inlineBlock'
+        ? { ...c, item: lookup(inlineBlocks, 'inlineBlock', c.item) }
+        : c,
+    ) as Paragraph<IB>['children'];
+
+  const visitListItem = (item: ListItem<string, string>): ListItem<B, IB> => ({
+    ...item,
+    children: item.children.map((child) =>
+      child.type === 'paragraph'
+        ? { ...child, children: visitInlineChildren(child.children) }
+        : {
+            ...child,
+            children: child.children.map(visitListItem),
+          },
+    ) as ListItem<B, IB>['children'],
+  });
+
+  const visitNode = (
+    node: ParsedRootChild,
+  ): Root<B, IB>['children'][number] => {
+    switch (node.type) {
+      case 'block':
+        return { ...node, item: lookup(blocks, 'block', node.item) };
+      case 'paragraph':
+        return { ...node, children: visitInlineChildren(node.children) };
+      case 'heading':
+        return { ...node, children: visitInlineChildren(node.children) };
+      case 'list':
+        return {
+          ...node,
+          children: node.children.map(visitListItem),
+        };
+      case 'blockquote':
+        return {
+          ...node,
+          children: node.children.map((p) => ({
+            ...p,
+            children: visitInlineChildren(p.children),
+          })) as Blockquote<IB>['children'],
+        };
+      default:
+        return node;
+    }
+  };
+
+  return {
+    ...parsed,
+    document: {
+      ...parsed.document,
+      children: parsed.document.children.map(visitNode),
+    },
+  };
+}
+
 /**
  * Parses a dastdown source string into a DAST document. Block and inlineBlock
  * `item` fields are always string IDs in the result, since dastdown only
  * encodes ids on the wire.
  *
+ * If `original` is provided, every parsed `block`/`inlineBlock` looks up its
+ * id in the original document and is rehydrated with the original `item`
+ * value. This makes `parse(serialize(doc), doc)` a faithful round-trip:
+ * blocks come back as the same objects (e.g. full nested-response items),
+ * not bare string ids. If a parsed id is not present in the original an
+ * error is thrown.
+ *
  * Mapping of edge cases:
- *  - `null` / `undefined` → `null` (the absent-value form for a structured-text field)
+ *  - `null` / `undefined` input → `null` (the absent-value form for a structured-text field)
  *  - `''` / whitespace-only string → document with a single empty paragraph
+ *  - `original` is `null`/`undefined` → behaves as if it weren't passed
  *  - everything else → parsed document
  */
-export function parse(input: string | null | undefined): Document | null {
+export function parse(input: string | null | undefined): Document | null;
+export function parse<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(
+  input: string | null | undefined,
+  original: Document<B, IB>,
+): Document<B, IB> | null;
+export function parse<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(
+  input: string | null | undefined,
+  original: Document<B, IB> | null | undefined,
+): Document<B, IB> | null;
+export function parse(
+  input: string | null | undefined,
+  original?:
+    | Document<SerializableBlockId, SerializableBlockId>
+    | null
+    | undefined,
+): Document<SerializableBlockId, SerializableBlockId> | null {
   if (input === null || input === undefined) return null;
 
   const rawLines = input.split('\n');
@@ -764,16 +933,23 @@ export function parse(input: string | null | undefined): Document | null {
   }));
 
   const children = parseBlocks(lines);
-  if (children.length === 0) return emptyDocument();
+  if (children.length === 0) {
+    const empty = emptyDocument();
+    return original
+      ? restoreOriginalItems(empty as Document<string, string>, original)
+      : empty;
+  }
 
   const doc: Document<string, string> = {
     schema: 'dast',
     document: { type: 'root', children },
   };
-  const canonical = canonicalize(doc);
+  const canonical = canonicalize(doc) as Document<string, string>;
   const result = validate(canonical as Document);
   if (!result.valid) {
     throw new DastdownParseError(`invalid dast: ${result.message}`, 1, 1);
   }
+
+  if (original) return restoreOriginalItems(canonical, original);
   return canonical as Document;
 }
