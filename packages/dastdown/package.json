@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-dastdown",
-  "version": "5.1.11",
+  "version": "5.1.12",
   "description": "Lossless textual serialization (dastdown) for DatoCMS Structured Text fields, with parser and serializer.",
   "keywords": [
     "datocms",
