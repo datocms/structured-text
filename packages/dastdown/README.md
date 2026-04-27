@@ -113,7 +113,7 @@ Parses a `dastdown` source string into a `dast` document.
 
 By default, `block` / `inlineBlock` / `inlineItem` / `itemLink` references come back with their `item` field as a string id, since `dastdown` only encodes ids on the wire.
 
-If a second argument is passed, each parsed `block` / `inlineBlock` is rehydrated by looking up its id in `original` and reusing the original `item` object. The return type follows `Document<B, IB>`, so a `parse(serialize(doc), doc)` round-trip preserves both static types and the original block items (e.g. full `BlockInNestedResponse<…>` objects from a `?nested=true` fetch). A serialized id that isn't present in `original` throws `DastdownParseError`.
+If a second argument is passed, each parsed `block` / `inlineBlock` is rehydrated by looking up its id in `original` and reusing the original `item` object. The return type follows `Document<B, IB>`, so a `parse(serialize(doc), doc)` round-trip preserves both static types and the original block items (e.g. full `BlockInNestedResponse<…>` objects from a `?nested=true` fetch). A serialized id that isn't present in `original` throws a `DastdownParseError`.
 
 If the input is malformed, `parse` throws a `DastdownParseError` carrying `line` and `column` info:
 
