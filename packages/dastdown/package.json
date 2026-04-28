@@ -1,6 +1,6 @@
 {
   "name": "datocms-structured-text-dastdown",
-  "version": "5.1.12",
+  "version": "5.1.13",
   "description": "Lossless textual serialization (dastdown) for DatoCMS Structured Text fields, with parser and serializer.",
   "keywords": [
     "datocms",
@@ -35,7 +35,7 @@
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
-    "datocms-structured-text-utils": "^5.1.11"
+    "datocms-structured-text-utils": "^5.1.13"
   },
   "devDependencies": {
     "@datocms/cma-client": "^5.4.6"
