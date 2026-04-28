@@ -122,18 +122,29 @@ export function isBlock<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 /**
  * Narrows a union of block item shapes to the member whose model
- * (`item_type`) matches `Id`.
+ * (`item_type`) matches `Id`. Bare string IDs (the unchanged-block form
+ * inside request payloads) are filtered out — they have no shape to narrow.
  *
- * Any object carrying `relationships.item_type.data.id` is narrowable —
- * that covers items from `nested: true` responses as well as the object
- * variants of request payloads (updated / newly-created blocks). The bare
- * string IDs that may appear inside request payloads (to reference
- * existing, unchanged blocks) are filtered out of the result.
+ * Discriminates on the `__itemTypeId` phantom field carried by every
+ * object-shaped block variant exposed by `@datocms/cma-client-node`
+ * (nested response items and both request-side variants — updated and
+ * newly created). It deliberately does NOT key off
+ * `relationships.item_type.data.id`: on the request-side "updated" shape
+ * `relationships` is declared optional, which would cause an
+ * `Extract`-based narrow to silently drop that variant.
+ *
+ * For the per-D narrowing to fully resolve when the input was
+ * parameterized over a *union* of item-type definitions, the upstream
+ * `BlockInRequest<D>` / `BlockInNestedResponse<D>` types must distribute
+ * over `D` (i.e. be defined as `D extends unknown ? ... : never`).
  */
-export type NarrowBlockItemByItemType<T, Id extends string> = Extract<
-  T,
-  { relationships: { item_type: { data: { type: 'item_type'; id: Id } } } }
->;
+export type NarrowBlockItemByItemType<T, Id extends string> = T extends string
+  ? never
+  : T extends { __itemTypeId?: infer ItemTypeIds }
+  ? Id extends ItemTypeIds & string
+    ? T
+    : never
+  : never;
 
 function itemHasItemTypeId(item: unknown, itemTypeId: string): boolean {
   if (typeof item !== 'object' || item === null) return false;

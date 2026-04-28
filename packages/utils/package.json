@@ -35,5 +35,8 @@
   "dependencies": {
     "array-flatten": "^3.0.0"
   },
-  "gitHead": "e2342d17a94ecb8d41538daef11face03d21d871"
+  "gitHead": "e2342d17a94ecb8d41538daef11face03d21d871",
+  "devDependencies": {
+    "@datocms/cma-client": "^5.4.10"
+  }
 }
