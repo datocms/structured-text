@@ -24,7 +24,7 @@ import {
   isRoot,
   isThematicBreak,
 } from '../src/guards';
-import type { Document, Root } from '../src/types';
+import type { Document, Root, Paragraph } from '../src/types';
 
 describe('manipulation utilities', () => {
   // Helper for async tests
@@ -246,6 +246,221 @@ describe('manipulation utilities', () => {
         ),
       ).toBe(true);
     });
+
+    it('preserves children replaced by the mapper', () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'contact me at foo@bar.com' }],
+          },
+        ],
+      };
+
+      const result = mapNodes(root, (node) => {
+        if (node.type !== 'paragraph') return node;
+        const newChildren: Paragraph['children'] = [];
+        for (const child of node.children) {
+          if (!isSpan(child)) {
+            newChildren.push(child);
+            continue;
+          }
+          const parts = child.value.split(/([\w.+-]+@[\w.-]+\.\w{2,})/);
+          for (const part of parts) {
+            if (!part) continue;
+            if (/^[\w.+-]+@[\w.-]+\.\w{2,}$/.test(part)) {
+              newChildren.push({
+                type: 'link',
+                url: `mailto:${part}`,
+                children: [{ type: 'span', value: part }],
+              });
+            } else {
+              newChildren.push({ type: 'span', value: part });
+            }
+          }
+        }
+        return { ...node, children: newChildren };
+      });
+
+      expect(result).toMatchObject({
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              { type: 'span', value: 'contact me at ' },
+              {
+                type: 'link',
+                url: 'mailto:foo@bar.com',
+                children: [{ type: 'span', value: 'foo@bar.com' }],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('splats an array returned by the mapper into the parent children', () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'click here' }],
+          },
+        ],
+      };
+
+      const result = mapNodes(root, (node) => {
+        if (!isSpan(node)) return node;
+        const parts = node.value.split(/(here)/);
+        return parts
+          .filter((p) => p)
+          .map((part) =>
+            part === 'here'
+              ? {
+                  type: 'link' as const,
+                  url: '/target',
+                  children: [{ type: 'span' as const, value: 'here' }],
+                }
+              : { type: 'span' as const, value: part },
+          );
+      });
+
+      expect(result).toMatchObject({
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              { type: 'span', value: 'click ' },
+              {
+                type: 'link',
+                url: '/target',
+                children: [{ type: 'span', value: 'here' }],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('removes a node when the mapper returns null', () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'keep' }],
+          },
+          { type: 'thematicBreak' },
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'also keep' }],
+          },
+        ],
+      };
+
+      const result = mapNodes(root, (node) =>
+        isThematicBreak(node) ? null : node,
+      );
+
+      expect(result.children).toHaveLength(2);
+      expect(result.children.every((child) => !isThematicBreak(child))).toBe(
+        true,
+      );
+    });
+
+    it('removes a node when the mapper returns undefined', () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          { type: 'thematicBreak' },
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'kept' }],
+          },
+        ],
+      };
+
+      const result = mapNodes(root, (node) =>
+        isThematicBreak(node) ? undefined : node,
+      );
+
+      expect(result.children).toHaveLength(1);
+    });
+
+    it('wraps a node without infinite recursion (bottom-up termination)', () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'wrap me' }],
+          },
+        ],
+      };
+
+      const result = mapNodes(root, (node) => {
+        if (!isSpan(node)) return node;
+        return {
+          type: 'link' as const,
+          url: '#',
+          children: [node],
+        };
+      });
+
+      expect(result).toMatchObject({
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              {
+                type: 'link',
+                url: '#',
+                children: [{ type: 'span', value: 'wrap me' }],
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('processes nodes bottom-up (children before parent)', () => {
+      const order: string[] = [];
+
+      mapNodes(simpleRoot, (node) => {
+        order.push(isSpan(node) ? `span(${node.value})` : node.type);
+        return node;
+      });
+
+      expect(order).toEqual([
+        'span(Hello)',
+        'span( World)',
+        'paragraph',
+        'root',
+      ]);
+    });
+
+    it('throws when the outermost mapper returns null', () => {
+      expect(() => mapNodes(simpleRoot, () => null)).toThrow(
+        /cannot remove the root/,
+      );
+    });
+
+    it('throws when the outermost mapper returns undefined', () => {
+      expect(() => mapNodes(simpleRoot, () => undefined)).toThrow(
+        /cannot remove the root/,
+      );
+    });
+
+    it('throws when the outermost mapper returns an array', () => {
+      expect(() => mapNodes(simpleRoot, (node) => [node, node])).toThrow(
+        /multiple nodes/,
+      );
+    });
   });
 
   describe('mapNodesAsync', () => {
@@ -269,6 +484,56 @@ describe('manipulation utilities', () => {
           },
         ],
       });
+    });
+
+    it('splats, removes, and wraps with async mappers', async () => {
+      const root: Root = {
+        type: 'root',
+        children: [
+          { type: 'thematicBreak' },
+          {
+            type: 'paragraph',
+            children: [{ type: 'span', value: 'a b' }],
+          },
+        ],
+      };
+
+      const result = await mapNodesAsync(root, async (node) => {
+        await wait();
+        if (isThematicBreak(node)) return null;
+        if (isSpan(node)) {
+          return node.value
+            .split(' ')
+            .map((part) => ({ type: 'span' as const, value: part }));
+        }
+        return node;
+      });
+
+      expect(result).toMatchObject({
+        type: 'root',
+        children: [
+          {
+            type: 'paragraph',
+            children: [
+              { type: 'span', value: 'a' },
+              { type: 'span', value: 'b' },
+            ],
+          },
+        ],
+      });
+      expect(result.children).toHaveLength(1);
+    });
+
+    it('throws when the outermost async mapper returns null', async () => {
+      await expect(mapNodesAsync(simpleRoot, async () => null)).rejects.toThrow(
+        /cannot remove the root/,
+      );
+    });
+
+    it('throws when the outermost async mapper returns an array', async () => {
+      await expect(
+        mapNodesAsync(simpleRoot, async (node) => [node]),
+      ).rejects.toThrow(/multiple nodes/);
     });
   });
 

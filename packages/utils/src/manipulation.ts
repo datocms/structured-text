@@ -168,167 +168,210 @@ export async function forEachNodeAsync<T>(
 }
 
 /**
- * Transform nodes in the Structured Text tree by applying a mapping function.
- * Creates a new tree structure with transformed nodes while preserving the Structured Text tree hierarchy.
- *
- * @template T - The type of nodes in the input Structured Text tree
- * @template R - The type of nodes in the output tree
- * @param input - A structured text document
- * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
- * @returns The transformed document
+ * Result type for mapNodes mappers: a single node, an array of nodes (for splat),
+ * or null/undefined (for removal).
  */
-export function mapNodes<T, R>(
-  input: Document<T>,
-  mapper: NodePredicate<T, R>,
-  parent?: AllNodesInTree<T> | null,
-  path?: TreePath,
-): Document<T>;
+export type MapNodesMapperResult<T> =
+  | AllNodesInTree<T>
+  | readonly AllNodesInTree<T>[]
+  | null
+  | undefined;
 
 /**
- * Transform nodes in the Structured Text tree by applying a mapping function.
- * Creates a new tree structure with transformed nodes while preserving the Structured Text tree hierarchy.
- *
- * @template T - The type of nodes in the input Structured Text tree
- * @template R - The type of nodes in the output tree
- * @param input - A specific DAST node
- * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
- * @returns The transformed node
+ * Mapper function type for `mapNodes`.
  */
-export function mapNodes<T, R>(
-  input: T,
-  mapper: NodePredicate<T, R>,
-  parent?: AllNodesInTree<T> | null,
-  path?: TreePath,
-): T;
+export type MapNodesMapper<T> = (
+  node: AllNodesInTree<T>,
+  parent: WithChildren<AllNodesInTree<T>> | null,
+  path: TreePath,
+) => MapNodesMapperResult<T>;
 
-export function mapNodes<T, R>(
-  input: StructuredTextDocumentOrNode<T>,
-  mapper: NodePredicate<T, R>,
-  parent: WithChildren<AllNodesInTree<T>> | null = null,
-  path: TreePath = [],
-): StructuredTextDocumentOrNode<R> {
-  const node = extractNode(input);
+/**
+ * Mapper function type for `mapNodesAsync`.
+ */
+export type MapNodesMapperAsync<T> = (
+  node: AllNodesInTree<T>,
+  parent: WithChildren<AllNodesInTree<T>> | null,
+  path: TreePath,
+) => Promise<MapNodesMapperResult<T>>;
 
-  // Transform current node
-  const transformedNode = mapper(node as AllNodesInTree<T>, parent, path);
+function mapNodesRecursive<T>(
+  node: T,
+  mapper: MapNodesMapper<T>,
+  parent: WithChildren<AllNodesInTree<T>> | null,
+  path: TreePath,
+): MapNodesMapperResult<T> {
+  let processed: T = node;
 
-  // If the original node has children, recursively transform them
-  let result: R;
-  if (
-    hasChildren(node) &&
-    typeof transformedNode === 'object' &&
-    transformedNode !== null
-  ) {
-    const transformedChildren = node.children.map((child, index) =>
-      extractNode(
-        mapNodes(child as T, mapper, node as AllNodesInTree<T>, [
-          ...path,
-          'children',
-          index,
-        ]),
+  if (hasChildren(node)) {
+    const newChildren: AllNodesInTree<T>[] = [];
+    for (let index = 0; index < node.children.length; index++) {
+      const childResult = mapNodesRecursive(
+        node.children[index] as T,
+        mapper,
+        node as WithChildren<AllNodesInTree<T>>,
+        [...path, 'children', index],
+      );
+      if (childResult == null) continue;
+      if (Array.isArray(childResult)) {
+        for (const item of childResult) newChildren.push(item);
+      } else {
+        newChildren.push(childResult as AllNodesInTree<T>);
+      }
+    }
+    processed = { ...node, children: newChildren } as T;
+  }
+
+  return mapper(processed as AllNodesInTree<T>, parent, path);
+}
+
+async function mapNodesAsyncRecursive<T>(
+  node: T,
+  mapper: MapNodesMapperAsync<T>,
+  parent: WithChildren<AllNodesInTree<T>> | null,
+  path: TreePath,
+): Promise<MapNodesMapperResult<T>> {
+  let processed: T = node;
+
+  if (hasChildren(node)) {
+    const childResults = await Promise.all(
+      node.children.map((child, index) =>
+        mapNodesAsyncRecursive(
+          child as T,
+          mapper,
+          node as WithChildren<AllNodesInTree<T>>,
+          [...path, 'children', index],
+        ),
       ),
     );
-
-    result = {
-      ...transformedNode,
-      children: transformedChildren,
-    } as R;
-  } else {
-    result = transformedNode;
+    const newChildren: AllNodesInTree<T>[] = [];
+    for (const childResult of childResults) {
+      if (childResult == null) continue;
+      if (Array.isArray(childResult)) {
+        for (const item of childResult) newChildren.push(item);
+      } else {
+        newChildren.push(childResult as AllNodesInTree<T>);
+      }
+    }
+    processed = { ...node, children: newChildren } as T;
   }
 
-  // If input was a document wrapper, return a document wrapper
-  if (isDocument(input)) {
-    return {
-      schema: 'dast' as const,
-      document: result,
-    };
-  }
+  return mapper(processed as AllNodesInTree<T>, parent, path);
+}
 
-  return result;
+function assertSingleRootResult<T>(
+  result: MapNodesMapperResult<T>,
+  fnName: string,
+): AllNodesInTree<T> {
+  if (result == null) {
+    throw new Error(
+      `${fnName}: outermost mapper returned null/undefined; cannot remove the root node`,
+    );
+  }
+  if (Array.isArray(result)) {
+    throw new Error(
+      `${fnName}: outermost mapper returned an array; cannot replace the root node with multiple nodes`,
+    );
+  }
+  return result as AllNodesInTree<T>;
 }
 
 /**
  * Transform nodes in the Structured Text tree by applying a mapping function.
- * Creates a new tree structure with transformed nodes while preserving the Structured Text tree hierarchy.
+ * Children are processed bottom-up: when the mapper sees a node, its descendants
+ * have already been transformed, and the mapper's output for that node is final.
+ *
+ * The mapper may return:
+ * - a single node — replaces the input node 1:1
+ * - an array of nodes — splatted into the parent's children (1:N)
+ * - `null` / `undefined` — removes the node from its parent (1:0)
+ *
+ * Returning an array or null/undefined for the outermost (root) node throws,
+ * since the function returns a single node.
  *
  * @template T - The type of nodes in the input Structured Text tree
- * @template R - The type of nodes in the output tree
+ * @param input - A structured text document
+ * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
+ * @returns The transformed document
+ */
+export function mapNodes<T>(
+  input: Document<T>,
+  mapper: MapNodesMapper<T>,
+): Document<T>;
+
+/**
+ * Transform nodes in the Structured Text tree by applying a mapping function.
+ * See the document overload for details on bottom-up traversal and mapper return semantics.
+ *
+ * @template T - The type of nodes in the input Structured Text tree
+ * @param input - A specific DAST node
+ * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
+ * @returns The transformed node
+ */
+export function mapNodes<T>(input: T, mapper: MapNodesMapper<T>): T;
+
+export function mapNodes<T>(
+  input: StructuredTextDocumentOrNode<T>,
+  mapper: MapNodesMapper<T>,
+): StructuredTextDocumentOrNode<T> {
+  const node = extractNode(input);
+  const result = mapNodesRecursive(node, mapper, null, []);
+  const single = assertSingleRootResult(result, 'mapNodes');
+
+  if (isDocument(input)) {
+    return {
+      schema: 'dast' as const,
+      document: single as T,
+    };
+  }
+
+  return single as T;
+}
+
+/**
+ * Transform nodes in the Structured Text tree by applying an async mapping function.
+ * See `mapNodes` for details on bottom-up traversal and mapper return semantics.
+ *
+ * @template T - The type of nodes in the input Structured Text tree
  * @param input - A structured text document
  * @param mapper - Asynchronous function that transforms each node. Receives the node, its parent, and path
  * @returns Promise that resolves to the transformed document
  */
-export async function mapNodesAsync<T, R>(
+export async function mapNodesAsync<T>(
   input: Document<T>,
-  mapper: NodePredicate<T, Promise<R>>,
-  parent?: AllNodesInTree<T> | null,
-  path?: TreePath,
-): Promise<Document<R>>;
+  mapper: MapNodesMapperAsync<T>,
+): Promise<Document<T>>;
 
 /**
- * Transform nodes in the Structured Text tree by applying a mapping function.
- * Creates a new tree structure with transformed nodes while preserving the Structured Text tree hierarchy.
+ * Transform nodes in the Structured Text tree by applying an async mapping function.
+ * See `mapNodes` for details on bottom-up traversal and mapper return semantics.
  *
  * @template T - The type of nodes in the input Structured Text tree
- * @template R - The type of nodes in the output tree
  * @param input - A specific DAST node
  * @param mapper - Asynchronous function that transforms each node. Receives the node, its parent, and path
  * @returns Promise that resolves to the transformed node
  */
-export async function mapNodesAsync<T, R>(
+export async function mapNodesAsync<T>(
   input: T,
-  mapper: NodePredicate<T, Promise<R>>,
-  parent?: AllNodesInTree<T> | null,
-  path?: TreePath,
-): Promise<R>;
+  mapper: MapNodesMapperAsync<T>,
+): Promise<T>;
 
-export async function mapNodesAsync<T, R>(
+export async function mapNodesAsync<T>(
   input: StructuredTextDocumentOrNode<T>,
-  mapper: NodePredicate<T, Promise<R>>,
-  parent: WithChildren<AllNodesInTree<T>> | null = null,
-  path: TreePath = [],
-): Promise<StructuredTextDocumentOrNode<R>> {
+  mapper: MapNodesMapperAsync<T>,
+): Promise<StructuredTextDocumentOrNode<T>> {
   const node = extractNode(input);
+  const result = await mapNodesAsyncRecursive(node, mapper, null, []);
+  const single = assertSingleRootResult(result, 'mapNodesAsync');
 
-  // Transform current node
-  const transformedNode = await mapper(node as AllNodesInTree<T>, parent, path);
-
-  // If the original node has children, recursively transform them
-  let result: R;
-  if (
-    hasChildren(node) &&
-    typeof transformedNode === 'object' &&
-    transformedNode !== null
-  ) {
-    const transformedChildren = await Promise.all(
-      node.children.map(async (child, index) =>
-        extractNode(
-          await mapNodesAsync(child as T, mapper, node as AllNodesInTree<T>, [
-            ...path,
-            'children',
-            index,
-          ]),
-        ),
-      ),
-    );
-
-    result = {
-      ...transformedNode,
-      children: transformedChildren,
-    } as R;
-  } else {
-    result = transformedNode;
-  }
-
-  // If input was a document wrapper, return a document wrapper
   if (isDocument(input)) {
     return {
       schema: 'dast' as const,
-      document: result,
+      document: single as T,
     };
   }
 
-  return result;
+  return single as T;
 }
 
 /**
