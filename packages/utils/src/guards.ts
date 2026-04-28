@@ -122,29 +122,28 @@ export function isBlock<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 /**
  * Narrows a union of block item shapes to the member whose model
- * (`item_type`) matches `Id`. Bare string IDs (the unchanged-block form
- * inside request payloads) are filtered out — they have no shape to narrow.
+ * (`item_type`) matches `Id`.
  *
- * Discriminates on the `__itemTypeId` phantom field carried by every
- * object-shaped block variant exposed by `@datocms/cma-client-node`
- * (nested response items and both request-side variants — updated and
- * newly created). It deliberately does NOT key off
- * `relationships.item_type.data.id`: on the request-side "updated" shape
- * `relationships` is declared optional, which would cause an
- * `Extract`-based narrow to silently drop that variant.
+ * Matches existing (persisted) blocks — items that carry an `id` and
+ * whose `relationships.item_type.data.id` matches. That covers both the
+ * `nested: true` response form and the "updated block" variant of
+ * request payloads. Filtered out:
+ *   - bare string IDs (no `id` property to read)
+ *   - newly-created blocks in request payloads (they have no `id` yet —
+ *     the caller already knows the type, so finding them by model is
+ *     not the typical use case)
  *
- * For the per-D narrowing to fully resolve when the input was
- * parameterized over a *union* of item-type definitions, the upstream
- * `BlockInRequest<D>` / `BlockInNestedResponse<D>` types must distribute
- * over `D` (i.e. be defined as `D extends unknown ? ... : never`).
+ * `relationships` is constrained as optional so the updated-block
+ * request shape (where `relationships?` may be omitted when patching an
+ * existing block) is still picked up.
  */
-export type NarrowBlockItemByItemType<T, Id extends string> = T extends string
-  ? never
-  : T extends { __itemTypeId?: infer ItemTypeIds }
-  ? Id extends ItemTypeIds & string
-    ? T
-    : never
-  : never;
+export type NarrowBlockItemByItemType<T, Id extends string> = Extract<
+  T,
+  {
+    id: string;
+    relationships?: { item_type: { data: { type: 'item_type'; id: Id } } };
+  }
+>;
 
 function itemHasItemTypeId(item: unknown, itemTypeId: string): boolean {
   if (typeof item !== 'object' || item === null) return false;

@@ -168,8 +168,12 @@ export async function forEachNodeAsync<T>(
 }
 
 /**
- * Result type for mapNodes mappers: a single node, an array of nodes (for splat),
- * or null/undefined (for removal).
+ * Default result shape for mapNodes mappers: a single node, an array of nodes
+ * (for splat), or null/undefined (for removal). The mapper's actual return
+ * type `R` (see `MapNodesMapper`) is left fully free, so callers may produce
+ * nodes whose `item` (or other field-typed payload) has a shape different
+ * from the input tree — e.g. swapping a nested-response block for a
+ * request-shape block built via `buildBlockRecord`.
  */
 export type MapNodesMapperResult<T> =
   | AllNodesInTree<T>
@@ -178,43 +182,48 @@ export type MapNodesMapperResult<T> =
   | undefined;
 
 /**
- * Mapper function type for `mapNodes`.
+ * Mapper function type for `mapNodes`. `R` is the per-call return type and
+ * is intentionally unconstrained — TypeScript infers it from the mapper
+ * body, which keeps the mapper interoperable across response- and
+ * request-shape DAST trees.
  */
-export type MapNodesMapper<T> = (
+export type MapNodesMapper<T, R = MapNodesMapperResult<T>> = (
   node: AllNodesInTree<T>,
   parent: WithChildren<AllNodesInTree<T>> | null,
   path: TreePath,
-) => MapNodesMapperResult<T>;
+) => R;
 
 /**
  * Mapper function type for `mapNodesAsync`.
  */
-export type MapNodesMapperAsync<T> = (
+export type MapNodesMapperAsync<T, R = MapNodesMapperResult<T>> = (
   node: AllNodesInTree<T>,
   parent: WithChildren<AllNodesInTree<T>> | null,
   path: TreePath,
-) => Promise<MapNodesMapperResult<T>>;
+) => Promise<R>;
 
-function mapNodesRecursive<T>(
+function mapNodesRecursive<T, R>(
   node: T,
-  mapper: MapNodesMapper<T>,
+  mapper: MapNodesMapper<T, R>,
   parent: WithChildren<AllNodesInTree<T>> | null,
   path: TreePath,
-): MapNodesMapperResult<T> {
+): R {
   let processed: T = node;
 
   if (hasChildren(node)) {
     const newChildren: AllNodesInTree<T>[] = [];
     for (let index = 0; index < node.children.length; index++) {
-      const childResult = mapNodesRecursive(
+      const childResult = (mapNodesRecursive(
         node.children[index] as T,
         mapper,
         node as WithChildren<AllNodesInTree<T>>,
         [...path, 'children', index],
-      );
+      ) as unknown) as MapNodesMapperResult<T>;
       if (childResult == null) continue;
       if (Array.isArray(childResult)) {
-        for (const item of childResult) newChildren.push(item);
+        for (const item of childResult) {
+          newChildren.push(item as AllNodesInTree<T>);
+        }
       } else {
         newChildren.push(childResult as AllNodesInTree<T>);
       }
@@ -225,12 +234,12 @@ function mapNodesRecursive<T>(
   return mapper(processed as AllNodesInTree<T>, parent, path);
 }
 
-async function mapNodesAsyncRecursive<T>(
+async function mapNodesAsyncRecursive<T, R>(
   node: T,
-  mapper: MapNodesMapperAsync<T>,
+  mapper: MapNodesMapperAsync<T, R>,
   parent: WithChildren<AllNodesInTree<T>> | null,
   path: TreePath,
-): Promise<MapNodesMapperResult<T>> {
+): Promise<R> {
   let processed: T = node;
 
   if (hasChildren(node)) {
@@ -245,10 +254,13 @@ async function mapNodesAsyncRecursive<T>(
       ),
     );
     const newChildren: AllNodesInTree<T>[] = [];
-    for (const childResult of childResults) {
+    for (const result of childResults) {
+      const childResult = (result as unknown) as MapNodesMapperResult<T>;
       if (childResult == null) continue;
       if (Array.isArray(childResult)) {
-        for (const item of childResult) newChildren.push(item);
+        for (const item of childResult) {
+          newChildren.push(item as AllNodesInTree<T>);
+        }
       } else {
         newChildren.push(childResult as AllNodesInTree<T>);
       }
@@ -260,7 +272,7 @@ async function mapNodesAsyncRecursive<T>(
 }
 
 function assertSingleRootResult<T>(
-  result: MapNodesMapperResult<T>,
+  result: unknown,
   fnName: string,
 ): AllNodesInTree<T> {
   if (result == null) {
@@ -294,9 +306,9 @@ function assertSingleRootResult<T>(
  * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
  * @returns The transformed document
  */
-export function mapNodes<T>(
+export function mapNodes<T, R = AllNodesInTree<T>>(
   input: Document<T>,
-  mapper: MapNodesMapper<T>,
+  mapper: MapNodesMapper<T, R>,
 ): Document<T>;
 
 /**
@@ -308,24 +320,27 @@ export function mapNodes<T>(
  * @param mapper - Synchronous function that transforms each node. Receives the node, its parent, and path
  * @returns The transformed node
  */
-export function mapNodes<T>(input: T, mapper: MapNodesMapper<T>): T;
+export function mapNodes<T, R = AllNodesInTree<T>>(
+  input: T,
+  mapper: MapNodesMapper<T, R>,
+): T;
 
-export function mapNodes<T>(
+export function mapNodes<T, R>(
   input: StructuredTextDocumentOrNode<T>,
-  mapper: MapNodesMapper<T>,
+  mapper: MapNodesMapper<T, R>,
 ): StructuredTextDocumentOrNode<T> {
   const node = extractNode(input);
   const result = mapNodesRecursive(node, mapper, null, []);
-  const single = assertSingleRootResult(result, 'mapNodes');
+  const single = assertSingleRootResult<T>(result, 'mapNodes');
 
   if (isDocument(input)) {
     return {
       schema: 'dast' as const,
-      document: single as T,
+      document: (single as unknown) as T,
     };
   }
 
-  return single as T;
+  return (single as unknown) as T;
 }
 
 /**
@@ -337,9 +352,9 @@ export function mapNodes<T>(
  * @param mapper - Asynchronous function that transforms each node. Receives the node, its parent, and path
  * @returns Promise that resolves to the transformed document
  */
-export async function mapNodesAsync<T>(
+export async function mapNodesAsync<T, R = AllNodesInTree<T>>(
   input: Document<T>,
-  mapper: MapNodesMapperAsync<T>,
+  mapper: MapNodesMapperAsync<T, R>,
 ): Promise<Document<T>>;
 
 /**
@@ -351,27 +366,27 @@ export async function mapNodesAsync<T>(
  * @param mapper - Asynchronous function that transforms each node. Receives the node, its parent, and path
  * @returns Promise that resolves to the transformed node
  */
-export async function mapNodesAsync<T>(
+export async function mapNodesAsync<T, R = AllNodesInTree<T>>(
   input: T,
-  mapper: MapNodesMapperAsync<T>,
+  mapper: MapNodesMapperAsync<T, R>,
 ): Promise<T>;
 
-export async function mapNodesAsync<T>(
+export async function mapNodesAsync<T, R>(
   input: StructuredTextDocumentOrNode<T>,
-  mapper: MapNodesMapperAsync<T>,
+  mapper: MapNodesMapperAsync<T, R>,
 ): Promise<StructuredTextDocumentOrNode<T>> {
   const node = extractNode(input);
   const result = await mapNodesAsyncRecursive(node, mapper, null, []);
-  const single = assertSingleRootResult(result, 'mapNodesAsync');
+  const single = assertSingleRootResult<T>(result, 'mapNodesAsync');
 
   if (isDocument(input)) {
     return {
       schema: 'dast' as const,
-      document: single as T,
+      document: (single as unknown) as T,
     };
   }
 
-  return single as T;
+  return (single as unknown) as T;
 }
 
 /**

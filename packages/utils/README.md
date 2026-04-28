@@ -237,8 +237,8 @@ await forEachNodeAsync(structuredText, async (node, parent, path) => {
 
 | Function                                                                                                        | Description                                                        |
 | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [`mapNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L297)      | Transform nodes in the tree synchronously (1:1, splat, or remove)  |
-| [`mapNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L340) | Transform nodes in the tree asynchronously (1:1, splat, or remove) |
+| [`mapNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L309)      | Transform nodes in the tree synchronously (1:1, splat, or remove)  |
+| [`mapNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L355) | Transform nodes in the tree asynchronously (1:1, splat, or remove) |
 
 `mapNodes` walks the tree **bottom-up**: when the mapper sees a node, its
 descendants have already been transformed, and the mapper's return for that
@@ -306,10 +306,10 @@ const processed = await mapNodesAsync(structuredText, async (node) => {
 
 | Function                                                                                                             | Description                                                  |
 | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`collectNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L387)       | Collect all nodes that match a predicate function            |
-| [`collectNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L445)  | Collect all nodes that match an async predicate function     |
-| [`findFirstNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L484)      | Find the first node that matches a predicate function        |
-| [`findFirstNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L562) | Find the first node that matches an async predicate function |
+| [`collectNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L402)       | Collect all nodes that match a predicate function            |
+| [`collectNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L460)  | Collect all nodes that match an async predicate function     |
+| [`findFirstNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L499)      | Find the first node that matches a predicate function        |
+| [`findFirstNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L577) | Find the first node that matches an async predicate function |
 
 Find specific nodes using predicates or type guards:
 
@@ -344,8 +344,8 @@ const strongText = collectNodes(
 
 | Function                                                                                                           | Description                                             |
 | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| [`filterNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L611)      | Remove nodes that don't match a predicate synchronously |
-| [`filterNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L694) | Remove nodes that don't match an async predicate        |
+| [`filterNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L626)      | Remove nodes that don't match a predicate synchronously |
+| [`filterNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L709) | Remove nodes that don't match an async predicate        |
 
 Remove nodes that don't match a predicate:
 
@@ -373,8 +373,8 @@ const validated = await filterNodesAsync(structuredText, async (node) => {
 
 | Function                                                                                                           | Description                                                            |
 | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| [`reduceNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L781)      | Reduce the tree to a single value using a synchronous reducer function |
-| [`reduceNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L826) | Reduce the tree to a single value using an async reducer function      |
+| [`reduceNodes`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L796)      | Reduce the tree to a single value using a synchronous reducer function |
+| [`reduceNodesAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L841) | Reduce the tree to a single value using an async reducer function      |
 
 Reduce the entire tree to a single value:
 
@@ -408,10 +408,10 @@ const nodeCounts = reduceNodes(
 
 | Function                                                                                                         | Description                                                                           |
 | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| [`someNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L868)       | Check if any node in the tree matches a predicate (short-circuit evaluation)          |
-| [`someNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L910)  | Check if any node in the tree matches an async predicate (short-circuit evaluation)   |
-| [`everyNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L952)      | Check if every node in the tree matches a predicate (short-circuit evaluation)        |
-| [`everyNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L983) | Check if every node in the tree matches an async predicate (short-circuit evaluation) |
+| [`someNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L883)       | Check if any node in the tree matches a predicate (short-circuit evaluation)          |
+| [`someNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L925)  | Check if any node in the tree matches an async predicate (short-circuit evaluation)   |
+| [`everyNode`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L967)      | Check if every node in the tree matches a predicate (short-circuit evaluation)        |
+| [`everyNodeAsync`](https://github.com/datocms/structured-text/blob/main/packages/utils/src/manipulation.ts#L998) | Check if every node in the tree matches an async predicate (short-circuit evaluation) |
 
 Test if any or all nodes match a condition:
 
