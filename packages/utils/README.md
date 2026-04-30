@@ -183,11 +183,13 @@ Both guards support two call styles:
 import {
   findFirstNode,
   isBlockWithItemOfType,
+  isInlineBlockWithItemOfType,
 } from 'datocms-structured-text-utils';
 
 const WARNING_BLOCK_TYPE_ID = 'abc123' as const;
+const CALLOUT_BLOCK_TYPE_ID = 'def456' as const;
 
-// Curried
+// Curried — block
 const needle = findFirstNode(
   body.document,
   isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID),
@@ -198,13 +200,28 @@ if (needle) {
   console.log(needle.node.item.attributes.message);
 }
 
-// Direct
+// Direct — block
 if (isBlockWithItemOfType(WARNING_BLOCK_TYPE_ID, node)) {
   console.log(node.item.attributes.message);
 }
+
+// Same shape for inline blocks
+const callout = findFirstNode(
+  body.document,
+  isInlineBlockWithItemOfType(CALLOUT_BLOCK_TYPE_ID),
+);
+
+if (callout) {
+  // callout.node.item is narrowed to the Callout inline-block-model shape
+  console.log(callout.node.item.attributes.label);
+}
+
+if (isInlineBlockWithItemOfType(CALLOUT_BLOCK_TYPE_ID, node)) {
+  console.log(node.item.attributes.label);
+}
 ```
 
-Pass the `itemTypeId` as a literal (`as const` on pre-set constants) for narrowing to kick in. At runtime the guard walks `item.relationships.item_type.data.id`, so it works for any block item carrying that shape — CMA nested-mode responses and the object variants of request payloads. Bare string IDs (used in request payloads to reference unchanged blocks) are filtered out.
+Pass the `itemTypeId` as a literal (`as const` on pre-set constants) for narrowing to kick in. At runtime the guards walk `item.relationships.item_type.data.id`, so they work for any block item carrying that shape — CMA nested-mode responses and the object variants of request payloads. Bare string IDs (used in request payloads to reference unchanged blocks) are filtered out.
 
 ## Tree Manipulation Utilities
 
