@@ -899,6 +899,20 @@ function restoreOriginalItems<
  *  - `original` is `null`/`undefined` → behaves as if it weren't passed
  *  - everything else → parsed document
  */
+export function parse(input: null | undefined): null;
+export function parse<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(input: null | undefined, original: Document<B, IB> | null | undefined): null;
+export function parse(input: string): Document;
+export function parse<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(input: string, original: Document<B, IB>): Document<B, IB>;
+export function parse<
+  B extends SerializableBlockId,
+  IB extends SerializableBlockId
+>(input: string, original: Document<B, IB> | null | undefined): Document<B, IB>;
 export function parse(input: string | null | undefined): Document | null;
 export function parse<
   B extends SerializableBlockId,
