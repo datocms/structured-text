@@ -1,29 +1,23 @@
-import convert from 'hast-util-is-element/convert';
-import toText from 'hast-util-to-text';
-import has from 'hast-util-has-property';
+import { convertElement } from 'hast-util-is-element';
+import { toText } from 'hast-util-to-text';
+import { hasProperty } from 'hast-util-has-property';
 import {
   allowedChildren,
   inlineNodeTypes,
   Mark,
 } from 'datocms-structured-text-utils';
 
-import {
-  Handler,
-  Context,
-  HastNode,
-  HastElementNode,
-  Node,
-  CreateNodeFunction,
-} from './types';
+import type { Handler, Context, Node, CreateNodeFunction } from './types.js';
+import type { Nodes as HastNodes, Element as HastElement } from 'hast';
 
 import { Heading as DastHeading } from 'datocms-structured-text-utils';
 
-import visitChildren from './visit-children';
-import { wrap } from './wrap';
+import visitChildren from './visit-children.js';
+import { wrap } from './wrap.js';
 
 export const root: Handler = async function root(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   let children = await visitChildren(createNode, node, {
@@ -51,12 +45,11 @@ export const root: Handler = async function root(
 
 export const paragraph: Handler = async function paragraph(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'paragraph',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('paragraph');
 
   const children = await visitChildren(createNode, node, {
     ...context,
@@ -71,19 +64,18 @@ export const paragraph: Handler = async function paragraph(
 
 export const thematicBreak: Handler = async function thematicBreak(
   createNode: CreateNodeFunction,
-  _node: HastNode,
+  _node: HastNodes,
   context: Context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'thematicBreak',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('thematicBreak');
 
   return isAllowedChild ? createNode('thematicBreak', {}) : undefined;
 };
 
 export const heading: Handler = async function heading(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   if (node.type !== 'element') return undefined;
@@ -113,12 +105,11 @@ export const heading: Handler = async function heading(
 
 export const code: Handler = async function code(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
-  const isAllowedChild = allowedChildren[context.parentNodeType].includes(
-    'code',
-  );
+  const isAllowedChild =
+    allowedChildren[context.parentNodeType].includes('code');
 
   if (!isAllowedChild) {
     return inlineCode(createNode, node, context);
@@ -130,12 +121,12 @@ export const code: Handler = async function code(
 
   const prefix =
     typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
-  const isPre = convert('pre');
-  const isCode = convert('code');
+  const isPre = convertElement('pre');
+  const isCode = convertElement('code');
   const children =
     node.type === 'element' || node.type === 'root' ? node.children || [] : [];
   let index = -1;
-  let classList: string[] | null = null;
+  let classList: Array<string | number> | null = null;
   let language: Record<string, string> = {};
 
   if (isPre(node)) {
@@ -145,26 +136,29 @@ export const code: Handler = async function code(
         typeof child === 'object' &&
         child.type === 'element' &&
         isCode(child) &&
-        has(child, 'className')
+        hasProperty(child, 'className')
       ) {
-        classList = child.properties?.className || null;
+        const cn = child.properties?.className;
+        classList = Array.isArray(cn) ? cn : null;
         break;
       }
     }
   } else if (
     node.type === 'element' &&
     isCode(node) &&
-    has(node, 'className')
+    hasProperty(node, 'className')
   ) {
-    classList = node.properties?.className || null;
+    const cn = node.properties?.className;
+    classList = Array.isArray(cn) ? cn : null;
   }
 
   if (Array.isArray(classList)) {
     index = -1;
 
     while (++index < classList.length) {
-      if (classList[index].slice(0, prefix.length) === prefix) {
-        language = { language: classList[index].slice(prefix.length) };
+      const className = String(classList[index]);
+      if (className.slice(0, prefix.length) === prefix) {
+        language = { language: className.slice(prefix.length) };
         break;
       }
     }
@@ -178,7 +172,7 @@ export const code: Handler = async function code(
 
 export const blockquote: Handler = async function blockquote(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   const isAllowedChild =
@@ -199,7 +193,7 @@ export const blockquote: Handler = async function blockquote(
 };
 export const list: Handler = async function list(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   const isAllowedChild =
@@ -228,7 +222,7 @@ export const list: Handler = async function list(
 };
 export const listItem: Handler = async function listItem(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   const isAllowedChild =
@@ -251,7 +245,7 @@ export const listItem: Handler = async function listItem(
 };
 export const link: Handler = async function link(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   if (!context.allowedBlocks.includes('link')) {
@@ -287,7 +281,7 @@ export const link: Handler = async function link(
   );
   if (wrapsHeadings) {
     let i = 0;
-    const splitChildren: HastElementNode[] = [];
+    const splitChildren: HastElement[] = [];
     nodeChildren.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
         if (splitChildren.length > 0) {
@@ -337,10 +331,14 @@ export const link: Handler = async function link(
 
     if (nodeProps) {
       ['target', 'rel', 'title'].forEach((attr) => {
-        const value = Array.isArray(nodeProps[attr])
-          ? (nodeProps[attr] as string[]).join(' ')
-          : nodeProps[attr];
-        if (value) {
+        const raw = nodeProps[attr];
+        const value = Array.isArray(raw) ? raw.join(' ') : raw;
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== false &&
+          value !== ''
+        ) {
           meta.push({ id: attr, value: String(value) });
         }
       });
@@ -356,7 +354,7 @@ export const link: Handler = async function link(
 };
 export const span: Handler = async function span(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   if (node.type !== 'text') return undefined;
@@ -395,7 +393,7 @@ export const highlight = withMark('highlight');
 
 export const head: Handler = async function head(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   if (node.type !== 'element') return undefined;
@@ -411,7 +409,7 @@ export const head: Handler = async function head(
 
 export const base: Handler = async function base(
   _createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   if (node.type !== 'element') return undefined;
@@ -428,7 +426,7 @@ export const base: Handler = async function base(
 
 export const extractInlineStyles: Handler = async function extractInlineStyles(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   const accumulated: Mark[] = Array.isArray(context.marks)
@@ -487,7 +485,7 @@ export function noop(): void {}
 export function withMark(type: Mark): Handler {
   return function markHandler(
     createNode: CreateNodeFunction,
-    node: HastNode,
+    node: HastNodes,
     context: Context,
   ) {
     if (
@@ -581,7 +579,7 @@ export const handlers = {
 
 export async function wrapListItems(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ): Promise<Node[]> {
   const children = await visitChildren(createNode, node, context);
@@ -610,17 +608,16 @@ export function wrapText(context: Context, value: string): string {
   return context.wrapText ? value : value.replace(/\r?\n|\r/g, ' ');
 }
 
-export function resolveUrl(
-  context: Context,
-  url: string | null | undefined,
-): string {
+export function resolveUrl(context: Context, url: unknown): string {
   if (url === null || url === undefined) {
     return '';
   }
 
+  const urlString = String(url);
+
   if (context.global.baseUrl && typeof URL !== 'undefined') {
-    const isRelative = /^\.?\//.test(url);
-    const parsed = new URL(url, context.global.baseUrl);
+    const isRelative = /^\.?\//.test(urlString);
+    const parsed = new URL(urlString, context.global.baseUrl);
     if (isRelative) {
       const parsedBase = new URL(context.global.baseUrl);
       if (!parsed.pathname.startsWith(parsedBase.pathname)) {
@@ -630,5 +627,5 @@ export function resolveUrl(
     return parsed.toString();
   }
 
-  return url;
+  return urlString;
 }

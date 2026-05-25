@@ -1,12 +1,13 @@
 import minify from 'rehype-minify-whitespace';
 
-import { CreateNodeFunction, Handler, HastRootNode, NodeOf } from './types';
-import visitNode from './visit-node';
-import visitChildren from './visit-children';
-import { handlers } from './handlers';
-import parse5 from 'parse5';
-import parse5DocumentToHast from 'hast-util-from-parse5';
-import documentToHast from 'hast-util-from-dom';
+import type { CreateNodeFunction, NodeOf } from './types.js';
+import type { Root as HastRoot } from 'hast';
+import visitNode from './visit-node.js';
+import visitChildren from './visit-children.js';
+import { handlers } from './handlers.js';
+import type { DefaultTreeAdapterMap } from 'parse5';
+import { fromParse5 } from 'hast-util-from-parse5';
+import { fromDom } from 'hast-util-from-dom';
 import {
   Document,
   defaultMarks,
@@ -18,11 +19,12 @@ import {
   ListType,
   Heading,
 } from 'datocms-structured-text-utils';
+import type { Handler } from './types.js';
 
 export type Options = Partial<{
   newlines: boolean;
   handlers: Record<string, Handler>;
-  preprocess: (hast: HastRootNode) => void;
+  preprocess: (hast: HastRoot) => void;
   allowedBlocks: Array<
     BlockquoteType | CodeType | HeadingType | LinkType | ListType
   >;
@@ -41,26 +43,26 @@ export async function htmlToStructuredText(
     );
   }
   const document = new DOMParser().parseFromString(html, 'text/html');
-  const tree = documentToHast(document);
+  const tree = fromDom(document) as HastRoot;
   return hastToStructuredText(tree, options);
 }
 
 export async function parse5ToStructuredText(
-  document: parse5.Document,
+  document: DefaultTreeAdapterMap['document'],
   options: Options = {},
 ): Promise<Document | null> {
-  const tree = parse5DocumentToHast(document);
+  const tree = fromParse5(document) as HastRoot;
   return hastToStructuredText(tree, options);
 }
 
 export async function hastToStructuredText(
-  tree: HastRootNode,
+  tree: HastRoot,
   options: Options = {},
 ): Promise<Document | null> {
   minify({ newlines: options.newlines === true })(tree);
 
   const createNode: CreateNodeFunction = (type, props) => {
-    return ({ type, ...props } as unknown) as NodeOf<typeof type>;
+    return { type, ...props } as unknown as NodeOf<typeof type>;
   };
 
   if (typeof options.preprocess === 'function') {
@@ -101,4 +103,4 @@ export async function hastToStructuredText(
 
 export { visitNode, visitChildren };
 
-export * from './types';
+export * from './types.js';

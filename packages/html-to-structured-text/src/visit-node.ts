@@ -1,10 +1,11 @@
-import { Handler, HastNode, CreateNodeFunction, Context } from './types';
-import visitChildren from './visit-children';
+import type { Handler, CreateNodeFunction, Context } from './types.js';
+import type { Nodes as HastNodes } from 'hast';
+import visitChildren from './visit-children.js';
 
 // visitNode() is for visiting a single node
 const visitNode: Handler = async function visitNode(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   const handlers = context.handlers;
@@ -38,7 +39,7 @@ export default visitNode;
 // It skips the current node and processes its children.
 const unknownHandler: Handler = async function unknownHandler(
   createNode: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) {
   return visitChildren(createNode, node, context);

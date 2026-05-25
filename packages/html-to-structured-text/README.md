@@ -1,8 +1,14 @@
 # `datocms-html-to-structured-text`
 
-This package contains utilities to convert HTML (or a [Hast](https://github.com/syntax-tree/hast) to a DatoCMS Structured Text `dast` (DatoCMS Abstract Syntax Tree) document.
+This package contains utilities to convert HTML (or a [Hast](https://github.com/syntax-tree/hast) tree) into a DatoCMS Structured Text `dast` (DatoCMS Abstract Syntax Tree) document.
 
 Please refer to [the `dast` format docs](https://www.datocms.com/docs/structured-text/dast) to learn more about the syntax tree format and the available nodes.
+
+## Requirements
+
+Starting with v6, this package is **ESM-only** and requires **Node.js 18 or newer**. Use `import` (not `require()`) from native ESM, a bundler, or a TypeScript project with `module: "NodeNext"` (or equivalent).
+
+If you need CommonJS support, pin to `^5.1.16`.
 
 ## Usage
 
@@ -27,14 +33,14 @@ htmlToStructuredText(html).then((structuredText) => {
 
 `htmlToStructuredText` is meant to be used in a browser environment.
 
-In Node.js you can use the `parse5ToStructuredText` helper which instead takes a document generated with `parse5`.
+In Node.js you can use the `parse5ToStructuredText` helper which takes a document generated with `parse5`.
 
 ```js
-import parse5 from 'parse5';
+import { parse } from 'parse5';
 import { parse5ToStructuredText } from 'datocms-html-to-structured-text';
 
 parse5ToStructuredText(
-  parse5.parse(html, {
+  parse(html, {
     sourceCodeLocationInfo: true,
   }),
 ).then((structuredText) => {
@@ -42,7 +48,15 @@ parse5ToStructuredText(
 });
 ```
 
-Internally, both utilities work on a [Hast](https://github.com/syntax-tree/hast). Should you have a `hast` already you can use a third utility called `hastToDast`.
+Internally, both utilities work on a [Hast](https://github.com/syntax-tree/hast) tree. If you already have a `hast` tree, use `hastToStructuredText`:
+
+```js
+import { hastToStructuredText } from 'datocms-html-to-structured-text';
+
+hastToStructuredText(hastTree).then((structuredText) => {
+  console.log(structuredText);
+});
+```
 
 ## Validate `dast` documents
 
@@ -66,37 +80,41 @@ htmlToStructuredText(html).then((structuredText) => {
 });
 ```
 
-We recommend to validate every `dast` to avoid errors later when creating records.
+We recommend validating every `dast` document to avoid errors later when creating records.
 
 ## Advanced Usage
 
 ### Options
 
-All the `*ToStructuredText` utils accept an optional `options` object as second argument:
+All the `*ToStructuredText` utilities accept an optional `options` object as second argument:
 
-```js
+```ts
+import type { Root as HastRoot } from 'hast';
+
 type Options = Partial<{
-  newlines: boolean,
+  newlines: boolean;
   // Override existing `hast` node handlers or add new ones
-  handlers: Record<string, CreateNodeFunction>,
+  handlers: Record<string, Handler>;
   // Allows to tweak the `hast` tree before transforming it to a `dast` document
-  preprocess: (hast: HastRootNode) => HastRootNode,
+  preprocess: (hast: HastRoot) => void;
   // Array of allowed block nodes
   allowedBlocks: Array<
-    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
-  >,
+    BlockquoteType | CodeType | HeadingType | LinkType | ListType
+  >;
   // Array of allowed marks
-  allowedMarks: Mark[],
+  allowedMarks: Mark[];
   // Array of allowed heading levels for 'heading' nodes
-  allowedHeadingLevels: Array<1 | 2 | 3 | 4 | 5 | 6>,
+  allowedHeadingLevels: Array<1 | 2 | 3 | 4 | 5 | 6>;
+  // Properties shared across handler invocations via context.global
+  shared: Record<string, unknown>;
 }>;
 ```
 
 ### Transforming Nodes
 
-The utils in this library traverse a `hast` tree and transform supported nodes to `dast` nodes. The transformation is done by working on a `hast` node with a handler (async) function.
+The utilities in this library traverse a `hast` tree and transform supported nodes into `dast` nodes. The transformation is done by associating a handler (async) function to a `hast` node.
 
-Handlers are associated to `hast` nodes by `tagName` or `type` when `node.type !== 'element'` and look as follow:
+Handlers are associated to `hast` nodes by `tagName` or `type` (when `node.type !== 'element'`) and look like this:
 
 ```js
 import { visitChildren } from 'datocms-html-to-structured-text';
@@ -109,64 +127,69 @@ async function p(createDastNode, hastNode, context) {
 }
 ```
 
-Handlers can return either a promise that resolves to a `dast` node, an array of `dast` Nodes or `undefined` to skip the current node.
+Handlers can return either a promise that resolves to a `dast` node, an array of `dast` nodes or `undefined` to skip the current node.
 
-To ensure that a valid `dast` is generated the default handlers also check that the current `hastNode` is a valid `dast` node for its parent and, if not, they ignore the current node and continue visiting its children.
+To ensure that a valid `dast` is generated, the default handlers also check that the current `hastNode` is a valid `dast` node for its parent and, if not, they ignore the current node and continue visiting its children.
 
 Information about the parent `dast` node name is available in `context.parentNodeType`.
 
-Please take a look at the [default handlers implementation](./handlers.ts) for examples.
+Please take a look at the [default handlers implementation](./src/handlers.ts) for examples.
 
 The default handlers are available on `context.defaultHandlers`.
 
-### context
+### Context
 
-Every handler receives a `context` object that includes the following information:
+Every handler receives a `context` object with the following shape:
 
-```js
+```ts
+import type { Nodes as HastNodes } from 'hast';
+
 export interface GlobalContext {
   // Whether the library has found a <base> tag or should not look further.
   // See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
   baseUrlFound?: boolean;
-  // <base> tag url. This is used for resolving relative URLs.
-  baseUrl?: string;
+  // <base> tag url. Used for resolving relative URLs.
+  baseUrl?: string | null;
+  [key: string]: unknown;
 }
 
 export interface Context {
   // The current parent `dast` node type.
   parentNodeType: NodeType;
   // The parent `hast` node.
-  parentNode: HastNode;
+  parentNode: HastNodes | null;
   // A reference to the current handlers - merged default + user handlers.
-  handlers: Record<string, Handler<unknown>>;
+  handlers: Record<string, Handler>;
   // A reference to the default handlers record (map).
-  defaultHandlers: Record<string, Handler<unknown>>;
+  defaultHandlers: Record<string, Handler>;
   // true if the content can include newlines, and false if not (such as in headings).
   wrapText: boolean;
   // Marks for span nodes.
   marks?: Mark[];
   // Prefix for language detection in code blocks.
-  // Detection is done on a class name eg class="language-html"
-  // Default is `language-`
+  // Detection is done on a class name eg class="language-html".
+  // Default is `language-`.
   codePrefix?: string;
-  // Array of allowed Block types.
-  allowedBlocks: Array<
-    BlockquoteType | CodeType | HeadingType | LinkType | ListType,
-  >;
-  // Array of allowed marks.
+  // Allowed block types.
+  allowedBlocks: string[];
+  // Allowed heading levels.
+  allowedHeadingLevels: Array<1 | 2 | 3 | 4 | 5 | 6>;
+  // Allowed marks.
   allowedMarks: Mark[];
-  // Properties in this object are available to every handler as Context
+  // Properties in this object are available to every handler — Context
   // is not deeply cloned.
   global: GlobalContext;
 }
 ```
+
+`HastNodes` is the union of all hast node kinds (`Root | Element | Text | Comment | Doctype`) exported by [`@types/hast`](https://www.npmjs.com/package/@types/hast).
 
 ### Custom Handlers
 
 It is possible to register custom handlers and override the default behavior via options:
 
 ```js
-import { paragraphHandler } from './customHandlers';
+import { paragraphHandler } from './customHandlers.js';
 
 htmlToStructuredText(html, {
   handlers: {
@@ -177,16 +200,17 @@ htmlToStructuredText(html, {
 });
 ```
 
-It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships and therefore generating a tree that is compliant with DatoCMS' Structured Text.
+It is **highly encouraged** to validate the `dast` when using custom handlers because handlers are responsible for dictating valid parent-children relationships, and therefore for generating a tree that is compliant with DatoCMS' Structured Text.
 
-## preprocessing
+## Preprocessing
 
-Because of the strictness of the `dast` spec it is possible that some semantic or elements might be lost during the transformation.
+Because of the strictness of the `dast` spec, some semantics or elements might be lost during transformation.
 
-To improve the final result, you might want to modify the `hast` before it is transformed to `dast` with the `preprocess` hook.
+To improve the final result, you can modify the `hast` tree before it is transformed to `dast` via the `preprocess` hook.
 
 ```js
-import { findAll } from 'unist-utils-core';
+import { visit } from 'unist-util-visit';
+
 const html = `
   <p>convert this to an h1</p>
 `;
@@ -194,8 +218,8 @@ const html = `
 htmlToStructuredText(html, {
   preprocess: (tree) => {
     // Transform <p> to <h1>
-    findAll(tree, (node) => {
-      if (node.type === 'element' && node.tagName === 'p') {
+    visit(tree, 'element', (node) => {
+      if (node.tagName === 'p') {
         node.tagName = 'h1';
       }
     });
@@ -210,12 +234,12 @@ htmlToStructuredText(html, {
 <details>
   <summary>Split a node that contains an image.</summary>
 
-In `dast` images can be presented as `Block` nodes but these are not allowed inside of `ListItem` nodes (ul/ol lists). In this example we will split the list in 3 pieces and lift up the image.
+In `dast` images can be represented as `Block` nodes, but these are not allowed inside `ListItem` nodes (ul/ol lists). In this example we split the list in three pieces and lift up the image.
 
 The same approach can be used to split other types of branches and lift up nodes to become root nodes.
 
 ```js
-import { visit } from 'unist-utils-core';
+import { visitParents } from 'unist-util-visit-parents';
 
 const html = `
   <ul>
@@ -228,20 +252,19 @@ const html = `
 const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
     const liftedImages = new WeakSet();
-    const body = find(tree, (node) => node.tagName === 'body');
 
-    visit(body, (node, index, parents) => {
+    visitParents(tree, 'element', (node, ancestors) => {
       if (
-        !node ||
         node.tagName !== 'img' ||
         liftedImages.has(node) ||
-        parents.length === 1 // is a top level img
+        ancestors.length <= 1 // already a top-level img
       ) {
         return;
       }
-      // remove image
 
+      const parents = ancestors;
       const imgParent = parents[parents.length - 1];
+      const index = imgParent.children.indexOf(node);
       imgParent.children.splice(index, 1);
 
       let i = parents.length;
@@ -249,42 +272,32 @@ const dast = await htmlToStructuredText(html, {
       let childrenAfterSplitPoint = [];
 
       while (--i > 0) {
-        // Example: i == 2
-        // [ 'body', 'div', 'h1' ]
-        const /* h1 */ parent = parents[i];
-        const /* div */ parentsParent = parents[i - 1];
+        const parent = parents[i];
+        const parentsParent = parents[i - 1];
 
-        // Delete the siblings after the image and save them in a variable
-        childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
-          splitChildrenIndex,
-        );
-        // parent.children is now == [ 'h1.1' ]
+        // Delete the siblings after the image and save them.
+        childrenAfterSplitPoint = parent.children.splice(splitChildrenIndex);
 
-        // parentsParent.children = [ 'h1' ]
         splitChildrenIndex = parentsParent.children.indexOf(parent);
-        // splitChildrenIndex = 0
 
         let nodeInserted = false;
 
-        // If we reached the 'div' add the image's node
+        // Once we reach the topmost parent, insert the image node.
         if (i === 1) {
           splitChildrenIndex += 1;
           parentsParent.children.splice(splitChildrenIndex, 0, node);
           liftedImages.add(node);
-
           nodeInserted = true;
         }
 
         splitChildrenIndex += 1;
-        // Create a new branch with childrenAfterSplitPoint if we have any i.e.
-        // <h1>h1.2</h1>
         if (childrenAfterSplitPoint.length > 0) {
           parentsParent.children.splice(splitChildrenIndex, 0, {
             ...parent,
             children: childrenAfterSplitPoint,
           });
         }
-        // Remove the parent if empty
+
         if (parent.children.length === 0) {
           splitChildrenIndex -= 1;
           parentsParent.children.splice(
@@ -299,9 +312,7 @@ const dast = await htmlToStructuredText(html, {
     img: async (createNode, node, context) => {
       // In a real scenario you would upload the image to Dato and get back an id.
       const item = '123';
-      return createNode('block', {
-        item,
-      });
+      return createNode('block', { item });
     },
   },
 });
@@ -313,7 +324,7 @@ const dast = await htmlToStructuredText(html, {
   <summary>Lift up an image node</summary>
 
 ```js
-import { visit, CONTINUE } from 'unist-utils-core';
+import { visitParents, CONTINUE } from 'unist-util-visit-parents';
 
 const html = `
   <ul>
@@ -325,9 +336,10 @@ const html = `
 
 const dast = await htmlToStructuredText(html, {
   preprocess: (tree) => {
-    visit(tree, (node, index, parents) => {
-      if (node.tagName === 'img' && parents.length > 1) {
-        const parent = parents[parents.length - 1];
+    visitParents(tree, 'element', (node, ancestors) => {
+      if (node.tagName === 'img' && ancestors.length > 1) {
+        const parent = ancestors[ancestors.length - 1];
+        const index = parent.children.indexOf(node);
         tree.children.push(node);
         parent.children.splice(index, 1);
         return [CONTINUE, index];
@@ -348,7 +360,12 @@ const dast = await htmlToStructuredText(html, {
 
 ### Utilities
 
-To work with `hast` and `dast` trees we recommend using the [unist-utils-core](https://www.npmjs.com/package/unist-utils-core) library.
+To work with `hast` and `dast` trees we recommend the [unified ecosystem](https://unifiedjs.com/) — in particular:
+
+- [`unist-util-visit`](https://www.npmjs.com/package/unist-util-visit) and [`unist-util-visit-parents`](https://www.npmjs.com/package/unist-util-visit-parents) for tree traversal
+- [`@types/hast`](https://www.npmjs.com/package/@types/hast) for hast node types (`Root`, `Element`, `Text`, `Nodes`)
+
+For `dast` trees specifically, the [`datocms-structured-text-utils`](https://www.npmjs.com/package/datocms-structured-text-utils) package provides tailored traversal helpers (`collectNodes`, `findFirstNode`, `mapNodes`, `filterNodes`, …).
 
 ## License
 

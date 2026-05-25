@@ -1,6 +1,6 @@
 {
   "name": "datocms-html-to-structured-text",
-  "version": "5.1.16",
+  "version": "6.0.0",
   "description": "Convert HTML (or a `hast` syntax tree) to a valid DatoCMS Structured Text `dast` document",
   "keywords": [
     "datocms",
@@ -10,10 +10,23 @@
   "author": "Giuseppe Gurgone",
   "homepage": "https://github.com/datocms/structured-text/tree/master/packages/html-to-structured-text#readme",
   "license": "MIT",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "typings": "dist/types/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./preprocessors/google-docs": {
+      "types": "./dist/preprocessors/google-docs.d.ts",
+      "import": "./dist/preprocessors/google-docs.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "directories": {
     "lib": "dist",
     "test": "__tests__"
@@ -27,26 +40,27 @@
     "url": "git+https://github.com/datocms/structured-text.git"
   },
   "scripts": {
-    "build": "tsc && tsc --project ./tsconfig.esnext.json",
+    "build": "tsc",
     "prebuild": "rimraf dist"
   },
   "bugs": {
     "url": "https://github.com/datocms/structured-text/issues"
   },
   "dependencies": {
+    "@types/hast": "^3.0.4",
     "datocms-structured-text-utils": "^5.1.16",
-    "hast-util-from-dom": "^3.0.0",
-    "hast-util-from-parse5": "^6.0.1",
-    "hast-util-has-property": "^1.0.4",
-    "hast-util-is-element": "^1.1.0",
-    "hast-util-to-text": "^2.0.1",
-    "rehype-minify-whitespace": "^4.0.5",
-    "unist-util-is": "^4.0.4",
-    "unist-utils-core": "^1.0.5"
+    "hast-util-from-dom": "^5.0.1",
+    "hast-util-from-parse5": "^8.0.3",
+    "hast-util-has-property": "^3.0.0",
+    "hast-util-is-element": "^3.0.0",
+    "hast-util-to-text": "^4.0.2",
+    "rehype-minify-whitespace": "^6.0.2",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
-    "parse5": "^6.0.1",
-    "unist-util-inspect": "^6.0.0"
-  },
-  "gitHead": "b8d7dd8ac9d522ad1960688fc0bc249c38b704b1"
+    "parse5": "^8.0.1",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.4.0",
+    "unist-util-inspect": "^8.1.0"
+  }
 }

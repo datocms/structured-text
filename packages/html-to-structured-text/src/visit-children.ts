@@ -1,14 +1,19 @@
-import { Node, HastNode, CreateNodeFunction, Context } from './types';
-import visitNode from './visit-node';
+import type { Node, CreateNodeFunction, Context } from './types.js';
+import type { Nodes as HastNodes } from 'hast';
+import visitNode from './visit-node.js';
 
 // visitChildren() is for visiting all the children of a node
 export default async function visitChildren(
   createNode: CreateNodeFunction,
-  parentNode: HastNode,
+  parentNode: HastNodes,
   context: Context,
 ): Promise<Node | Array<Node> | void> {
-  const nodes: HastNode[] =
-    parentNode.type === 'text' ? [] : parentNode.children || [];
+  const nodes: HastNodes[] =
+    parentNode.type === 'text' ||
+    parentNode.type === 'comment' ||
+    parentNode.type === 'doctype'
+      ? []
+      : parentNode.children || [];
   let values: Node[] = [];
   let index = -1;
 

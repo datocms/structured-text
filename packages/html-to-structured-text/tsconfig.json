@@ -1,13 +1,21 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "declarationDir": "dist/types",
-    "outDir": "dist/cjs",
-    "typeRoots": [
-      "../../node_modules/@types",
-      "node_modules/@types",
-      "src/typings"
-    ]
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020", "DOM"],
+    "outDir": "dist",
+    "declarationDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true
   },
   "include": ["src"]
 }

@@ -1,5 +1,5 @@
 import { Span } from 'datocms-structured-text-utils';
-import { Node } from './types';
+import { Node } from './types.js';
 
 function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value));
@@ -128,19 +128,19 @@ function split(node: Node): Node[] {
     const parent: MutableNode = deepClone(shallow(node));
     const copy: MutableNode = shallow(child);
 
-    copy.children = [(parent as unknown) as Node];
+    copy.children = [parent as unknown as Node];
     if (hasChildren(child)) {
       parent.children = child.children;
     }
 
-    return [(copy as unknown) as Node];
+    return [copy as unknown as Node];
   }
 
   // Use `parent`, put the phrasing run inside it.
   function onphrasing(nodes: Node[]): Node[] {
     const parent: MutableNode = deepClone(shallow(node));
     parent.children = nodes;
-    return [(parent as unknown) as Node];
+    return [parent as unknown as Node];
   }
 }
 

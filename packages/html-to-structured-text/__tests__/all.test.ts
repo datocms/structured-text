@@ -2,17 +2,58 @@
 // @ts-nocheck
 
 import { parse5ToStructuredText, Options } from '../src';
-import parse5 from 'parse5';
+import { parse } from 'parse5';
 import { allowedChildren, Span, validate } from 'datocms-structured-text-utils';
-import { findAll, find, visit, CONTINUE } from 'unist-utils-core';
 import googleDocsPreprocessor from '../src/preprocessors/google-docs';
+
+// Minimal tree-walking helpers, ported from unist-utils-core for tests only.
+const CONTINUE = true;
+function visit(node, visitor) {
+  function walk(node, index, parents) {
+    const result = visitor(node, index, parents);
+    if (result === false) return false;
+    if (node && Array.isArray(node.children)) {
+      const childParents = [...parents, node];
+      for (let i = 0; i < node.children.length; i++) {
+        if (walk(node.children[i], i, childParents) === false) return false;
+      }
+    }
+    return true;
+  }
+  walk(node, null, []);
+}
+function find(node, typeOrPredicate) {
+  const predicate =
+    typeof typeOrPredicate === 'string'
+      ? (n) => n && n.type === typeOrPredicate
+      : typeOrPredicate;
+  let result;
+  visit(node, (n) => {
+    if (predicate(n)) {
+      result = n;
+      return false;
+    }
+  });
+  return result;
+}
+function findAll(node, typeOrPredicate) {
+  const predicate =
+    typeof typeOrPredicate === 'string'
+      ? (n) => n && n.type === typeOrPredicate
+      : typeOrPredicate;
+  const results = [];
+  visit(node, (n) => {
+    if (predicate(n)) results.push(n);
+  });
+  return results;
+}
 
 /* This is a shim for NodeJS. The actual CMS software usually uses DOMParser.
  Don't call it htmlToStructuredText() because there is an exported function
  by that same name already (in ../src) */
 function parse5HtmlToStructuredTextShim(html: string, options: Options = {}) {
   return parse5ToStructuredText(
-    parse5.parse(html, {
+    parse(html, {
       sourceCodeLocationInfo: true,
     }),
     options,
@@ -135,7 +176,7 @@ describe('htmlToStructuredText', () => {
         const paragraphs = findAll(result.document, 'paragraph');
         expect(paragraphs.map((p) => p.children[0].value))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "custom",
             "already wrapped",
             "needs wrapping",
@@ -195,7 +236,7 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "paragraph",
             "paragraph",
             "paragraph",
@@ -234,7 +275,7 @@ describe('htmlToStructuredText', () => {
         // <a href="#">hyperlink</a>
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "heading",
             "paragraph",
             "paragraph",
@@ -281,16 +322,16 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         const { meta } = find(result.document, 'link');
         expect(meta).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "id": "target",
               "value": "_blank",
             },
-            Object {
+            {
               "id": "rel",
               "value": "noopener noreferrer",
             },
-            Object {
+            {
               "id": "title",
               "value": "Foo bar",
             },
@@ -397,20 +438,20 @@ describe('htmlToStructuredText', () => {
         expect(spans).toHaveLength(3);
         expect(spans.map((span) => [span.value, span.marks]))
           .toMatchInlineSnapshot(`
-          Array [
-            Array [
+          [
+            [
               "b",
-              Array [
+              [
                 "strong",
               ],
             ],
-            Array [
+            [
               " ",
               undefined,
             ],
-            Array [
+            [
               "span",
-              Array [
+              [
                 "strong",
               ],
             ],
@@ -434,7 +475,7 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "paragraph",
             "paragraph",
             "paragraph",
@@ -454,22 +495,22 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "children": Array [
-                Object {
+          [
+            {
+              "children": [
+                {
                   "type": "span",
                   "value": "[simple text] ",
                 },
-                Object {
+                {
                   "type": "span",
                   "value": "[span becomes simple text]",
                 },
-                Object {
+                {
                   "type": "span",
                   "value": " ",
                 },
-                Object {
+                {
                   "type": "span",
                   "value": "[span becomes simple text]",
                 },
@@ -492,19 +533,19 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "children": Array [
-                Object {
+          [
+            {
+              "children": [
+                {
                   "type": "span",
                   "value": "[simple text]",
                 },
               ],
               "type": "paragraph",
             },
-            Object {
-              "children": Array [
-                Object {
+            {
+              "children": [
+                {
                   "type": "span",
                   "value": "[separate paragraph]",
                 },
@@ -536,7 +577,7 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "paragraph",
             "paragraph",
           ]
@@ -555,7 +596,7 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "paragraph",
             "paragraph",
           ]
@@ -579,14 +620,14 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0].children).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "type": "span",
               "value": "span ",
             },
-            Object {
-              "children": Array [
-                Object {
+            {
+              "children": [
+                {
                   "type": "span",
                   "value": "link",
                 },
@@ -638,8 +679,8 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children[0]).toMatchInlineSnapshot(`
-          Object {
-            "code": "<import src=\\"file.html\\" />",
+          {
+            "code": "<import src="file.html" />",
             "language": "html",
             "type": "code",
           }
@@ -657,8 +698,8 @@ describe('htmlToStructuredText', () => {
         expect(find(result.document, 'paragraph')).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(0);
         expect(findAll(result.document, 'span')[0]).toMatchInlineSnapshot(`
-          Object {
-            "marks": Array [
+          {
+            "marks": [
               "code",
             ],
             "type": "span",
@@ -675,7 +716,7 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(findAll(result.document, 'code')).toHaveLength(1);
         expect(findAll(result.document, 'code')[0]).toMatchInlineSnapshot(`
-          Object {
+          {
             "code": "dast()",
             "language": "html",
             "type": "code",
@@ -713,8 +754,8 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "code": "foo
           bar",
               "type": "code",
@@ -734,17 +775,17 @@ describe('htmlToStructuredText', () => {
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children.map((child) => child.type))
           .toMatchInlineSnapshot(`
-          Array [
+          [
             "blockquote",
             "blockquote",
           ]
         `);
         expect(result.document.children[0]).toMatchInlineSnapshot(`
-          Object {
-            "children": Array [
-              Object {
-                "children": Array [
-                  Object {
+          {
+            "children": [
+              {
+                "children": [
+                  {
                     "type": "span",
                     "value": "1",
                   },
@@ -764,21 +805,21 @@ describe('htmlToStructuredText', () => {
         const result = await parse5HtmlToStructuredTextShim(html);
         expect(validate(result).valid).toBeTruthy();
         expect(result.document.children).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "children": Array [
-                Object {
-                  "children": Array [
-                    Object {
+          [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
                       "type": "span",
                       "value": "1",
                     },
-                    Object {
+                    {
                       "type": "span",
                       "value": "
           ",
                     },
-                    Object {
+                    {
                       "type": "span",
                       "value": "2",
                     },
@@ -904,12 +945,12 @@ describe('htmlToStructuredText', () => {
           find(listItem, 'paragraph').children.map((child) => child.type),
         );
         expect(items).toMatchInlineSnapshot(`
-          Array [
-            Array [
+          [
+            [
               "link",
               "span",
             ],
-            Array [
+            [
               "link",
             ],
           ]
@@ -1246,11 +1287,11 @@ describe('htmlToStructuredText', () => {
             findAll(c, 'span').map((s) => s.value),
           ),
         ).toMatchInlineSnapshot(`
-          Array [
-            Array [
+          [
+            [
               "hello",
             ],
-            Array [
+            [
               "
           ",
               "world",
@@ -1291,9 +1332,8 @@ describe('htmlToStructuredText', () => {
           const /* div */ parentsParent = parents[i - 1];
 
           // Delete the siblings after the image and save them in a variable
-          childrenAfterSplitPoint /* [ 'h1.2' ] */ = parent.children.splice(
-            splitChildrenIndex,
-          );
+          childrenAfterSplitPoint /* [ 'h1.2' ] */ =
+            parent.children.splice(splitChildrenIndex);
           // parent.children is now == [ 'h1.1' ]
 
           // parentsParent.children = [ 'h1' ]
@@ -1398,41 +1438,41 @@ describe('htmlToStructuredText', () => {
           return child.type;
         }),
       ).toMatchInlineSnapshot(`
-        Array [
-          Array [
+        [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
                 "listItem",
               ],
             ],
           ],
           "block",
-          Array [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
                 "listItem",
-                "listItem",
-                "listItem",
-              ],
-            ],
-          ],
-          "block",
-          Array [
-            "list",
-            Array [
-              Array [
                 "listItem",
                 "listItem",
               ],
             ],
           ],
           "block",
-          Array [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
+                "listItem",
+                "listItem",
+              ],
+            ],
+          ],
+          "block",
+          [
+            "list",
+            [
+              [
                 "listItem",
                 "listItem",
               ],
@@ -1440,19 +1480,19 @@ describe('htmlToStructuredText', () => {
           ],
           "block",
           "block",
-          Array [
+          [
             "heading",
-            Array [
-              Array [
+            [
+              [
                 "span",
               ],
             ],
           ],
           "block",
-          Array [
+          [
             "heading",
-            Array [
-              Array [
+            [
+              [
                 "span",
               ],
             ],
@@ -1494,12 +1534,12 @@ describe('htmlToStructuredText', () => {
           return child.type;
         }),
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "block",
-          Array [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
                 "listItem",
               ],
             ],
@@ -1548,22 +1588,22 @@ describe('htmlToStructuredText', () => {
           return child.type;
         }),
       ).toMatchInlineSnapshot(`
-        Array [
+        [
           "block",
-          Array [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
                 "listItem",
               ],
             ],
           ],
           "block",
           "block",
-          Array [
+          [
             "list",
-            Array [
-              Array [
+            [
+              [
                 "listItem",
               ],
             ],
@@ -1606,11 +1646,11 @@ describe('htmlToStructuredText', () => {
       expect(validate(result).valid).toBeTruthy();
       expect(result.document.children.map((node) => node.type))
         .toMatchInlineSnapshot(`
-              Array [
-                "list",
-                "block",
-              ]
-          `);
+        [
+          "list",
+          "block",
+        ]
+      `);
     });
   });
 });

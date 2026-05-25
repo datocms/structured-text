@@ -1,10 +1,11 @@
-import {
+import type {
   Node,
   Root,
   NodeType,
   Mark,
   Heading,
 } from 'datocms-structured-text-utils';
+import type { Nodes as HastNodes } from 'hast';
 
 export type { Node, Root, NodeType, Mark };
 
@@ -17,14 +18,13 @@ export type NodeOf<T extends NodeType> = Extract<Node, { type: T }>;
  * either the strict variant (e.g. `Span[]` for `link`) or the wide `Node[]`
  * produced by `visitChildren`. Handlers are responsible for validation.
  */
-export type NodePropsFor<T extends NodeType> = Omit<
-  NodeOf<T>,
-  'type' | 'children'
-> &
-  (NodeOf<T> extends { children: Array<infer C> }
-    ? { children: Array<C> | Array<Node> }
-    : // eslint-disable-next-line @typescript-eslint/ban-types
-      {});
+export type NodePropsFor<T extends NodeType> = NodeOf<T> extends {
+  children: Array<infer C>;
+}
+  ? Omit<NodeOf<T>, 'type' | 'children'> & {
+      children: Array<C> | Array<Node>;
+    }
+  : Omit<NodeOf<T>, 'type'>;
 
 export type CreateNodeFunction = <T extends NodeType>(
   type: T,
@@ -46,7 +46,7 @@ export interface Context {
   /** The parent `dast` node type. */
   parentNodeType: NodeType;
   /** The parent `hast` node. */
-  parentNode: HastNode | null;
+  parentNode: HastNodes | null;
   /** A reference to the current handlers - merged default + user handlers. */
   handlers: Record<string, Handler>;
   /** A reference to the default handlers record (map). */
@@ -88,31 +88,6 @@ export type HandlerReturn =
 
 export type Handler = (
   createNodeFunction: CreateNodeFunction,
-  node: HastNode,
+  node: HastNodes,
   context: Context,
 ) => Promise<HandlerReturn> | HandlerReturn;
-
-export interface HastProperties {
-  className?: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}
-
-export interface HastTextNode {
-  type: 'text';
-  value: string;
-}
-
-export interface HastElementNode {
-  type: 'element';
-  tagName: string;
-  properties?: HastProperties;
-  children?: HastNode[];
-}
-
-export interface HastRootNode {
-  type: 'root';
-  children?: HastNode[];
-}
-
-export type HastNode = HastTextNode | HastElementNode | HastRootNode;
