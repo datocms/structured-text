@@ -97,7 +97,7 @@ describe('datocms-structured-text-utils', () => {
           expect(
             render(adapter, structuredText, [
               renderRule(
-                (node: Node): node is Node => true,
+                (_node: Node): _node is Node => true,
                 ({ adapter, ...other }) => {
                   return adapter.renderNode(other);
                 },
