@@ -4,6 +4,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^4.12.0",
+    "cross-env": "^7.0.3",
     "@typescript-eslint/parser": "^4.12.0",
     "eslint": "^7.17.0",
     "eslint-config-prettier": "^7.1.0",
@@ -20,7 +21,7 @@
     "url": "git://github.com/datocms/structured-text.git"
   },
   "scripts": {
-    "test": "npm run lint && jest",
+    "test": "npm run lint && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "lerna bootstrap && lerna run build",
     "publish": "npm run build && npm run test && lerna publish",
     "publish-next": "npm run build && npm run test && lerna publish --dist-tag next",
