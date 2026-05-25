@@ -310,6 +310,9 @@ export const link: Handler<HastElementNode> = async function link(
   const children = await visitChildren(createNode, node, {
     ...context,
     parentNodeType: isAllowedChild ? 'link' : context.parentNodeType,
+    marks: Array.isArray(context.marks)
+      ? context.marks.filter((m) => m !== 'underline')
+      : context.marks,
   });
 
   if (Array.isArray(children) && children.length) {
@@ -444,7 +447,9 @@ export const extractInlineStyles: Handler<HastElementNode> = async function extr
       marks.marks = marks.marks.concat(
         newMarks.filter(
           (mark) =>
-            !marks.marks.includes(mark) && context.allowedMarks.includes(mark),
+            !marks.marks.includes(mark) &&
+            context.allowedMarks.includes(mark) &&
+            !(context.parentNodeType === 'link' && mark === 'underline'),
         ),
       );
     }
@@ -463,7 +468,10 @@ export async function noop() {}
 
 export function withMark(type: Mark): Handler<HastElementNode> {
   return function markHandler(createNode, node, context) {
-    if (!context.allowedMarks.includes(type)) {
+    if (
+      !context.allowedMarks.includes(type) ||
+      (context.parentNodeType === 'link' && type === 'underline')
+    ) {
       return visitChildren(createNode, node, context);
     }
 

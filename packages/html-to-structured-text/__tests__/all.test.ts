@@ -1016,6 +1016,55 @@ describe('htmlToStructuredText', () => {
         expect(findAll(result.document, 'paragraph')).toHaveLength(1);
         expect(find(result.document, 'span').value).toBe('dato');
       });
+
+      it('does not inherit underline marks from parent context', async () => {
+        const html = `
+          <p>
+            <span style="text-decoration: underline;">
+              <a href="https://example.com">link text</a>
+            </span>
+          </p>
+        `;
+        const result = await parse5HtmlToStructuredTextShim(html);
+        expect(validate(result).valid).toBeTruthy();
+        const link = find(result.document, 'link');
+        const span = find(link, 'span');
+        expect(span.marks).toBeUndefined();
+      });
+
+      it('does not inherit underline from inline styles inside a link (Google Docs style)', async () => {
+        const html = `
+          <p>
+            <a href="https://google.com" style="text-decoration:none;">
+              <span style="text-decoration:underline;-webkit-text-decoration-skip:none;">
+                bar
+              </span>
+            </a>
+          </p>
+        `;
+        const result = await parse5HtmlToStructuredTextShim(html);
+        expect(validate(result).valid).toBeTruthy();
+        const link = find(result.document, 'link');
+        const span = find(link, 'span');
+        expect(span.marks).toBeUndefined();
+      });
+
+      it('does not inherit underline when other marks are present', async () => {
+        const html = `
+          <p>
+            <span style="font-weight: 700; text-decoration: underline;">
+              <a href="https://example.com">bold link</a>
+            </span>
+          </p>
+        `;
+        const result = await parse5HtmlToStructuredTextShim(html);
+        expect(validate(result).valid).toBeTruthy();
+        const link = find(result.document, 'link');
+        const span = find(link, 'span');
+        // strong from font-weight should be preserved, underline should not
+        expect(span.marks).toContain('strong');
+        expect(span.marks).not.toContain('underline');
+      });
     });
 
     describe('with Marks', () => {
