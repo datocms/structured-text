@@ -1,10 +1,6 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-
-// @ts-ignore
 import minify from 'rehype-minify-whitespace';
 
-import { CreateNodeFunction, Handler, HastRootNode } from './types';
+import { CreateNodeFunction, Handler, HastRootNode, NodeOf } from './types';
 import visitNode from './visit-node';
 import visitChildren from './visit-children';
 import { handlers } from './handlers';
@@ -32,6 +28,7 @@ export type Options = Partial<{
   >;
   allowedHeadingLevels: Heading['level'][];
   allowedMarks: Mark[];
+  shared: Record<string, unknown>;
 }>;
 
 export async function htmlToStructuredText(
@@ -63,8 +60,7 @@ export async function hastToStructuredText(
   minify({ newlines: options.newlines === true })(tree);
 
   const createNode: CreateNodeFunction = (type, props) => {
-    props.type = type;
-    return props;
+    return ({ type, ...props } as unknown) as NodeOf<typeof type>;
   };
 
   if (typeof options.preprocess === 'function') {
@@ -93,9 +89,9 @@ export async function hastToStructuredText(
     },
   });
 
-  if (rootNode) {
+  if (rootNode && !Array.isArray(rootNode) && rootNode.type === 'root') {
     return {
-      schema: 'dast',
+      schema: 'dast' as const,
       document: rootNode,
     };
   }

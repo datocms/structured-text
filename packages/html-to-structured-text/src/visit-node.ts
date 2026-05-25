@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-import { Handler, HastElementNode, HastNode } from './types';
+import { Handler, HastNode, CreateNodeFunction, Context } from './types';
 import visitChildren from './visit-children';
 
 // visitNode() is for visiting a single node
-export default (async function visitNode(createNode, node, context) {
+const visitNode: Handler = async function visitNode(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
+) {
   const handlers = context.handlers;
-  let handler;
+  let handler: Handler | undefined;
 
   if (node.type === 'element') {
     if (
@@ -28,14 +30,16 @@ export default (async function visitNode(createNode, node, context) {
   }
 
   return await handler(createNode, node, context);
-} as Handler<HastNode>);
+};
+
+export default visitNode;
 
 // This is a default handler for unknown nodes.
 // It skips the current node and processes its children.
-const unknownHandler: Handler<HastElementNode> = async function unknownHandler(
-  createNode,
-  node,
-  context,
+const unknownHandler: Handler = async function unknownHandler(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   return visitChildren(createNode, node, context);
 };

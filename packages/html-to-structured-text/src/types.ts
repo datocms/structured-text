@@ -1,11 +1,35 @@
-import { Node, Root, NodeType, Mark } from 'datocms-structured-text-utils';
+import {
+  Node,
+  Root,
+  NodeType,
+  Mark,
+  Heading,
+} from 'datocms-structured-text-utils';
 
 export type { Node, Root, NodeType, Mark };
 
-export type CreateNodeFunction = (
-  type: NodeType,
-  props: Omit<Node, 'type'>,
-) => Node;
+/** The DAST node variant produced for a given `NodeType`. */
+export type NodeOf<T extends NodeType> = Extract<Node, { type: T }>;
+
+/**
+ * The props (everything but `type`) accepted when creating a DAST node of a
+ * given `NodeType`. For nodes with children, the `children` array can be
+ * either the strict variant (e.g. `Span[]` for `link`) or the wide `Node[]`
+ * produced by `visitChildren`. Handlers are responsible for validation.
+ */
+export type NodePropsFor<T extends NodeType> = Omit<
+  NodeOf<T>,
+  'type' | 'children'
+> &
+  (NodeOf<T> extends { children: Array<infer C> }
+    ? { children: Array<C> | Array<Node> }
+    : // eslint-disable-next-line @typescript-eslint/ban-types
+      {});
+
+export type CreateNodeFunction = <T extends NodeType>(
+  type: T,
+  props: NodePropsFor<T>,
+) => NodeOf<T>;
 
 export interface GlobalContext {
   /**
@@ -14,14 +38,15 @@ export interface GlobalContext {
    */
   baseUrlFound?: boolean;
   /** <base> tag url. This is used for resolving relative URLs. */
-  baseUrl?: string;
+  baseUrl?: string | null;
+  [key: string]: unknown;
 }
 
 export interface Context {
   /** The parent `dast` node type. */
   parentNodeType: NodeType;
   /** The parent `hast` node. */
-  parentNode: HastNode;
+  parentNode: HastNode | null;
   /** A reference to the current handlers - merged default + user handlers. */
   handlers: Record<string, Handler>;
   /** A reference to the default handlers record (map). */
@@ -30,6 +55,12 @@ export interface Context {
   wrapText: boolean;
   /** Marks for span nodes. */
   marks?: Mark[];
+  /** Allowed block types */
+  allowedBlocks: string[];
+  /** Allowed heading levels */
+  allowedHeadingLevels: Heading['level'][];
+  /** Allowed marks */
+  allowedMarks: Mark[];
   /**
    * Prefix for language detection in code blocks.
    *
@@ -43,13 +74,23 @@ export interface Context {
   global: GlobalContext;
 }
 
-export type Handler<HN extends HastNode = HastNode> = (
+/**
+ * What a `Handler` is allowed to return — sync or wrapped in a promise.
+ * Custom user handlers can also return an array containing a mix of nodes
+ * and unresolved promises; `visitChildren` flattens those.
+ */
+export type HandlerReturn =
+  | Node
+  | Array<Node | Promise<Node>>
+  | null
+  | undefined
+  | void;
+
+export type Handler = (
   createNodeFunction: CreateNodeFunction,
-  node: HN,
+  node: HastNode,
   context: Context,
-) =>
-  | Promise<Node | Array<Node> | void>
-  | Array<Promise<Node | Array<Node> | void>>;
+) => Promise<HandlerReturn> | HandlerReturn;
 
 export interface HastProperties {
   className?: string[];

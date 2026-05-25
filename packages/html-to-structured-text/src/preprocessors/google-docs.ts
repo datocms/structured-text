@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { findAll } from 'unist-utils-core';
 import { HastRootNode, HastNode } from '../types';
 
 export default function preprocessGoogleDocs(tree: HastRootNode): void {
-  // Remove Google docs <b> tags.
-  // Inline styles are already handled by the extractInlineStyles handler in handlers.ts
+  // findAll uses unist Node types which are incompatible with our HastNode type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   findAll(tree as any, isGoogleDocsNode as any);
 }
 

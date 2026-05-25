@@ -1,31 +1,30 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 import convert from 'hast-util-is-element/convert';
 import toText from 'hast-util-to-text';
 import has from 'hast-util-has-property';
 import {
   allowedChildren,
   inlineNodeTypes,
+  Mark,
 } from 'datocms-structured-text-utils';
 
 import {
   Handler,
-  Mark,
   Context,
   HastNode,
-  HastTextNode,
   HastElementNode,
-  HastRootNode,
+  Node,
+  CreateNodeFunction,
 } from './types';
+
+import { Heading as DastHeading } from 'datocms-structured-text-utils';
 
 import visitChildren from './visit-children';
 import { wrap } from './wrap';
-import { MetaEntry } from '../../utils/dist/types';
 
-export const root: Handler<HastRootNode> = async function root(
-  createNode,
-  node,
-  context,
+export const root: Handler = async function root(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   let children = await visitChildren(createNode, node, {
     ...context,
@@ -35,7 +34,7 @@ export const root: Handler<HastRootNode> = async function root(
   if (
     Array.isArray(children) &&
     children.some(
-      (child: HastNode) => child && !allowedChildren.root.includes(child.type),
+      (child) => child && !allowedChildren.root.includes(child.type),
     )
   ) {
     children = wrap(children);
@@ -50,10 +49,10 @@ export const root: Handler<HastRootNode> = async function root(
   });
 };
 
-export const paragraph: Handler<HastElementNode> = async function paragraph(
-  createNode,
-  node,
-  context,
+export const paragraph: Handler = async function paragraph(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'paragraph',
@@ -70,10 +69,10 @@ export const paragraph: Handler<HastElementNode> = async function paragraph(
   return undefined;
 };
 
-export const thematicBreak: Handler<HastElementNode> = async function thematicBreak(
-  createNode,
-  node,
-  context,
+export const thematicBreak: Handler = async function thematicBreak(
+  createNode: CreateNodeFunction,
+  _node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'thematicBreak',
@@ -82,12 +81,13 @@ export const thematicBreak: Handler<HastElementNode> = async function thematicBr
   return isAllowedChild ? createNode('thematicBreak', {}) : undefined;
 };
 
-export const heading: Handler<HastElementNode> = async function heading(
-  createNode,
-  node,
-  context,
+export const heading: Handler = async function heading(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
-  const level = Number(node.tagName.charAt(1)) || 1;
+  if (node.type !== 'element') return undefined;
+  const level = (Number(node.tagName.charAt(1)) || 1) as DastHeading['level'];
 
   const isAllowedChild =
     allowedChildren[context.parentNodeType].includes('heading') &&
@@ -111,10 +111,10 @@ export const heading: Handler<HastElementNode> = async function heading(
   return undefined;
 };
 
-export const code: Handler<HastElementNode> = async function code(
-  createNode,
-  node,
-  context,
+export const code: Handler = async function code(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild = allowedChildren[context.parentNodeType].includes(
     'code',
@@ -132,28 +132,31 @@ export const code: Handler<HastElementNode> = async function code(
     typeof context.codePrefix === 'string' ? context.codePrefix : 'language-';
   const isPre = convert('pre');
   const isCode = convert('code');
-  const children = node.children;
+  const children =
+    node.type === 'element' || node.type === 'root' ? node.children || [] : [];
   let index = -1;
-  let classList = null;
-  let language = {};
+  let classList: string[] | null = null;
+  let language: Record<string, string> = {};
 
   if (isPre(node)) {
     while (++index < children.length) {
+      const child = children[index];
       if (
-        typeof children[index] === 'object' &&
-        isCode(children[index]) &&
-        has(children[index], 'className')
+        typeof child === 'object' &&
+        child.type === 'element' &&
+        isCode(child) &&
+        has(child, 'className')
       ) {
-        // error TS2339: Property 'properties' does not exist on type 'HastNode'.
-        //               Property 'properties' does not exist on type 'HastTextNode'
-        // isCode (convert) checks that the node is an element and therefore it'll have properties
-        // @ts-ignore
-        classList = children[index].properties.className;
+        classList = child.properties?.className || null;
         break;
       }
     }
-  } else if (isCode(node) && has(node, 'className')) {
-    classList = node.properties.className;
+  } else if (
+    node.type === 'element' &&
+    isCode(node) &&
+    has(node, 'className')
+  ) {
+    classList = node.properties?.className || null;
   }
 
   if (Array.isArray(classList)) {
@@ -173,10 +176,10 @@ export const code: Handler<HastElementNode> = async function code(
   });
 };
 
-export const blockquote: Handler<HastElementNode> = async function blockquote(
-  createNode,
-  node,
-  context,
+export const blockquote: Handler = async function blockquote(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild =
     allowedChildren[context.parentNodeType].includes('blockquote') &&
@@ -194,10 +197,10 @@ export const blockquote: Handler<HastElementNode> = async function blockquote(
   }
   return undefined;
 };
-export const list: Handler<HastElementNode> = async function list(
-  createNode,
-  node,
-  context,
+export const list: Handler = async function list(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild =
     allowedChildren[context.parentNodeType].includes('list') &&
@@ -215,15 +218,18 @@ export const list: Handler<HastElementNode> = async function list(
   if (Array.isArray(children) && children.length) {
     return createNode('list', {
       children,
-      style: node.tagName === 'ol' ? 'numbered' : 'bulleted',
+      style:
+        node.type === 'element' && node.tagName === 'ol'
+          ? 'numbered'
+          : 'bulleted',
     });
   }
   return undefined;
 };
-export const listItem: Handler<HastElementNode> = async function listItem(
-  createNode,
-  node,
-  context,
+export const listItem: Handler = async function listItem(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   const isAllowedChild =
     allowedChildren[context.parentNodeType].includes('listItem') &&
@@ -243,10 +249,10 @@ export const listItem: Handler<HastElementNode> = async function listItem(
   }
   return undefined;
 };
-export const link: Handler<HastElementNode> = async function link(
-  createNode,
-  node,
-  context,
+export const link: Handler = async function link(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
   if (!context.allowedBlocks.includes('link')) {
     return visitChildren(createNode, node, context);
@@ -267,18 +273,22 @@ export const link: Handler<HastElementNode> = async function link(
     isAllowedChild = allowedChildrenWrapped.includes(context.parentNodeType);
   }
 
+  if (node.type !== 'element') return undefined;
+  const e = node;
+  const nodeChildren = e.children || [];
+
   // When a link wraps headings we try to preserve the heading by inverting the parent-child relationship.
   // Essentially we tweak the nodes so that the heading wraps the link.
   //
   // @TODO this is only checking for headings that are direct descendants of links.
   // Decide if it is worth looking deeper.
-  const wrapsHeadings = node.children.some(
+  const wrapsHeadings = nodeChildren.some(
     (child) => child.type === 'element' && child.tagName.startsWith('h'),
   );
   if (wrapsHeadings) {
     let i = 0;
     const splitChildren: HastElementNode[] = [];
-    node.children.forEach((child) => {
+    nodeChildren.forEach((child) => {
       if (child.type === 'element' && child.tagName.startsWith('h')) {
         if (splitChildren.length > 0) {
           i++;
@@ -287,23 +297,25 @@ export const link: Handler<HastElementNode> = async function link(
           ...child,
           children: [
             {
-              ...node,
+              ...e,
               children: child.children,
             },
           ],
         });
         i++;
       } else if (splitChildren[i]) {
-        splitChildren[i].children.push(child);
+        const sc = splitChildren[i];
+        sc.children = sc.children || [];
+        sc.children.push(child);
       } else {
         splitChildren[i] = {
-          ...node,
+          ...e,
           children: [child],
         };
       }
     });
 
-    node.children = splitChildren;
+    e.children = splitChildren;
     isAllowedChild = false;
   }
 
@@ -320,38 +332,36 @@ export const link: Handler<HastElementNode> = async function link(
       return children;
     }
 
-    const props = {
-      url: resolveUrl(context, node.properties.href),
-      children,
-    };
+    const nodeProps = e.properties;
+    const meta: Array<{ id: string; value: string }> = [];
 
-    const meta: Array<MetaEntry> = [];
-
-    if (node.properties) {
+    if (nodeProps) {
       ['target', 'rel', 'title'].forEach((attr) => {
-        const value = Array.isArray(node.properties[attr])
-          ? node.properties[attr].join(' ')
-          : node.properties[attr];
+        const value = Array.isArray(nodeProps[attr])
+          ? (nodeProps[attr] as string[]).join(' ')
+          : nodeProps[attr];
         if (value) {
-          meta.push({ id: attr, value });
+          meta.push({ id: attr, value: String(value) });
         }
       });
     }
 
-    if (meta.length > 0) {
-      props.meta = meta;
-    }
-
-    return createNode('link', props);
+    return createNode('link', {
+      url: resolveUrl(context, nodeProps?.href),
+      children,
+      ...(meta.length > 0 ? { meta } : {}),
+    });
   }
   return undefined;
 };
-export const span: Handler<HastTextNode> = async function span(
-  createNode,
-  node,
-  context,
+export const span: Handler = async function span(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
-  const marks = {};
+  if (node.type !== 'text') return undefined;
+
+  const marks: { marks?: Mark[] } = {};
 
   if (Array.isArray(context.marks)) {
     const allowedMarks = context.marks.filter((mark) =>
@@ -368,8 +378,8 @@ export const span: Handler<HastTextNode> = async function span(
   });
 };
 
-export const newLine: Handler<HastTextNode> = async function newLine(
-  createNode,
+export const newLine: Handler = async function newLine(
+  createNode: CreateNodeFunction,
 ) {
   return createNode('span', {
     value: '\n',
@@ -383,12 +393,15 @@ export const underline = withMark('underline');
 export const strikethrough = withMark('strikethrough');
 export const highlight = withMark('highlight');
 
-export const head: Handler<HastElementNode> = async function head(
-  createNode,
-  node,
-  context,
+export const head: Handler = async function head(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
-  const baseElement = node.children.find((child) => child.tagName === 'base');
+  if (node.type !== 'element') return undefined;
+  const baseElement = (node.children || []).find(
+    (child) => child.type === 'element' && child.tagName === 'base',
+  );
   if (baseElement) {
     return context.handlers.base(createNode, baseElement, context);
   } else {
@@ -396,78 +409,87 @@ export const head: Handler<HastElementNode> = async function head(
   }
 };
 
-export const base: Handler<HastElementNode> = async function base(
-  createNode,
-  node,
-  context,
+export const base: Handler = async function base(
+  _createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
+  if (node.type !== 'element') return undefined;
   if (
     !context.global.baseUrlFound &&
     typeof node.properties === 'object' &&
-    node.properties.href
+    node.properties?.href
   ) {
-    context.global.baseUrl = node.properties.href.replace(/\/$/, '');
+    context.global.baseUrl = String(node.properties.href).replace(/\/$/, '');
     context.global.baseUrlFound = true;
   }
+  return undefined;
 };
 
-export const extractInlineStyles: Handler<HastElementNode> = async function extractInlineStyles(
-  createNode,
-  node,
-  context,
+export const extractInlineStyles: Handler = async function extractInlineStyles(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
 ) {
-  let marks = { marks: Array.isArray(context.marks) ? context.marks : [] };
-  if (node.properties && typeof node.properties.style === 'string') {
-    const newMarks = [];
-    node.properties.style.split(';').forEach((declaration) => {
-      const [firstChunk, ...otherChunks] = declaration.split(':');
-      const prop = firstChunk.trim();
-      const value = otherChunks.join(':').trim();
-      switch (prop) {
-        case 'font-weight':
-          if (value === 'bold' || Number(value) > 400) {
-            newMarks.push('strong');
-          }
-          break;
-        case 'font-style':
-          if (value === 'italic') {
-            newMarks.push('emphasis');
-          }
-          break;
-        case 'text-decoration':
-          if (value === 'underline') {
-            newMarks.push('underline');
-          }
-          break;
-        default:
-          break;
+  const accumulated: Mark[] = Array.isArray(context.marks)
+    ? [...context.marks]
+    : [];
+  const properties = node.type === 'element' ? node.properties : undefined;
+  if (properties && typeof properties.style === 'string') {
+    const newMarks: Mark[] = [];
+    String(properties.style)
+      .split(';')
+      .forEach((declaration) => {
+        const [firstChunk, ...otherChunks] = declaration.split(':');
+        const prop = firstChunk.trim();
+        const value = otherChunks.join(':').trim();
+        switch (prop) {
+          case 'font-weight':
+            if (value === 'bold' || Number(value) > 400) {
+              newMarks.push('strong');
+            }
+            break;
+          case 'font-style':
+            if (value === 'italic') {
+              newMarks.push('emphasis');
+            }
+            break;
+          case 'text-decoration':
+            if (value === 'underline') {
+              newMarks.push('underline');
+            }
+            break;
+          default:
+            break;
+        }
+      });
+    newMarks.forEach((mark) => {
+      if (
+        !accumulated.includes(mark) &&
+        context.allowedMarks.includes(mark) &&
+        !(context.parentNodeType === 'link' && mark === 'underline')
+      ) {
+        accumulated.push(mark);
       }
     });
-    if (newMarks.length > 0) {
-      marks.marks = marks.marks.concat(
-        newMarks.filter(
-          (mark) =>
-            !marks.marks.includes(mark) &&
-            context.allowedMarks.includes(mark) &&
-            !(context.parentNodeType === 'link' && mark === 'underline'),
-        ),
-      );
-    }
   }
-  if (marks.marks.length === 0) {
-    marks = {};
-  }
+  const marksContext: { marks?: Mark[] } =
+    accumulated.length > 0 ? { marks: accumulated } : {};
   return visitChildren(createNode, node, {
     ...context,
-    ...marks,
+    ...marksContext,
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function,  @typescript-eslint/explicit-module-boundary-types
-export async function noop() {}
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export function noop(): void {}
 
-export function withMark(type: Mark): Handler<HastElementNode> {
-  return function markHandler(createNode, node, context) {
+export function withMark(type: Mark): Handler {
+  return function markHandler(
+    createNode: CreateNodeFunction,
+    node: HastNode,
+    context: Context,
+  ) {
     if (
       !context.allowedMarks.includes(type) ||
       (context.parentNodeType === 'link' && type === 'underline')
@@ -475,14 +497,13 @@ export function withMark(type: Mark): Handler<HastElementNode> {
       return visitChildren(createNode, node, context);
     }
 
-    let marks = { marks: [type] };
-    if (Array.isArray(context.marks)) {
-      marks = {
-        marks: context.marks.includes(type)
-          ? context.marks
-          : context.marks.concat([type]),
-      };
-    }
+    const marks: { marks: Mark[] } = Array.isArray(context.marks)
+      ? {
+          marks: context.marks.includes(type)
+            ? context.marks
+            : context.marks.concat([type]),
+        }
+      : { marks: [type] };
     return visitChildren(createNode, node, {
       ...context,
       ...marks,
@@ -558,11 +579,11 @@ export const handlers = {
   iframe: noop,
 };
 
-export const wrapListItems: Handler<HastElementNode> = async function wrapListItems(
-  createNode,
-  node,
-  context,
-) {
+export async function wrapListItems(
+  createNode: CreateNodeFunction,
+  node: HastNode,
+  context: Context,
+): Promise<Node[]> {
   const children = await visitChildren(createNode, node, context);
 
   if (!Array.isArray(children)) {
@@ -571,23 +592,19 @@ export const wrapListItems: Handler<HastElementNode> = async function wrapListIt
 
   let index = -1;
   while (++index < children.length) {
-    if (
-      typeof children[index] !== 'undefined' &&
-      children[index].type !== 'listItem'
-    ) {
-      children[index] = {
-        type: 'listItem',
-        children: [
-          allowedChildren.listItem.includes(children[index].type)
-            ? children[index]
-            : createNode('paragraph', { children: [children[index]] }),
-        ],
-      };
+    const child = children[index];
+    if (typeof child !== 'undefined' && child.type !== 'listItem') {
+      const wrappedChild = allowedChildren.listItem.includes(child.type)
+        ? child
+        : createNode('paragraph', { children: [child] });
+      children[index] = createNode('listItem', {
+        children: [wrappedChild],
+      });
     }
   }
 
   return children;
-};
+}
 
 export function wrapText(context: Context, value: string): string {
   return context.wrapText ? value : value.replace(/\r?\n|\r/g, ' ');

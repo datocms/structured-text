@@ -1,15 +1,18 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
-import extend from 'extend';
-import convert from 'unist-util-is/convert';
+import { Span } from 'datocms-structured-text-utils';
 import { Node } from './types';
 
-const isPhrasing = convert(['span', 'link']);
+function deepClone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function isPhrasing(node: Node): boolean {
+  return node.type === 'span' || node.type === 'link';
+}
 
 export function wrap(nodes: Node[]): Node[] {
   return runs(nodes, onphrasing);
 
-  function onphrasing(nodes) {
+  function onphrasing(nodes: Node[]): Node[] {
     const head = nodes[0];
     if (
       nodes.length === 1 &&
@@ -19,18 +22,25 @@ export function wrap(nodes: Node[]): Node[] {
       return [];
     }
 
-    return { type: 'paragraph', children: nodes };
+    return [{ type: 'paragraph', children: nodes as Span[] }];
   }
 }
 
+type NodeHandler = (nodes: Node[]) => Node[];
+type SingleHandler = (node: Node) => Node[];
+
 // Wrap all runs of dast phrasing content in `paragraph` nodes.
-function runs(nodes, onphrasing, onnonphrasing) {
+function runs(
+  nodes: Node[],
+  onphrasing: NodeHandler,
+  onnonphrasing?: SingleHandler,
+): Node[] {
   const nonphrasing = onnonphrasing || identity;
   const flattened = flatten(nodes);
-  let result = [];
+  let result: Node[] = [];
   let index = -1;
-  let node;
-  let queue;
+  let node: Node;
+  let queue: Node[] | undefined;
 
   while (++index < flattened.length) {
     node = flattened[index];
@@ -56,26 +66,26 @@ function runs(nodes, onphrasing, onnonphrasing) {
 }
 
 // Flatten a list of nodes.
-function flatten(nodes) {
-  let flattened = [];
+function flatten(nodes: Node[]): Node[] {
+  let flattened: Node[] = [];
   let index = -1;
-  let node;
 
   while (++index < nodes.length) {
-    node = nodes[index];
+    const node = nodes[index];
 
     // Straddling: some elements are *weird*.
     // Namely: `map`, `ins`, `del`, and `a`, as they are hybrid elements.
     // See: <https://html.spec.whatwg.org/#paragraphs>.
     // Paragraphs are the weirdest of them all.
     // See the straddling fixture for more info!
-    // `ins` is ignored in mdast, so we don’t need to worry about that.
-    // `map` maps to its content, so we don’t need to worry about that either.
+    // `ins` is ignored in mdast, so we don't need to worry about that.
+    // `map` maps to its content, so we don't need to worry about that either.
     // `del` maps to `delete` and `a` to `link`, so we do handle those.
-    // What we’ll do is split `node` over each of its children.
+    // What we'll do is split `node` over each of its children.
     if (
-      (node.type === 'delete' || node.type === 'link') &&
-      needed(node.children)
+      node.type === 'link' &&
+      node.children &&
+      needed(node.children as Node[])
     ) {
       flattened = flattened.concat(split(node));
     } else {
@@ -86,57 +96,64 @@ function flatten(nodes) {
   return flattened;
 }
 
+function hasChildren(node: Node): node is Node & { children: Node[] } {
+  return 'children' in node && Array.isArray(node.children);
+}
+
 // Check if there are non-phrasing mdast nodes returned.
 // This is needed if a fragment is given, which could just be a sentence, and
-// doesn’t need a wrapper paragraph.
+// doesn't need a wrapper paragraph.
 export function needed(nodes: Node[]): boolean {
   let index = -1;
-  let node;
 
   while (++index < nodes.length) {
-    node = nodes[index];
+    const node = nodes[index];
 
-    if (!isPhrasing(node) || (node.children && needed(node.children))) {
+    if (!isPhrasing(node) || (hasChildren(node) && needed(node.children))) {
       return true;
     }
   }
   return false;
 }
 
-function split(node) {
-  return runs(node.children, onphrasing, onnonphrasing);
+type MutableNode = Record<string, unknown> & { children?: Node[] };
+
+function split(node: Node): Node[] {
+  const children = hasChildren(node) ? node.children : [];
+  return runs(children, onphrasing, onnonphrasing);
 
   // Use `child`, add `parent` as its first child, put the original children
   // into `parent`.
-  function onnonphrasing(child) {
-    const parent = extend(true, {}, shallow(node));
-    const copy = shallow(child);
+  function onnonphrasing(child: Node): Node[] {
+    const parent: MutableNode = deepClone(shallow(node));
+    const copy: MutableNode = shallow(child);
 
-    copy.children = [parent];
-    parent.children = child.children;
+    copy.children = [(parent as unknown) as Node];
+    if (hasChildren(child)) {
+      parent.children = child.children;
+    }
 
-    return copy;
+    return [(copy as unknown) as Node];
   }
 
   // Use `parent`, put the phrasing run inside it.
-  function onphrasing(nodes) {
-    const parent = extend(true, {}, shallow(node));
+  function onphrasing(nodes: Node[]): Node[] {
+    const parent: MutableNode = deepClone(shallow(node));
     parent.children = nodes;
-    return parent;
+    return [(parent as unknown) as Node];
   }
 }
 
-function identity(n) {
-  return n;
+function identity(n: Node): Node[] {
+  return [n];
 }
 
-function shallow(node) {
-  const copy = {};
-  let key;
+function shallow(node: Node): Record<string, unknown> {
+  const copy: Record<string, unknown> = {};
 
-  for (key in node) {
-    if ({}.hasOwnProperty.call(node, key) && key !== 'children') {
-      copy[key] = node[key];
+  for (const key in node) {
+    if (Object.prototype.hasOwnProperty.call(node, key) && key !== 'children') {
+      copy[key] = (node as Record<string, unknown>)[key];
     }
   }
 
