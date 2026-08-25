@@ -223,7 +223,7 @@ return result.trim();
 **Location:** `src/index.ts:345`
 
 ```typescript
-children: (children as any) as ReturnType<F>;
+children: children as any as ReturnType<F>;
 ```
 
 **Severity:** 🟡 **MEDIUM** - Type safety violation
@@ -270,7 +270,7 @@ if (Array.isArray(children)) {
 ```typescript
 // The children array is guaranteed to be compatible with RenderResult
 // because it's produced by the same adapter
-children: (children as unknown) as RenderResult<H, T, F>;
+children: children as unknown as RenderResult<H, T, F>;
 ```
 
 **Recommendation:** Use **Option 2** for runtime safety.
@@ -518,12 +518,11 @@ export const defaultAdapter = {
 #### 4. **Comprehensive Context Types**
 
 ```typescript
-type RenderInlineRecordContext<
-  R extends StructuredTextGraphQlResponseRecord
-> = {
-  record: R;
-  adapter: Adapter<H, T, F>;
-};
+type RenderInlineRecordContext<R extends StructuredTextGraphQlResponseRecord> =
+  {
+    record: R;
+    adapter: Adapter<H, T, F>;
+  };
 
 type RenderRecordLinkContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;

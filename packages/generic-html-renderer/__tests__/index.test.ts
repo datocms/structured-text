@@ -553,8 +553,7 @@ describe('render', () => {
           __typename: 'ImageRecord',
           id: '11922283',
           image: {
-            url:
-              'https://www.datocms-assets.com/205/1606492977-oberlo-cover.jpg',
+            url: 'https://www.datocms-assets.com/205/1606492977-oberlo-cover.jpg',
           },
         },
       ],

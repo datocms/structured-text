@@ -33,7 +33,7 @@
     "publish": "node bin/publish.mjs",
     "publish-next": "node bin/publish.mjs --tag next",
     "lint": "eslint . --ext .ts,.tsx",
-    "prettier": "prettier --write \"**/*.{ts,tsx,json}\"",
+    "prettier": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml}\"",
     "prepare": "husky install"
   },
   "license": "MIT",

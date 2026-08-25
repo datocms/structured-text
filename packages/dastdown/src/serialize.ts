@@ -300,15 +300,15 @@ function joinBlocksWithBlankLines(blocks: string[][]): string[] {
 
 export function serialize<
   B extends SerializableBlockId = string,
-  IB extends SerializableBlockId = string
+  IB extends SerializableBlockId = string,
 >(document: Document<B, IB> | null | undefined): string {
   if (document === null || document === undefined) return '';
 
-  const asGeneric = (document as unknown) as Document<
+  const asGeneric = document as unknown as Document<
     SerializableBlockId,
     SerializableBlockId
   >;
-  const result = validate((document as unknown) as Document);
+  const result = validate(document as unknown as Document);
   if (!result.valid) {
     throw new Error(`Invalid dast document: ${result.message}`);
   }

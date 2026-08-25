@@ -91,9 +91,8 @@ export const handlers: Array<Handler> = [
   makeHandler(
     (n): n is ContentfulParagraph => n.nodeType === BLOCKS.PARAGRAPH,
     async (node, context) => {
-      const isAllowedAsChild = allowedChildren[context.parentNodeType].includes(
-        'paragraph',
-      );
+      const isAllowedAsChild =
+        allowedChildren[context.parentNodeType].includes('paragraph');
 
       const children = await visitChildren(node, {
         ...context,
@@ -125,9 +124,8 @@ export const handlers: Array<Handler> = [
   makeHandler(
     (n): n is ContentfulHr => n.nodeType === BLOCKS.HR,
     async (node, context) => {
-      const isAllowedAsChild = allowedChildren[context.parentNodeType].includes(
-        'thematicBreak',
-      );
+      const isAllowedAsChild =
+        allowedChildren[context.parentNodeType].includes('thematicBreak');
 
       return isAllowedAsChild ? { type: 'thematicBreak' } : undefined;
     },
@@ -135,14 +133,16 @@ export const handlers: Array<Handler> = [
 
   makeHandler(
     (n): n is ContentfulHeading =>
-      ([
-        BLOCKS.HEADING_1,
-        BLOCKS.HEADING_2,
-        BLOCKS.HEADING_3,
-        BLOCKS.HEADING_4,
-        BLOCKS.HEADING_5,
-        BLOCKS.HEADING_6,
-      ] as string[]).includes(n.nodeType),
+      (
+        [
+          BLOCKS.HEADING_1,
+          BLOCKS.HEADING_2,
+          BLOCKS.HEADING_3,
+          BLOCKS.HEADING_4,
+          BLOCKS.HEADING_5,
+          BLOCKS.HEADING_6,
+        ] as string[]
+      ).includes(n.nodeType),
     async (node, context) => {
       const isAllowedAsChild =
         allowedChildren[context.parentNodeType].includes('heading') &&
@@ -264,9 +264,8 @@ export const handlers: Array<Handler> = [
       if (allowedChildren[context.parentNodeType] === 'inlineNodes') {
         isAllowedAsChild = inlineNodeTypes.includes('link');
       } else if (Array.isArray(allowedChildren[context.parentNodeType])) {
-        isAllowedAsChild = allowedChildren[context.parentNodeType].includes(
-          'link',
-        );
+        isAllowedAsChild =
+          allowedChildren[context.parentNodeType].includes('link');
       }
 
       if (!isAllowedAsChild) {

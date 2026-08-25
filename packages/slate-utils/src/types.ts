@@ -60,7 +60,7 @@ export type InlineBlock = {
 
 type ChildType<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  T extends { children: Array<any> }
+  T extends { children: Array<any> },
 > = T['children'] extends (infer U)[] ? U : never;
 
 export type Heading = Omit<FieldHeading, 'children'> & {
@@ -341,6 +341,6 @@ export const nonTextNodeDefs: Record<string, Definition | undefined> = {
   [thematicBreakDef.type]: thematicBreakDef,
 };
 
-export const allNodeTypes = (Object.values(
-  nonTextNodeDefs,
-) as Definition[]).map((def) => def.type);
+export const allNodeTypes = (
+  Object.values(nonTextNodeDefs) as Definition[]
+).map((def) => def.type);
