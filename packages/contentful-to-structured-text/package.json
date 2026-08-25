@@ -10,7 +10,7 @@
     "rich-text"
   ],
   "author": "Irene Oppo <i.oppo@datocms.com>",
-  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/contentful-to-structured-text#readme",
+  "homepage": "https://github.com/datocms/structured-text/tree/main/packages/contentful-to-structured-text#readme",
   "license": "MIT",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",

@@ -7,7 +7,7 @@
     "structured-text"
   ],
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/datocms-structured-text-slate-utils#readme",
+  "homepage": "https://github.com/datocms/structured-text/tree/main/packages/slate-utils#readme",
   "license": "MIT",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",

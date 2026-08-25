@@ -18,24 +18,30 @@ Monorepo with Typescript libraries for handling and rendering [DatoCMS Structure
 
 ### Official
 
-- [`html-to-structured-text`](https://github.com/datocms/structured-text/tree/master/packages/html-to-structured-text)
+- [`html-to-structured-text`](https://github.com/datocms/structured-text/tree/main/packages/html-to-structured-text)
   - Convert HTML (or [Hast](https://github.com/syntax-tree/hast) syntax tree) to a valid Structured Text document.
-- [`datocms-structured-text-utils`](https://github.com/datocms/structured-text/tree/master/packages/utils)
+- [`datocms-structured-text-utils`](https://github.com/datocms/structured-text/tree/main/packages/utils)
   - A set of Typescript types and helpers to work with DatoCMS Structured Text fields.
-- [`datocms-structured-text-to-plain-text`](https://github.com/datocms/structured-text/tree/master/packages/to-plain-text)
+- [`datocms-structured-text-to-plain-text`](https://github.com/datocms/structured-text/tree/main/packages/to-plain-text)
   - Plain text renderer for the Structured Text document.
-- [`datocms-structured-text-to-html-string`](https://github.com/datocms/structured-text/tree/master/packages/to-html-string)
+- [`datocms-structured-text-to-html-string`](https://github.com/datocms/structured-text/tree/main/packages/to-html-string)
   - HTML renderer for the DatoCMS Structured Text field type.
-- [`datocms-structured-text-to-markdown`](https://github.com/datocms/structured-text/tree/master/packages/to-markdown)
+- [`datocms-structured-text-to-markdown`](https://github.com/datocms/structured-text/tree/main/packages/to-markdown)
   - Markdown renderer for the DatoCMS Structured Text field type.
 - [`<StructuredText />`](https://github.com/datocms/react-datocms#structured-text)
   - React component that you can use to render Structured Text documents.
 - [`<datocms-structured-text />`](https://github.com/datocms/vue-datocms#structured-text)
   - Vue component that you can use to render Structured Text documents.
-- [`datocms-structured-text-to-dom-nodes`](https://github.com/datocms/structured-text/tree/master/packages/to-dom-nodes)
+- [`datocms-structured-text-to-dom-nodes`](https://github.com/datocms/structured-text/tree/main/packages/to-dom-nodes)
   - DOM nodes renderer for the DatoCMS Structured Text field type. To be used inside the browser, as it expects to find `document.createElement`.
-- [`datocms-contentful-to-structured-text`](https://github.com/datocms/structured-text/tree/master/packages/contentful-to-structured-text)
+- [`datocms-contentful-to-structured-text`](https://github.com/datocms/structured-text/tree/main/packages/contentful-to-structured-text)
   - Convert Contentful Rich Text to a valid Structured Text document.
+- [`datocms-structured-text-dastdown`](https://github.com/datocms/structured-text/tree/main/packages/dastdown)
+  - Lossless textual serialization (dastdown) for Structured Text documents, with both a parser and a serializer.
+- [`datocms-structured-text-slate-utils`](https://github.com/datocms/structured-text/tree/main/packages/slate-utils)
+  - Helpers to translate Structured Text documents to and from [Slate](https://docs.slatejs.org/) structures.
+- [`datocms-structured-text-generic-html-renderer`](https://github.com/datocms/structured-text/tree/main/packages/generic-html-renderer)
+  - Shared building blocks for the HTML-ish renderers above. You rarely depend on it directly.
 
 ## About Structured Text
 

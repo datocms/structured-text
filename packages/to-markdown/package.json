@@ -8,7 +8,7 @@
     "markdown"
   ],
   "author": "Stefano Verna <s.verna@datocms.com>",
-  "homepage": "https://github.com/datocms/structured-text/tree/master/packages/to-markdown#readme",
+  "homepage": "https://github.com/datocms/structured-text/tree/main/packages/to-markdown#readme",
   "license": "MIT",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
