@@ -4,23 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a Lerna-managed monorepo for DatoCMS Structured Text (DAST) utilities. It provides TypeScript libraries for handling, converting, and rendering DatoCMS Structured Text documents across multiple formats.
+This is an npm-workspaces monorepo for DatoCMS Structured Text (DAST) utilities, built with Turborepo and released with Changesets. It provides TypeScript libraries for handling, converting, and rendering DatoCMS Structured Text documents across multiple formats.
+
+Node 22 or later is required (see `.nvmrc`) — `@changesets/cli` declares `^22.11 || ^24 || >=26` and dies on Node 20 with an error that does not mention versions. The published packages have no such requirement.
 
 ## Commands
 
 ### Building
 
 ```bash
-npm run build          # Bootstrap all packages and build them
-lerna bootstrap        # Install dependencies for all packages
-lerna run build        # Build all packages
+npm install            # One install for the whole workspace; no bootstrap step
+npm run build          # turbo run build — every package, in dependency order
+npx turbo run build --filter=<package-name>   # ...and its dependencies only
 ```
 
-Individual packages can be built by navigating to `packages/<package-name>` and running:
+Turborepo derives the order from the manifests (`dependsOn: ["^build"]`), so nobody maintains a list: `utils` builds before `generic-html-renderer` before the renderers that depend on it. `npm run <script> --workspaces` would **not** honour that order.
+
+Individual packages can still be built by navigating to `packages/<package-name>` and running:
 
 ```bash
 npm run build          # Compiles TypeScript to both CommonJS (dist/cjs) and ESM (dist/esm)
 ```
+
+The packages resolve each other through their built `dist/`, so a fresh checkout must be built before the tests will run.
 
 ### Testing
 
@@ -41,18 +47,28 @@ npm run prettier       # Format all TypeScript and JSON files
 
 Pre-commit hook automatically runs `pretty-quick --staged` to format staged files.
 
-### Publishing
+### Changesets and publishing
+
+Every user-visible change needs a changeset, committed in the same PR:
 
 ```bash
-npm run publish        # Build, test, and publish to npm
-npm run publish-next   # Publish with 'next' dist-tag
+npx changeset          # Pick the changed packages and the bump level
 ```
+
+The ten packages version **independently**: a changeset bumps exactly the packages it names, plus any dependent whose declared range the new version falls outside. So the package list inside a changeset carries real weight. `patch` is for bug fixes only; new API surface is `minor`. See `.changeset/README.md`.
+
+```bash
+npm run publish        # Build, test, version, publish to npm, tag, release notes
+npm run publish-next   # The same, under the 'next' dist-tag
+```
+
+`bin/publish.mjs` implements it. The ordering is the point: everything fallible runs before anything irreversible, and npm is published before git is tagged, so a tag can never point at a version nobody can install. There is no rollback — every step is idempotent, so an interrupted release is resumed by re-running it. Tags are per package (`datocms-structured-text-utils@6.1.0`); the historical `vX.Y.Z` tags stay where they are.
 
 ## Architecture
 
 ### Monorepo Structure
 
-The repository contains 9 packages in `packages/`:
+The repository contains 10 packages in `packages/`:
 
 **Core:**
 
@@ -73,6 +89,11 @@ The repository contains 9 packages in `packages/`:
 **Framework Utilities:**
 
 - `slate-utils`: Slate.js integration helpers
+
+**Other renderers/converters:**
+
+- `to-markdown`: Markdown renderer
+- `dastdown`: Markdown-flavoured serialization and parsing of DAST, with round-trip support
 
 ### DAST (DatoCMS Abstract Syntax Tree)
 
@@ -141,7 +162,7 @@ The root `tsconfig.json` provides shared compiler options (strict mode, ES2015+ 
 
 ### Inter-package Dependencies
 
-Most packages depend on `datocms-structured-text-utils` for core types and utilities. Lerna manages workspace linking during development. When publishing, packages reference specific versions of dependencies.
+Most packages depend on `datocms-structured-text-utils` for core types and utilities, directly or through `generic-html-renderer`. npm workspaces symlinks them into the root `node_modules`, so a change in `utils` is visible to its dependents as soon as `utils` is rebuilt. When publishing, packages reference specific versions of dependencies.
 
 ## Development Notes
 
@@ -169,5 +190,5 @@ Most packages depend on `datocms-structured-text-utils` for core types and utili
 
 **utils:**
 
-- `update-links.js` script updates GitHub links in README.md to match current line numbers
+- `update-links.js` script updates GitHub links in README.md to match current line numbers. It runs as part of this package's `build`, which is why `packages/utils/turbo.json` lists `README.md` as a build output alongside `dist/**` — otherwise turbo would treat a file the build writes as one of its own inputs.
 - Tree manipulation supports custom type parameters for block/inline item types
