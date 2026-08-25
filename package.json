@@ -34,6 +34,7 @@
     "publish-next": "node bin/publish.mjs --tag next",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml}\"",
+    "prettier:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml}\"",
     "prepare": "husky install"
   },
   "license": "MIT",

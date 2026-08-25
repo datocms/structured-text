@@ -31,7 +31,12 @@ jobs:
       # One install for the whole workspace; the internal packages are
       # symlinked into the root node_modules, so there is no bootstrap step.
       - run: npm ci
+      # Formatting is checked here rather than inside `npm test`, which already
+      # runs eslint: the pre-commit hook only formats files someone happened to
+      # touch, so without this the rest drifts unnoticed.
+      - run: npm run prettier:check
       # Turborepo derives the build order from the manifests: `utils` before
       # `generic-html-renderer` before the renderers that depend on it.
       - run: npm run build
+      # Also runs eslint.
       - run: npm test
