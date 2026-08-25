@@ -753,7 +753,7 @@ function getOriginalItemId(item: SerializableBlockId): string {
  */
 function indexOriginalItems<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(
   original: Document<B, IB>,
 ): { blocks: Map<string, B>; inlineBlocks: Map<string, IB> } {
@@ -801,7 +801,7 @@ function indexOriginalItems<
 
 function restoreOriginalItems<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(
   parsed: Document<string, string>,
   original: Document<B, IB>,
@@ -902,28 +902,28 @@ function restoreOriginalItems<
 export function parse(input: null | undefined): null;
 export function parse<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(input: null | undefined, original: Document<B, IB> | null | undefined): null;
 export function parse(input: string): Document;
 export function parse<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(input: string, original: Document<B, IB>): Document<B, IB>;
 export function parse<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(input: string, original: Document<B, IB> | null | undefined): Document<B, IB>;
 export function parse(input: string | null | undefined): Document | null;
 export function parse<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(
   input: string | null | undefined,
   original: Document<B, IB>,
 ): Document<B, IB> | null;
 export function parse<
   B extends SerializableBlockId,
-  IB extends SerializableBlockId
+  IB extends SerializableBlockId,
 >(
   input: string | null | undefined,
   original: Document<B, IB> | null | undefined,

@@ -22,7 +22,7 @@ import { BlockId, Document, Node, WithChildrenNode } from './types';
  */
 type StructuredTextDocumentOrNode<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 > =
   | Node<BlockItemType, InlineBlockItemType>
   | Document<BlockItemType, InlineBlockItemType>;
@@ -43,7 +43,7 @@ const DEFAULT_CONFIG = {
  */
 export interface InspectOptions<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 > {
   /**
    * Custom formatter for block and inlineBlock nodes.
@@ -97,7 +97,7 @@ export interface InspectOptions<
  */
 function nodeHasChildren<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is WithChildrenNode<BlockItemType, InlineBlockItemType> {
@@ -115,7 +115,7 @@ function nodeHasChildren<
  */
 function defaultBlockFormatter<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(item: BlockItemType | InlineBlockItemType): string {
   return `(item: ${JSON.stringify(item)})`;
 }
@@ -132,7 +132,7 @@ function extractNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
   input: StructuredTextDocumentOrNode<BlockItemType, InlineBlockItemType>,
 ): Node<BlockItemType, InlineBlockItemType> {
   return isDocument(input)
-    ? ((input.document as unknown) as Node<BlockItemType, InlineBlockItemType>)
+    ? (input.document as unknown as Node<BlockItemType, InlineBlockItemType>)
     : (input as Node<BlockItemType, InlineBlockItemType>);
 }
 
@@ -156,7 +156,7 @@ function extractNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
  */
 export function inspectionTreeNodes<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   input: StructuredTextDocumentOrNode<BlockItemType, InlineBlockItemType>,
   options: InspectOptions<BlockItemType, InlineBlockItemType> = {},

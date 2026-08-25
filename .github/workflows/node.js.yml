@@ -1,4 +1,6 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# Installs from the lockfile, builds every workspace through Turborepo and runs
+# the test suite.
+#
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
 name: Node.js CI
@@ -15,8 +17,10 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        # 18 and 20 are both past end-of-life, and @changesets/cli needs
+        # ^22.11 || ^24 || >=26 — see .nvmrc.
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [22.x, 24.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +28,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+      # One install for the whole workspace; the internal packages are
+      # symlinked into the root node_modules, so there is no bootstrap step.
       - run: npm ci
-      - run: ./node_modules/.bin/lerna bootstrap
-      - run: npm run build --if-present
+      # Turborepo derives the build order from the manifests: `utils` before
+      # `generic-html-renderer` before the renderers that depend on it.
+      - run: npm run build
       - run: npm test

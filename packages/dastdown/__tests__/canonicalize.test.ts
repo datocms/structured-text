@@ -72,9 +72,11 @@ describe('canonicalize', () => {
         ),
       );
       const result = canonicalize(d);
-      const span = (result.document.children[0] as {
-        children: Array<{ marks: string[] }>;
-      }).children[0];
+      const span = (
+        result.document.children[0] as {
+          children: Array<{ marks: string[] }>;
+        }
+      ).children[0];
       expect(span.marks).toEqual([
         'highlight',
         'strikethrough',
@@ -88,18 +90,22 @@ describe('canonicalize', () => {
     it('places custom marks after default marks, alphabetically sorted', () => {
       const d = doc(p(s('x', ['zeta-mark', 'alpha-mark', 'strong'])));
       const result = canonicalize(d);
-      const span = (result.document.children[0] as {
-        children: Array<{ marks: string[] }>;
-      }).children[0];
+      const span = (
+        result.document.children[0] as {
+          children: Array<{ marks: string[] }>;
+        }
+      ).children[0];
       expect(span.marks).toEqual(['strong', 'alpha-mark', 'zeta-mark']);
     });
 
     it('handles spans with only custom marks', () => {
       const d = doc(p(s('x', ['gamma', 'alpha', 'beta'])));
       const result = canonicalize(d);
-      const span = (result.document.children[0] as {
-        children: Array<{ marks: string[] }>;
-      }).children[0];
+      const span = (
+        result.document.children[0] as {
+          children: Array<{ marks: string[] }>;
+        }
+      ).children[0];
       expect(span.marks).toEqual(['alpha', 'beta', 'gamma']);
     });
   });
@@ -119,9 +125,11 @@ describe('canonicalize', () => {
         ),
       );
       const result = canonicalize(d);
-      const linkNode = (result.document.children[0] as {
-        children: Array<{ meta: Array<{ id: string }> }>;
-      }).children[0];
+      const linkNode = (
+        result.document.children[0] as {
+          children: Array<{ meta: Array<{ id: string }> }>;
+        }
+      ).children[0];
       expect(linkNode.meta.map((m) => m.id)).toEqual(['rel', 'target']);
     });
   });

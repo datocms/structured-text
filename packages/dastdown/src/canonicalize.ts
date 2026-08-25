@@ -22,13 +22,11 @@ const DEFAULT_MARK_OUTER_TO_INNER: DefaultMark[] = [
   'code',
 ];
 
-const DEFAULT_MARK_INDEX: Record<
-  string,
-  number
-> = DEFAULT_MARK_OUTER_TO_INNER.reduce((acc, m, i) => {
-  acc[m] = i;
-  return acc;
-}, {} as Record<string, number>);
+const DEFAULT_MARK_INDEX: Record<string, number> =
+  DEFAULT_MARK_OUTER_TO_INNER.reduce((acc, m, i) => {
+    acc[m] = i;
+    return acc;
+  }, {} as Record<string, number>);
 
 const DEFAULT_MARK_SET: Set<string> = new Set(defaultMarks);
 

@@ -162,7 +162,11 @@ const graphqlResponse = {
 
 const options = {
   renderBlock({ record, adapter: { renderNode } }) {
-    return renderNode('figure', {}, renderNode('img', { src: record.image.url }));
+    return renderNode(
+      'figure',
+      {},
+      renderNode('img', { src: record.image.url }),
+    );
   },
   renderInlineRecord({ record, adapter: { renderNode } }) {
     return renderNode('a', { href: `/blog/${record.slug}` }, record.title);

@@ -440,7 +440,7 @@ export type InlineItem = {
 
 export type WithChildrenNode<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 > = Exclude<
   Node<BlockItemType, InlineBlockItemType>,
   | Code
@@ -495,7 +495,7 @@ export type CdaStructuredTextRecord = {
 export type CdaStructuredTextValue<
   BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
 > = {
   /**
    * A DatoCMS "dast" document
@@ -523,7 +523,7 @@ export type CdaStructuredTextValue<
 export type TypesafeCdaStructuredTextValue<
   BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
 > = {
   /**
    * A DatoCMS "dast" document
@@ -546,12 +546,12 @@ export type Record = CdaStructuredTextRecord;
 export type StructuredText<
   BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
 > = CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>;
 
 /** @deprecated Use TypesafeCdaStructuredTextValue */
 export type TypesafeStructuredText<
   BlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord = CdaStructuredTextRecord,
 > = TypesafeCdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>;

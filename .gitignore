@@ -43,3 +43,6 @@ yarn.lock
 
 **/.rpt2_cache
 .vscode/settings.json
+
+# Turborepo
+.turbo

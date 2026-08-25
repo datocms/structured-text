@@ -6,9 +6,10 @@ import {
   inlineNodeTypes,
 } from './definitions';
 
-export function validate(
-  document: Document | null | undefined,
-): { valid: boolean; message?: string } {
+export function validate(document: Document | null | undefined): {
+  valid: boolean;
+  message?: string;
+} {
   if (document === null || document === undefined) {
     return { valid: true };
   }

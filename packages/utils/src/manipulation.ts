@@ -213,12 +213,12 @@ function mapNodesRecursive<T, R>(
   if (hasChildren(node)) {
     const newChildren: AllNodesInTree<T>[] = [];
     for (let index = 0; index < node.children.length; index++) {
-      const childResult = (mapNodesRecursive(
+      const childResult = mapNodesRecursive(
         node.children[index] as T,
         mapper,
         node as WithChildren<AllNodesInTree<T>>,
         [...path, 'children', index],
-      ) as unknown) as MapNodesMapperResult<T>;
+      ) as unknown as MapNodesMapperResult<T>;
       if (childResult == null) continue;
       if (Array.isArray(childResult)) {
         for (const item of childResult) {
@@ -255,7 +255,7 @@ async function mapNodesAsyncRecursive<T, R>(
     );
     const newChildren: AllNodesInTree<T>[] = [];
     for (const result of childResults) {
-      const childResult = (result as unknown) as MapNodesMapperResult<T>;
+      const childResult = result as unknown as MapNodesMapperResult<T>;
       if (childResult == null) continue;
       if (Array.isArray(childResult)) {
         for (const item of childResult) {
@@ -336,11 +336,11 @@ export function mapNodes<T, R>(
   if (isDocument(input)) {
     return {
       schema: 'dast' as const,
-      document: (single as unknown) as T,
+      document: single as unknown as T,
     };
   }
 
-  return (single as unknown) as T;
+  return single as unknown as T;
 }
 
 /**
@@ -382,11 +382,11 @@ export async function mapNodesAsync<T, R>(
   if (isDocument(input)) {
     return {
       schema: 'dast' as const,
-      document: (single as unknown) as T,
+      document: single as unknown as T,
     };
   }
 
-  return (single as unknown) as T;
+  return single as unknown as T;
 }
 
 /**

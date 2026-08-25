@@ -18,14 +18,14 @@ export type TrasformFn = (...args: any[]) => any;
 export type RenderResult<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > = ReturnType<H> | ReturnType<T> | ReturnType<F> | null | undefined;
 
 export type RenderContext<
   H extends TrasformFn,
   T extends TrasformFn,
   F extends TrasformFn,
-  N extends Node
+  N extends Node,
 > = {
   adapter: Adapter<H, T, F>;
   node: N;
@@ -37,7 +37,7 @@ export type RenderContext<
 export interface RenderRule<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > {
   appliable: (node: Node) => boolean;
   apply: (ctx: RenderContext<H, T, F, Node>) => RenderResult<H, T, F>;
@@ -47,7 +47,7 @@ export const renderRule = <
   N extends Node,
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 >(
   guard: (node: Node) => node is N,
   transform: (ctx: RenderContext<H, T, F, N>) => RenderResult<H, T, F>,
@@ -60,7 +60,7 @@ export const renderRule = <
 export function transformNode<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 >(
   adapter: Adapter<H, T, F>,
   node: Node,
@@ -100,7 +100,7 @@ export function transformNode<
 export type Adapter<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > = {
   renderNode: H;
   renderText: T;
@@ -113,7 +113,7 @@ export function render<
   F extends TrasformFn,
   BlockRecord extends Record,
   LinkRecord extends Record,
-  InlineBlockRecord extends Record
+  InlineBlockRecord extends Record,
 >(
   adapter: Adapter<H, T, F>,
   structuredTextOrNode:

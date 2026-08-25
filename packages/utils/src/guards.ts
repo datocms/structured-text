@@ -44,7 +44,7 @@ import {
 
 export function hasChildren<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is WithChildrenNode<BlockItemType, InlineBlockItemType> {
@@ -53,7 +53,7 @@ export function hasChildren<
 
 export function isInlineNode<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is InlineNode<InlineBlockItemType> {
@@ -62,7 +62,7 @@ export function isInlineNode<
 
 export function isHeading<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Heading<InlineBlockItemType> {
@@ -83,7 +83,7 @@ export function isRoot<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 export function isParagraph<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Paragraph<InlineBlockItemType> {
@@ -98,7 +98,7 @@ export function isList<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 export function isListItem<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is ListItem<BlockItemType, InlineBlockItemType> {
@@ -107,7 +107,7 @@ export function isListItem<
 
 export function isBlockquote<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is Blockquote<InlineBlockItemType> {
@@ -193,7 +193,7 @@ export function isBlockWithItemOfType<Id extends string>(
 export function isBlockWithItemOfType<
   Id extends string,
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   itemTypeId: Id,
   node: Node<BlockItemType, InlineBlockItemType>,
@@ -215,7 +215,7 @@ export function isBlockWithItemOfType(
 
 export function isInlineBlock<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   node: Node<BlockItemType, InlineBlockItemType>,
 ): node is InlineBlock<InlineBlockItemType> {
@@ -256,7 +256,7 @@ export function isInlineBlockWithItemOfType<Id extends string>(
 export function isInlineBlockWithItemOfType<
   Id extends string,
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(
   itemTypeId: Id,
   node: Node<BlockItemType, InlineBlockItemType>,
@@ -290,21 +290,21 @@ export function isLink<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 
 export function isItemLink<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(node: Node<BlockItemType, InlineBlockItemType>): node is ItemLink {
   return node.type === itemLinkNodeType;
 }
 
 export function isInlineItem<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(node: Node<BlockItemType, InlineBlockItemType>): node is InlineItem {
   return node.type === inlineItemNodeType;
 }
 
 export function isThematicBreak<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(node: Node<BlockItemType, InlineBlockItemType>): node is ThematicBreak {
   return node.type === thematicBreakNodeType;
 }
@@ -331,7 +331,7 @@ export function isNode<BlockItemType = BlockId, InlineBlockItemType = BlockId>(
 export function isCdaStructuredTextValue<
   BlockRecord extends CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord,
 >(
   obj: unknown,
 ): obj is CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord> {
@@ -344,7 +344,7 @@ export function isCdaStructuredTextValue<
 export function isStructuredText<
   BlockRecord extends CdaStructuredTextRecord,
   LinkRecord extends CdaStructuredTextRecord,
-  InlineBlockRecord extends CdaStructuredTextRecord
+  InlineBlockRecord extends CdaStructuredTextRecord,
 >(
   obj: unknown,
 ): obj is StructuredText<BlockRecord, LinkRecord, InlineBlockRecord> {
@@ -353,7 +353,7 @@ export function isStructuredText<
 
 export function isDocument<
   BlockItemType = BlockId,
-  InlineBlockItemType = BlockId
+  InlineBlockItemType = BlockId,
 >(obj: unknown): obj is Document<BlockItemType, InlineBlockItemType> {
   return Boolean(
     isObject(obj) &&

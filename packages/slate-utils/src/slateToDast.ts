@@ -190,7 +190,7 @@ export function slateToDast(
 
       if (field.attributes.field_type === 'structured_text') {
         recordAttributes[apiKey] = slateToDast(
-          (blockAttributes[apiKey] as unknown) as Node[],
+          blockAttributes[apiKey] as unknown as Node[],
           allFieldsByItemTypeId,
         );
       } else if (blockAttributes[apiKey] === '__NULL_VALUE__') {

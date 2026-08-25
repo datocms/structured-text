@@ -80,12 +80,11 @@ type H = typeof defaultAdapter.renderNode;
 type T = typeof defaultAdapter.renderText;
 type F = typeof defaultAdapter.renderFragment;
 
-type RenderInlineRecordContext<
-  R extends StructuredTextGraphQlResponseRecord
-> = {
-  record: R;
-  adapter: Adapter<H, T, F>;
-};
+type RenderInlineRecordContext<R extends StructuredTextGraphQlResponseRecord> =
+  {
+    record: R;
+    adapter: Adapter<H, T, F>;
+  };
 
 type RenderRecordLinkContext<R extends StructuredTextGraphQlResponseRecord> = {
   record: R;
@@ -102,7 +101,7 @@ type RenderBlockContext<R extends StructuredTextGraphQlResponseRecord> = {
 export type RenderSettings<
   BlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
   LinkRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
-  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord
+  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
 > = {
   /** A set of additional rules to convert the document to a string **/
   customNodeRules?: RenderRule<H, T, F>[];
@@ -139,7 +138,7 @@ export type RenderSettings<
 export function render<
   BlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
   LinkRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
-  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord
+  InlineBlockRecord extends StructuredTextGraphQlResponseRecord = StructuredTextGraphQlResponseRecord,
 >(
   /** The actual field value you get from DatoCMS **/
   structuredTextOrNode:
@@ -217,7 +216,7 @@ export function render<
           record: item,
           adapter,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          children: (children as any) as ReturnType<F>,
+          children: children as any as ReturnType<F>,
           transformedMeta: node.meta
             ? (settings?.metaTransformer || defaultMetaTransformer)({
                 node,

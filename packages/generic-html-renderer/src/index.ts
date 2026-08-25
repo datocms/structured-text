@@ -47,7 +47,7 @@ export function markToTagName(mark: Mark): string {
 export function renderSpanValue<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 >({
   node,
   key,
@@ -76,7 +76,7 @@ export function renderSpanValue<
 type RenderMarkContext<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > = {
   mark: string;
   adapter: Adapter<H, T, F>;
@@ -87,7 +87,7 @@ type RenderMarkContext<
 export type RenderMarkRule<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > = {
   appliable: (mark: string) => boolean;
   apply: (ctx: RenderMarkContext<H, T, F>) => RenderResult<H, T, F>;
@@ -96,7 +96,7 @@ export type RenderMarkRule<
 export function renderMarkRule<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 >(
   guard: string | ((mark: string) => boolean),
   transform: (ctx: RenderMarkContext<H, T, F>) => RenderResult<H, T, F>,
@@ -110,7 +110,7 @@ export function renderMarkRule<
 export function spanNodeRenderRule<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 >({
   customMarkRules,
 }: {
@@ -168,7 +168,7 @@ export const defaultMetaTransformer: TransformMetaFn = ({ meta }) => {
 export type RenderOptions<
   H extends TrasformFn,
   T extends TrasformFn,
-  F extends TrasformFn
+  F extends TrasformFn,
 > = {
   adapter: Adapter<H, T, F>;
   customNodeRules?: RenderRule<H, T, F>[];
@@ -182,7 +182,7 @@ export function render<
   F extends TrasformFn,
   BlockRecord extends Record,
   LinkRecord extends Record,
-  InlineBlockRecord extends Record
+  InlineBlockRecord extends Record,
 >(
   structuredTextOrNode:
     | CdaStructuredTextValue<BlockRecord, LinkRecord, InlineBlockRecord>
