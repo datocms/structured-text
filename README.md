@@ -96,13 +96,17 @@ writes under `.changeset/`. See [`.changeset/README.md`](.changeset/README.md)
 for the details — in particular, the packages version **independently**, so
 which ones you list matters.
 
-To release, from an up-to-date, clean `main`, run `npm run publish` from the
+To release, from an up-to-date, clean `main`, run `npm run release` from the
 repo root. It builds and tests, applies the pending changesets — bumping only
 the packages that changed and writing their `CHANGELOG.md`s — publishes to npm,
 and only then tags each published package `name@X.Y.Z`, pushes, and creates a
 GitHub release per tag whose notes come straight from those changelog entries.
 An interrupted release is resumed by re-running it, never undone. Use
-`npm run publish-next` for a prerelease under the `next` dist-tag.
+`npm run release:next` for a prerelease under the `next` dist-tag.
+
+The script itself lives in
+[`@datocms/release-toolchain`](https://github.com/datocms/release-toolchain),
+shared with every other DatoCMS repository and pinned here by tag.
 
 ## License
 

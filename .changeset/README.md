@@ -6,7 +6,7 @@ Whenever you change something worth mentioning in a release, run `npx changeset`
 and answer the two prompts (which packages, and whether it's a patch/minor/major).
 That writes a small markdown file here, which you commit along with your changes.
 
-At release time `npm run publish` consumes every pending file: it computes the
+At release time `npm run release` consumes every pending file: it computes the
 resulting versions, updates the `package.json`s and the `CHANGELOG.md`s, and
 deletes the files.
 
@@ -39,7 +39,7 @@ though the version numbers will no longer move in lockstep to say so.
 
 ## Prereleases
 
-`npm run publish-next` publishes under the `next` dist-tag, leaving `latest`
+`npm run release:next` publishes under the `next` dist-tag, leaving `latest`
 untouched. It works in two modes:
 
 - **as-is** — the pending changesets produce a normal version (say `6.1.0`)
@@ -52,5 +52,5 @@ untouched. It works in two modes:
 Either way the GitHub release is marked as a prerelease, so it never becomes
 the repository's "Latest release".
 
-`npm run publish` refuses to run while `.changeset/pre.json` exists, so a
+`npm run release` refuses to run while `.changeset/pre.json` exists, so a
 forgotten pre mode can't quietly turn a real release into a prerelease.
