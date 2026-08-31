@@ -1,0 +1,44 @@
+# Every commit pushed to a branch of this repo gets an installable preview of
+# every package, without publishing anything to npm:
+#
+#     npm i https://pkg.pr.new/datocms-structured-text-utils@<commit-sha>
+#
+# The point is to cross a repo boundary while developing. A change here can be
+# tried inside a consumer that lives in another repository — `cms`, a demo, a
+# customer project — from a real tarball, instead of `npm link` or pinning a
+# git branch by hand and remembering to unpin it later. Installing one preview
+# pulls in the previews of its siblings from the same commit, so a change that
+# spans several packages is tried as one coherent set.
+#
+# Pull requests opened from forks are deliberately not published: this runs on
+# pushes to branches of *this* repo, which only people with write access can
+# make, so an unreviewed fork cannot mint a URL under our namespace. If we ever
+# want fork previews too, pkg.pr.new documents an "approved pull requests only"
+# recipe that gates them behind a maintainer's review.
+name: Continuous releases
+
+on:
+  push:
+    # Every branch. Defining `branches` on its own also means tag pushes don't
+    # trigger this, which is what we want: a tag points at a commit that was
+    # already published when it landed on its branch.
+    branches: ['**']
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      # Once for all the packages, not once per package: pkg.pr.new expects a
+      # single invocation per workflow run, and rejects the rest as spam.
+      - run: npm exec -- pkg-pr-new publish --commentWithSha './packages/*'
