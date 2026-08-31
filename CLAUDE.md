@@ -58,11 +58,11 @@ npx changeset          # Pick the changed packages and the bump level
 The ten packages version **independently**: a changeset bumps exactly the packages it names, plus any dependent whose declared range the new version falls outside. So the package list inside a changeset carries real weight. `patch` is for bug fixes only; new API surface is `minor`. See `.changeset/README.md`.
 
 ```bash
-npm run publish        # Build, test, version, publish to npm, tag, release notes
-npm run publish-next   # The same, under the 'next' dist-tag
+npm run release        # Build, test, version, publish to npm, tag, release notes
+npm run release:next   # The same, under the 'next' dist-tag
 ```
 
-`toolchain/publish.mjs` implements it. The ordering is the point: everything fallible runs before anything irreversible, and npm is published before git is tagged, so a tag can never point at a version nobody can install. There is no rollback — every step is idempotent, so an interrupted release is resumed by re-running it. Tags are per package (`datocms-structured-text-utils@6.1.0`); the historical `vX.Y.Z` tags stay where they are.
+[`@datocms/release-toolchain`](https://github.com/datocms/release-toolchain) implements it — one script shared by every DatoCMS repository, pinned here by git tag and never published to npm. The ordering is the point: everything fallible runs before anything irreversible, and npm is published before git is tagged, so a tag can never point at a version nobody can install. There is no rollback — every step is idempotent, so an interrupted release is resumed by re-running it. Tags are per package (`datocms-structured-text-utils@6.1.0`); the historical `vX.Y.Z` tags stay where they are.
 
 ## Architecture
 
