@@ -38,6 +38,6 @@
     "datocms-structured-text-utils": "^6.0.0"
   },
   "devDependencies": {
-    "@datocms/cma-client": "^5.4.6"
+    "@datocms/cma-client": "^6.1.0"
   }
 }
